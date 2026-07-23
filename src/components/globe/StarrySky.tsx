@@ -4,58 +4,35 @@ import * as THREE from "three";
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 
-// ─── 星空粒子层（圆形发光点 + 闪烁） ───
-const STAR_COUNT = 1800;
+// ─── 星空粒子（参考图风格：小而微妙的暗点） ───
+const STAR_COUNT = 2000;
 
-// 模块级一次生成，避免重复计算
 function generateStars() {
   const positions = new Float32Array(STAR_COUNT * 3);
   const colors = new Float32Array(STAR_COUNT * 3);
   const sizes = new Float32Array(STAR_COUNT);
-  const twinklePhases = new Float32Array(STAR_COUNT); // 每颗星随机相位
 
   for (let i = 0; i < STAR_COUNT; i++) {
-    // 球面均匀分布
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = 90 + Math.random() * 20; // 90~110 半径范围，增加层次
+    const r = 80 + Math.random() * 30; // 更远，80~110
 
     positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
 
-    // 颜色分布：70% 白色 / 15% 淡蓝 / 10% 淡黄 / 5% 淡红
-    const colorRoll = Math.random();
-    if (colorRoll < 0.7) {
-      // 白色 (略偏暖)
-      colors[i * 3] = 1;
-      colors[i * 3 + 1] = 0.98;
-      colors[i * 3 + 2] = 0.95;
-    } else if (colorRoll < 0.85) {
-      // 淡蓝
-      colors[i * 3] = 0.75;
-      colors[i * 3 + 1] = 0.88;
-      colors[i * 3 + 2] = 1;
-    } else if (colorRoll < 0.95) {
-      // 淡黄
-      colors[i * 3] = 1;
-      colors[i * 3 + 1] = 0.95;
-      colors[i * 3 + 2] = 0.7;
-    } else {
-      // 淡红
-      colors[i * 3] = 1;
-      colors[i * 3 + 1] = 0.75;
-      colors[i * 3 + 2] = 0.7;
-    }
+    // 参考图：大部分白色小点，少数淡蓝
+    const isBlue = Math.random() < 0.15;
+    const brightness = 0.5 + Math.random() * 0.5; // 亮度随机，大部分偏暗
+    colors[i * 3] = brightness * (isBlue ? 0.8 : 1);
+    colors[i * 3 + 1] = brightness * (isBlue ? 0.9 : 1);
+    colors[i * 3 + 2] = brightness * 1;
 
-    // 大小分层：远处的小，近处稍大
-    sizes[i] = Math.random() * 1.8 + 0.4;
-
-    // 闪烁相位（0 ~ 2π）
-    twinklePhases[i] = Math.random() * Math.PI * 2;
+    // 大部分很小，极少数稍大（参考图风格）
+    sizes[i] = Math.random() < 0.95 ? Math.random() * 0.8 + 0.2 : Math.random() * 1.5 + 0.8;
   }
 
-  return { positions, colors, sizes, twinklePhases };
+  return { positions, colors, sizes };
 }
 
 const starData = generateStars();
@@ -65,18 +42,9 @@ export default function StarrySky() {
 
   useFrame((state) => {
     if (!pointsRef.current) return;
-
-    // 极慢整体旋转
-    pointsRef.current.rotation.y += 0.00008;
-
-    // 闪烁：动态更新每个粒子的透明度
-    const material = pointsRef.current.material as THREE.PointsMaterial;
-    const t = state.clock.elapsedTime;
-
-    // 用 sizeAttenuation + 动态 opacity 实现闪烁
-    // 通过 color 的 alpha 通道控制（PointsMaterial 不直接支持 per-particle opacity，
-    // 所以用 vertexColors + 整体 opacity 脉冲模拟群体闪烁层次）
-    material.opacity = 0.85 + Math.sin(t * 0.5) * 0.08;
+    pointsRef.current.rotation.y += 0.00005;
+    const m = pointsRef.current.material as THREE.PointsMaterial;
+    m.opacity = 0.6 + Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
   });
 
   const geometry = useMemo(() => {
@@ -90,10 +58,10 @@ export default function StarrySky() {
   const material = useMemo(
     () =>
       new THREE.PointsMaterial({
-        size: 1.5,
+        size: 0.8, // 比参考图稍大一点但保持微妙
         vertexColors: true,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.7,
         sizeAttenuation: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
@@ -104,24 +72,23 @@ export default function StarrySky() {
   return <points ref={pointsRef} geometry={geometry} material={material} />;
 }
 
-// ─── 大气尘埃粒子层（高级效果：地球周围的微尘光晕） ───
-const DUST_COUNT = 300;
+// ─── 大气微尘（环绕地球的微光粒子） ───
+const DUST_COUNT = 200;
 
 function generateDust() {
   const positions = new Float32Array(DUST_COUNT * 3);
   const sizes = new Float32Array(DUST_COUNT);
 
   for (let i = 0; i < DUST_COUNT; i++) {
-    // 分布在地球外围 1.05 ~ 1.35 倍半径
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(2 * Math.random() - 1);
-    const r = 1.05 + Math.random() * 0.3;
+    const r = 1.08 + Math.random() * 0.25;
 
     positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
     positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
     positions[i * 3 + 2] = r * Math.cos(phi);
 
-    sizes[i] = Math.random() * 0.03 + 0.008;
+    sizes[i] = Math.random() * 0.015 + 0.005;
   }
 
   return { positions, sizes };
@@ -134,10 +101,9 @@ export function AtmosphereDust() {
 
   useFrame((state) => {
     if (ref.current) {
-      ref.current.rotation.y += 0.0003;
-      ref.current.rotation.x += 0.0001;
+      ref.current.rotation.y += 0.0002;
       const m = ref.current.material as THREE.PointsMaterial;
-      m.opacity = 0.25 + Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+      m.opacity = 0.15 + Math.sin(state.clock.elapsedTime * 0.25) * 0.08;
     }
   });
 
@@ -151,10 +117,10 @@ export function AtmosphereDust() {
   const material = useMemo(
     () =>
       new THREE.PointsMaterial({
-        size: 0.02,
-        color: new THREE.Color("#6eb8ff"),
+        size: 0.012,
+        color: new THREE.Color("#5aaaff"),
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.2,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
         sizeAttenuation: true,
