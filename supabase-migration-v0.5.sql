@@ -1,0 +1,18 @@
+-- v0.5 路线系统
+CREATE TABLE IF NOT EXISTS routes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  color TEXT NOT NULL DEFAULT '#60a5fa',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS route_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  route_id UUID NOT NULL REFERENCES routes(id) ON DELETE CASCADE,
+  work_id UUID NOT NULL REFERENCES works(id) ON DELETE CASCADE,
+  sort_order INTEGER DEFAULT 0,
+  UNIQUE(route_id, work_id)
+);
+
+ALTER TABLE routes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE route_items DISABLE ROW LEVEL SECURITY;
