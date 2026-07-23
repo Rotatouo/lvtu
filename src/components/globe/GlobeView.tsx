@@ -5,6 +5,8 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useRef, useState, useMemo, useEffect, useCallback, use } from "react";
 import StarrySky, { AtmosphereDust } from "./StarrySky";
+import GlobeMarkers from "./GlobeMarkers";
+import RouteLines from "./RouteLines";
 import type { Work, Route } from "@/types";
 import type { TimeMode } from "./TimeController";
 
@@ -32,34 +34,34 @@ const TIME_PHASES: Record<string, TimePhase> = {
   dawn: {
     name: "晨光",
     lightPos: [2.5, -0.5, -0.8],
-    lightIntensity: 1.3,
-    lightColor: "#ffb877",
+    lightIntensity: 1.2,
+    lightColor: "#ffd4aa",
     ambientIntensity: 0.12,
     ambientColor: "#334466",
-    atmoColor: "#ff8844",
-    atmoIntensity: 0.8,
-    nightLightOpacity: 0.6,
+    atmoColor: "#e8a06a",
+    atmoIntensity: 0.5,
+    nightLightOpacity: 0.5,
   },
   day: {
     name: "日间",
     lightPos: [2.5, 1.2, 1.2],
-    lightIntensity: 1.6,
+    lightIntensity: 1.5,
     lightColor: "#fff8ee",
     ambientIntensity: 0.25,
     ambientColor: "#8899bb",
     atmoColor: "#55aaff",
-    atmoIntensity: 1.0,
+    atmoIntensity: 0.8,
     nightLightOpacity: 0,
   },
   dusk: {
     name: "黄昏",
     lightPos: [-2.5, -0.3, 1.5],
-    lightIntensity: 1.1,
-    lightColor: "#ffaa55",
+    lightIntensity: 1.0,
+    lightColor: "#ffcc88",
     ambientIntensity: 0.1,
     ambientColor: "#443355",
-    atmoColor: "#ff6633",
-    atmoIntensity: 0.9,
+    atmoColor: "#e8985a",
+    atmoIntensity: 0.5,
     nightLightOpacity: 0.4,
   },
   night: {
@@ -69,8 +71,8 @@ const TIME_PHASES: Record<string, TimePhase> = {
     lightColor: "#8899cc",
     ambientIntensity: 0.04,
     ambientColor: "#223355",
-    atmoColor: "#3366cc",
-    atmoIntensity: 0.5,
+    atmoColor: "#4477bb",
+    atmoIntensity: 0.3,
     nightLightOpacity: 1.0,
   },
 };
@@ -123,7 +125,7 @@ function useEarthTextures() {
 }
 
 // ─── 地球组件 ───
-function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnType<typeof useEarthTextures> }) {
+function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: TimeMode; textures: ReturnType<typeof useEarthTextures>; works: Work[]; routes: Route[]; onSelectWork?: (work: Work) => void }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const lightsRef = useRef<THREE.Mesh>(null);
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
@@ -133,7 +135,7 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
   const lastInteractionRef = useRef(Date.now());
   const isAutoRotatingRef = useRef(false);
 
-  // 自然大气 shader（单层、柔和渐变、无硬边）
+  // 自然大气 shader（极薄、柔和、几乎融入太空）
   const atmoMaterial = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -154,15 +156,15 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
           varying vec3 vViewPosition;
           void main() {
             vec3 viewDir = normalize(vViewPosition);
-            float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 3.0);
-            // 柔和衰减，无硬边
+            float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 4.0);
+            // 极柔和的衰减，几乎不可见
             float soft = fresnel * uIntensity;
             gl_FragColor = vec4(uColor, soft);
           }
         `,
         uniforms: {
-          uColor: { value: new THREE.Color("#55aaff") },
-          uIntensity: { value: 0.6 },
+          uColor: { value: new THREE.Color("#4a9eff") },
+          uIntensity: { value: 0.12 },
         },
         transparent: true,
         blending: THREE.AdditiveBlending,
@@ -172,7 +174,7 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
     []
   );
 
-  // 底部暖光大气（参考图左下暖金效果）
+  // 暖光大气（极微弱，只在晨昏可见）
   const warmAtmoMaterial = useMemo(
     () =>
       new THREE.ShaderMaterial({
@@ -194,8 +196,7 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
           varying vec3 vViewPosition;
           void main() {
             vec3 viewDir = normalize(vViewPosition);
-            float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 2.5);
-            // 只在一侧（光源方向）产生暖光
+            float fresnel = pow(1.0 - abs(dot(vNormal, viewDir)), 5.0);
             float warmSide = max(dot(vNormal, uLightDir), 0.0);
             float warm = fresnel * warmSide * uIntensity;
             gl_FragColor = vec4(uColor, warm);
@@ -204,7 +205,7 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
         uniforms: {
           uColor: { value: new THREE.Color("#ff7733") },
           uLightDir: { value: new THREE.Vector3(2.5, -0.5, -0.8).normalize() },
-          uIntensity: { value: 0.5 },
+          uIntensity: { value: 0.06 },
         },
         transparent: true,
         blending: THREE.AdditiveBlending,
@@ -240,14 +241,14 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
       ambLightRef.current.color.set(phase.ambientColor);
     }
 
-    // 更新大气
+    // 更新大气（极微弱，几乎融入太空）
     atmoMaterial.uniforms.uColor.value.set(phase.atmoColor);
-    atmoMaterial.uniforms.uIntensity.value = phase.atmoIntensity * 0.6;
+    atmoMaterial.uniforms.uIntensity.value = phase.atmoIntensity * 0.12;
 
-    // 暖光大气（晨光/黄昏时明显，星辰微弱）
+    // 暖光大气（只在晨昏微现，其他时间几乎不可见）
     const autoPhase = timeMode === "auto" ? getCurrentPhase() : (timeMode === "noon" ? "day" : "night");
     const warmVisible = autoPhase === "dawn" || autoPhase === "dusk";
-    warmAtmoMaterial.uniforms.uIntensity.value = warmVisible ? 0.4 : (autoPhase === "night" ? 0.15 : 0.25);
+    warmAtmoMaterial.uniforms.uIntensity.value = warmVisible ? 0.06 : 0.0;
     warmAtmoMaterial.uniforms.uLightDir.value.set(...phase.lightPos).normalize();
     warmAtmoMaterial.uniforms.uColor.value.set(phase.atmoColor);
 
@@ -296,15 +297,23 @@ function Earth({ timeMode, textures }: { timeMode: TimeMode; textures: ReturnTyp
         />
       </mesh>
 
-      {/* 大气辉光（单层，柔和渐变） */}
-      <mesh material={atmoMaterial} scale={1.12}>
+      {/* 大气辉光（极薄一层，几乎融入太空） */}
+      <mesh material={atmoMaterial} scale={1.06}>
         <sphereGeometry args={[1, 64, 64]} />
       </mesh>
 
-      {/* 暖光大气（左下暖金，参考图效果） */}
-      <mesh material={warmAtmoMaterial} scale={1.22}>
+      {/* 暖光大气（只在晨昏微现） */}
+      <mesh material={warmAtmoMaterial} scale={1.10}>
         <sphereGeometry args={[1, 64, 64]} />
       </mesh>
+
+      {/* 标点与路线 */}
+      {textures && (
+        <>
+          <GlobeMarkers works={works} routes={routes} onSelectWork={onSelectWork} />
+          <RouteLines routes={routes} />
+        </>
+      )}
     </group>
   );
 }
@@ -321,7 +330,7 @@ function isWebGLAvailable(): boolean {
 }
 
 // ─── 主组件 ───
-export default function GlobeView({ works, routes, timeMode = "auto" }: GlobeViewProps) {
+export default function GlobeView({ works, routes, onSelectWork, timeMode = "auto" }: GlobeViewProps) {
   const [webglOk, setWebglOk] = useState<boolean | null>(null);
   const textures = useEarthTextures();
 
@@ -347,7 +356,7 @@ export default function GlobeView({ works, routes, timeMode = "auto" }: GlobeVie
         gl={{ antialias: true, alpha: true }}
         style={{ background: "transparent" }}
       >
-        <Earth timeMode={timeMode} textures={textures} />
+        <Earth timeMode={timeMode} textures={textures} works={works} routes={routes} onSelectWork={onSelectWork} />
         <StarrySky />
         <AtmosphereDust />
         <OrbitControls
