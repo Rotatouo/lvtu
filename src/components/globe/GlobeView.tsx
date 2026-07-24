@@ -34,10 +34,10 @@ const TIME_PHASES: Record<string, TimePhase> = {
   dawn: {
     name: "晨光",
     lightPos: [2.5, -0.5, -0.8],
-    lightIntensity: 2.8,
+    lightIntensity: 3.4,
     lightColor: "#ffd4aa",
-    ambientIntensity: 0.8,
-    ambientColor: "#556688",
+    ambientIntensity: 1.1,
+    ambientColor: "#7799bb",
     atmoColor: "#e8a06a",
     atmoIntensity: 0.5,
     nightLightOpacity: 0.5,
@@ -45,10 +45,10 @@ const TIME_PHASES: Record<string, TimePhase> = {
   day: {
     name: "日间",
     lightPos: [2.5, 1.2, 1.2],
-    lightIntensity: 3.2,
+    lightIntensity: 3.8,
     lightColor: "#fff8ee",
-    ambientIntensity: 1.0,
-    ambientColor: "#99aabb",
+    ambientIntensity: 1.4,
+    ambientColor: "#bbccdd",
     atmoColor: "#55aaff",
     atmoIntensity: 0.8,
     nightLightOpacity: 0,
@@ -56,10 +56,10 @@ const TIME_PHASES: Record<string, TimePhase> = {
   dusk: {
     name: "黄昏",
     lightPos: [-2.5, -0.3, 1.5],
-    lightIntensity: 2.4,
+    lightIntensity: 3.0,
     lightColor: "#ffcc88",
-    ambientIntensity: 0.7,
-    ambientColor: "#665577",
+    ambientIntensity: 1.0,
+    ambientColor: "#887799",
     atmoColor: "#e8985a",
     atmoIntensity: 0.5,
     nightLightOpacity: 0.4,
@@ -67,10 +67,10 @@ const TIME_PHASES: Record<string, TimePhase> = {
   night: {
     name: "星辰",
     lightPos: [-2.5, -0.8, -1.5],
-    lightIntensity: 0.6,
-    lightColor: "#8899cc",
-    ambientIntensity: 0.4,
-    ambientColor: "#445577",
+    lightIntensity: 1.6,
+    lightColor: "#aabbdd",
+    ambientIntensity: 1.0,
+    ambientColor: "#6677aa",
     atmoColor: "#4477bb",
     atmoIntensity: 0.3,
     nightLightOpacity: 1.0,
@@ -265,13 +265,13 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
   return (
     <group>
       {/* 太阳光 */}
-      <directionalLight ref={dirLightRef} position={[3, 1.5, 1.5]} intensity={3.0} color="#fff8ee" />
-      {/* 环境光 */}
-      <ambientLight ref={ambLightRef} intensity={0.9} color="#99aabb" />
-      {/* 补充冷光（照亮暗面，确保暗面也可见） */}
-      <directionalLight position={[-2, -0.5, -1]} intensity={0.6} color="#7799dd" />
-      {/* 底部补光（防止地球下半部分太暗） */}
-      <directionalLight position={[0, -2, 0]} intensity={0.3} color="#5577aa" />
+      <directionalLight ref={dirLightRef} position={[3, 1.5, 1.5]} intensity={3.5} color="#fff8ee" />
+      {/* 环境光（大幅提升，让所有面都清晰） */}
+      <ambientLight ref={ambLightRef} intensity={1.2} color="#99aabb" />
+      {/* 补充冷光（照亮暗面） */}
+      <directionalLight position={[-2, -0.5, -1]} intensity={0.8} color="#7799dd" />
+      {/* 底部补光 */}
+      <directionalLight position={[0, -2, 0]} intensity={0.4} color="#5577aa" />
 
       {/* 地球+标点+路线 放在同一旋转组，转就一起转 */}
       <group ref={globeGroupRef}>
@@ -287,8 +287,8 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
             shininess={18}
             bumpMap={textures.normal}
             bumpScale={0.05}
-            emissive={new THREE.Color("#1a2535")}
-            emissiveIntensity={0.4}
+            emissive={new THREE.Color("#2a3545")}
+            emissiveIntensity={0.6}
             emissiveMap={textures.day}
           />
         </mesh>
