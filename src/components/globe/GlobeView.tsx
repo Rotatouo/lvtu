@@ -34,10 +34,10 @@ const TIME_PHASES: Record<string, TimePhase> = {
   dawn: {
     name: "晨光",
     lightPos: [2.5, -0.5, -0.8],
-    lightIntensity: 1.2,
+    lightIntensity: 1.6,
     lightColor: "#ffd4aa",
-    ambientIntensity: 0.12,
-    ambientColor: "#334466",
+    ambientIntensity: 0.35,
+    ambientColor: "#445577",
     atmoColor: "#e8a06a",
     atmoIntensity: 0.5,
     nightLightOpacity: 0.5,
@@ -45,9 +45,9 @@ const TIME_PHASES: Record<string, TimePhase> = {
   day: {
     name: "日间",
     lightPos: [2.5, 1.2, 1.2],
-    lightIntensity: 1.5,
+    lightIntensity: 2.0,
     lightColor: "#fff8ee",
-    ambientIntensity: 0.25,
+    ambientIntensity: 0.55,
     ambientColor: "#8899bb",
     atmoColor: "#55aaff",
     atmoIntensity: 0.8,
@@ -56,10 +56,10 @@ const TIME_PHASES: Record<string, TimePhase> = {
   dusk: {
     name: "黄昏",
     lightPos: [-2.5, -0.3, 1.5],
-    lightIntensity: 1.0,
+    lightIntensity: 1.4,
     lightColor: "#ffcc88",
-    ambientIntensity: 0.1,
-    ambientColor: "#443355",
+    ambientIntensity: 0.3,
+    ambientColor: "#554466",
     atmoColor: "#e8985a",
     atmoIntensity: 0.5,
     nightLightOpacity: 0.4,
@@ -69,8 +69,8 @@ const TIME_PHASES: Record<string, TimePhase> = {
     lightPos: [-2.5, -0.8, -1.5],
     lightIntensity: 0.2,
     lightColor: "#8899cc",
-    ambientIntensity: 0.04,
-    ambientColor: "#223355",
+    ambientIntensity: 0.15,
+    ambientColor: "#334466",
     atmoColor: "#4477bb",
     atmoIntensity: 0.3,
     nightLightOpacity: 1.0,
@@ -267,8 +267,8 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
       <directionalLight ref={dirLightRef} position={[3, 1.5, 1.5]} intensity={1.5} color="#fff8ee" />
       {/* 环境光 */}
       <ambientLight ref={ambLightRef} intensity={0.25} color="#8899bb" />
-      {/* 补充冷光（从反方向） */}
-      <directionalLight position={[-2, -0.5, -1]} intensity={0.15} color="#4488cc" />
+      {/* 补充冷光（照亮暗面） */}
+      <directionalLight position={[-2, -0.5, -1]} intensity={0.3} color="#6688cc" />
 
       {/* 地球本体：真实贴图 + 法线 + 高光 */}
       <mesh ref={meshRef}>
@@ -361,11 +361,12 @@ export default function GlobeView({ works, routes, onSelectWork, timeMode = "aut
         <AtmosphereDust />
         <OrbitControls
           enablePan={false}
-          minDistance={1.5}
+          minDistance={0.55}
           maxDistance={6}
           enableDamping
           dampingFactor={0.05}
           rotateSpeed={0.4}
+          zoomSpeed={1.2}
         />
       </Canvas>
     </div>
