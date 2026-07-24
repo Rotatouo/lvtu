@@ -130,6 +130,7 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
   const lightsRef = useRef<THREE.Mesh>(null);
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
   const ambLightRef = useRef<THREE.AmbientLight>(null);
+  const globeGroupRef = useRef<THREE.Group>(null);
   const { clock, gl, scene } = useThree();
 
   const lastInteractionRef = useRef(Date.now());
@@ -218,10 +219,10 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
   useFrame(() => {
     const t = clock.getElapsedTime();
 
-    // 12 秒无操作自转
+    // 12 秒无操作自转（整个地球组一起转，标点和路线跟着转）
     if (Date.now() - lastInteractionRef.current > 12000) {
       if (!isAutoRotatingRef.current) isAutoRotatingRef.current = true;
-      if (meshRef.current) meshRef.current.rotation.y += 0.001;
+      if (globeGroupRef.current) globeGroupRef.current.rotation.y += 0.0003;
     }
 
     // 时间光影
@@ -270,50 +271,53 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
       {/* 补充冷光（照亮暗面） */}
       <directionalLight position={[-2, -0.5, -1]} intensity={0.3} color="#6688cc" />
 
-      {/* 地球本体：真实贴图 + 法线 + 高光 */}
-      <mesh ref={meshRef}>
-        <sphereGeometry args={[1, 96, 96]} />
-        <meshPhongMaterial
-          map={textures.day}
-          normalMap={textures.normal}
-          normalScale={new THREE.Vector2(0.85, 0.85)}
-          specularMap={textures.specular}
-          specular={new THREE.Color("#333333")}
-          shininess={18}
-          bumpMap={textures.normal}
-          bumpScale={0.05}
-        />
-      </mesh>
+      {/* 地球+标点+路线 放在同一旋转组，转就一起转 */}
+      <group ref={globeGroupRef}>
+        {/* 地球本体：真实贴图 + 法线 + 高光 */}
+        <mesh ref={meshRef}>
+          <sphereGeometry args={[1, 96, 96]} />
+          <meshPhongMaterial
+            map={textures.day}
+            normalMap={textures.normal}
+            normalScale={new THREE.Vector2(0.85, 0.85)}
+            specularMap={textures.specular}
+            specular={new THREE.Color("#333333")}
+            shininess={18}
+            bumpMap={textures.normal}
+            bumpScale={0.05}
+          />
+        </mesh>
 
-      {/* 夜间城市灯光层 */}
-      <mesh ref={lightsRef}>
-        <sphereGeometry args={[1.003, 96, 96]} />
-        <meshStandardMaterial
-          map={textures.lights}
-          transparent
-          opacity={0}
-          blending={THREE.AdditiveBlending}
-          depthWrite={false}
-        />
-      </mesh>
+        {/* 夜间城市灯光层 */}
+        <mesh ref={lightsRef}>
+          <sphereGeometry args={[1.003, 96, 96]} />
+          <meshStandardMaterial
+            map={textures.lights}
+            transparent
+            opacity={0}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </mesh>
 
-      {/* 大气辉光（极薄一层，几乎融入太空） */}
+        {/* 标点与路线 */}
+        {textures && (
+          <>
+            <GlobeMarkers works={works} routes={routes} onSelectWork={onSelectWork} />
+            <RouteLines routes={routes} />
+          </>
+        )}
+      </group>
+
+      {/* 大气辉光（不随地球自转） */}
       <mesh material={atmoMaterial} scale={1.06}>
         <sphereGeometry args={[1, 64, 64]} />
       </mesh>
 
-      {/* 暖光大气（只在晨昏微现） */}
+      {/* 暖光大气（不随地球自转） */}
       <mesh material={warmAtmoMaterial} scale={1.10}>
         <sphereGeometry args={[1, 64, 64]} />
       </mesh>
-
-      {/* 标点与路线 */}
-      {textures && (
-        <>
-          <GlobeMarkers works={works} routes={routes} onSelectWork={onSelectWork} />
-          <RouteLines routes={routes} />
-        </>
-      )}
     </group>
   );
 }
