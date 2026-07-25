@@ -1,31 +1,65 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
+import { Globe2 } from "lucide-react";
 import { mockWorks } from "@/lib/mock-data";
-import {
-  IcelandScene,
-  TokyoScene,
-  SantoriniScene,
-  AlpsScene,
-} from "./Scenes";
+import type { Route as RouteType } from "@/types";
 
 const GlobeView = dynamic(() => import("@/components/globe/GlobeView"), {
   ssr: false,
   loading: () => null,
 });
 
-// 场景配置：默认是世界地图（NASA图），其他是 SVG 风景场景
-const SCENES = {
-  world: { label: "World Map", type: "image" as const, src: "/textures/earth-day.jpg" },
-  iceland: { label: "Northern Lights", type: "scene" as const, scene: "iceland" },
-  tokyo: { label: "Tokyo Nights", type: "scene" as const, scene: "tokyo" },
-  santorini: { label: "Santorini Sunset", type: "scene" as const, scene: "santorini" },
-  alps: { label: "Golden Alps", type: "scene" as const, scene: "alps" },
-};
+// ──────────────────────────────────────────────────────────
+// 5 个著名地点（World Map + 4 张用户实拍）
+// 照片用真实图片，不要放大撑满（避免模糊）
+// ──────────────────────────────────────────────────────────
+type SceneKey = "world" | "matterhorn" | "trossachs" | "liriver" | "iceland";
 
-// 三个英文 chapter links（底部）
+const LANDMARKS: {
+  key: SceneKey;
+  name: string;
+  subtitle: string;
+  thumb: string;
+}[] = [
+  {
+    key: "world",
+    name: "World Map",
+    subtitle: "NASA · real-time imagery",
+    thumb: "/textures/earth-day.jpg",
+  },
+  {
+    key: "matterhorn",
+    name: "Matterhorn",
+    subtitle: "Zermatt · Switzerland",
+    thumb: "/destinations/matterhorn.jpg",
+  },
+  {
+    key: "trossachs",
+    name: "The Trossachs",
+    subtitle: "Stirlingshire · Scotland",
+    thumb: "/destinations/trossachs.jpg",
+  },
+  {
+    key: "liriver",
+    name: "Li River",
+    subtitle: "Guilin · China",
+    thumb: "/destinations/li-river.jpg",
+  },
+  {
+    key: "iceland",
+    name: "Jökulsárlón",
+    subtitle: "Aurora over glacier lagoon",
+    thumb: "/destinations/iceland.jpg",
+  },
+];
+
+// ──────────────────────────────────────────────────────────
+// 3 个英文 chapter links（底部弹层）
+// ──────────────────────────────────────────────────────────
 type ChapterKey = "wanderlust" | "memories" | "trails";
 const chapters: {
   key: ChapterKey;
@@ -57,37 +91,49 @@ const chapters: {
   },
 ];
 
-// 右侧著名地点（点击切换背景）
-const destinations = [
-  { id: "iceland", name: "Northern Lights", subtitle: "Reykjavík · Iceland" },
-  { id: "alps", name: "Golden Alps", subtitle: "Matterhorn · Switzerland" },
-  { id: "tokyo", name: "Tokyo Nights", subtitle: "Shibuya · Japan" },
-  { id: "santorini", name: "Santorini Sunset", subtitle: "Cyclades · Greece" },
-];
+// ──────────────────────────────────────────────────────────
+// 背景层：5 个场景
+//  - world: NASA earth-day.jpg（v0.6.6-pre 风格：无 filter、无动画、center 对齐）
+//  - 其他 4 个：真实照片，NO Ken Burns / NO scale（保持原图清晰度）
+// ──────────────────────────────────────────────────────────
 
-function SceneLayer({ sceneKey }: { sceneKey: keyof typeof SCENES }) {
-  const scene = SCENES[sceneKey];
-  if (scene.type === "image") {
-    return (
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(${scene.src})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-    );
-  }
-  // SVG 场景
-  if (scene.scene === "iceland") return <IcelandScene />;
-  if (scene.scene === "tokyo") return <TokyoScene />;
-  if (scene.scene === "santorini") return <SantoriniScene />;
-  if (scene.scene === "alps") return <AlpsScene />;
-  return null;
+function WorldBackground() {
+  return (
+    <div
+      className="absolute inset-0"
+      style={{
+        backgroundImage: "url(/textures/earth-day.jpg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    />
+  );
 }
 
-function getStats() {
+function PhotoBackground({ src }: { src: string }) {
+  return (
+    <div
+      className="absolute inset-0"
+      style={{
+        backgroundImage: `url(${src})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    />
+  );
+}
+
+function SceneLayer({ sceneKey }: { sceneKey: SceneKey }) {
+  const landmark = LANDMARKS.find((l) => l.key === sceneKey)!;
+  if (sceneKey === "world") return <WorldBackground />;
+  return <PhotoBackground src={landmark.thumb} />;
+}
+
+// ──────────────────────────────────────────────────────────
+// 真实数据：从 mock + API 拉取
+// ──────────────────────────────────────────────────────────
+
+function getMockStats() {
   const been = mockWorks.filter((w) => w.status === "been_there");
   const countries = new Set(been.map((w) => w.final_country).filter(Boolean));
   const cities = new Set(been.map((w) => w.final_city).filter(Boolean));
@@ -95,13 +141,40 @@ function getStats() {
   return { countries: countries.size, cities: cities.size, spots: spots.size };
 }
 
+// ════════════════════════════════════════════════════════
+// 主页面
+// ════════════════════════════════════════════════════════
+
 export default function CoverPage() {
   const [stats, setStats] = useState({ countries: 0, cities: 0, spots: 0 });
-  const [activeScene, setActiveScene] = useState<keyof typeof SCENES>("world");
+  const [activeScene, setActiveScene] = useState<SceneKey>("world");
   const [openChapter, setOpenChapter] = useState<ChapterKey | null>(null);
+  const [routeCount, setRouteCount] = useState(0);
+  const [countryCount, setCountryCount] = useState(0);
 
   useEffect(() => {
-    setStats(getStats());
+    // Mock 部分（city/spot 从 mock-data 取）
+    setStats(getMockStats());
+
+    // 真实 API 部分（countries、routes 从 /api 取）
+    fetch("/api/routes")
+      .then((r) => (r.ok ? r.json() : { routes: [] }))
+      .then((d) => {
+        const list: RouteType[] = d.routes || [];
+        setRouteCount(list.length);
+      })
+      .catch(() => {});
+
+    fetch("/api/works")
+      .then((r) => (r.ok ? r.json() : { works: [] }))
+      .then((d) => {
+        const works = (d.works || []) as Array<{ final_country?: string }>;
+        const countries = new Set(
+          works.map((w) => w.final_country).filter(Boolean)
+        );
+        setCountryCount(countries.size);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -121,7 +194,7 @@ export default function CoverPage() {
           </motion.div>
         </AnimatePresence>
 
-        {/* 左侧文字加深遮罩 */}
+        {/* 左侧文字加深遮罩（与 v0.6.6-pre 一致） */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -137,7 +210,7 @@ export default function CoverPage() {
               "radial-gradient(ellipse at 25% 35%, rgba(60,100,160,0.15) 0%, transparent 55%), radial-gradient(ellipse at 85% 75%, rgba(120,70,160,0.10) 0%, transparent 60%)",
           }}
         />
-        {/* 微星空（仅在地球默认场景下） */}
+        {/* 微星空（仅在世界地图场景下） */}
         {activeScene === "world" && (
           <div className="absolute inset-0 pointer-events-none">
             {Array.from({ length: 50 }).map((_, i) => (
@@ -160,7 +233,7 @@ export default function CoverPage() {
         )}
       </div>
 
-      {/* ─────── 顶部 nav（中文 plain text） ─────── */}
+      {/* ─────── 顶部 nav（中文 plain text，与 v0.6.6-pre 一致） ─────── */}
       <motion.nav
         initial={{ y: -16, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -199,24 +272,26 @@ export default function CoverPage() {
       </motion.nav>
 
       {/* ─────── 主内容 ─────── */}
-      <div className="relative z-10 h-full flex flex-col justify-center px-10 md:px-20 max-w-[55%]">
+      <div className="relative z-10 h-full flex flex-col justify-center px-10 md:px-20 max-w-[60%]">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.5 }}
         >
+          {/* 顶部小标（v0.6.6-pre 风格） */}
           <div className="text-[10px] tracking-[0.5em] uppercase text-white/40 mb-5">
             A WORLD OF YOUR OWN
           </div>
 
+          {/* 主标题：v0.6.9 文案 + v0.6.6-pre 排版 + 中等字号 */}
           <h1
-            className="text-7xl md:text-8xl lg:text-[7rem] font-light text-white leading-[0.95] mb-5"
+            className="text-6xl md:text-7xl font-light text-white leading-[1.05] mb-5"
             style={{
               fontFamily: '"Playfair Display", "Noto Serif SC", Georgia, serif',
-              letterSpacing: "-0.03em",
+              letterSpacing: "-0.025em",
             }}
           >
-            A Journey
+            Every Saved Place
             <br />
             <span
               style={{
@@ -226,13 +301,14 @@ export default function CoverPage() {
                 fontStyle: "italic",
               }}
             >
-              Begins Within
+              Begins a New Journey
             </span>
-            <span className="text-white/30 text-4xl md:text-5xl align-top ml-2">.</span>
+            <span className="text-white/30 text-3xl md:text-4xl align-top ml-2">.</span>
           </h1>
 
+          {/* 中文大标（v0.6.6-pre 风格） */}
           <div
-            className="text-3xl md:text-4xl mb-7"
+            className="text-3xl md:text-4xl mb-6"
             style={{
               fontFamily: '"Noto Serif SC", serif',
               fontWeight: 300,
@@ -243,40 +319,88 @@ export default function CoverPage() {
             旅途
           </div>
 
-          <p className="text-white/45 text-sm md:text-base leading-relaxed tracking-wider max-w-md mb-12">
+          {/* 中文副标（v0.6.6-pre 文案） */}
+          <p className="text-white/50 text-sm md:text-base leading-relaxed tracking-wider max-w-md mb-6">
             一座属于你的微型世界地图。
             <br />
             把每一份心之所向变成清晰的远方。
           </p>
 
-          {/* 输入框 */}
-          <div className="flex items-center gap-3 max-w-md mb-10">
-            <div
-              className="flex-1 rounded-full px-6 py-3.5 flex items-center gap-3"
-              style={{
-                background: "rgba(255,255,255,0.06)",
-                backdropFilter: "blur(20px)",
-                border: "1px solid rgba(255,255,255,0.10)",
-              }}
-            >
-              <input
-                type="text"
-                placeholder="下一站想去哪里？"
-                className="bg-transparent outline-none text-white/85 text-sm flex-1 placeholder:text-white/30"
-              />
-              <button
-                className="px-5 py-2 rounded-full text-sm text-white font-medium cursor-not-allowed opacity-60"
-                style={{
-                  background: "rgba(255,255,255,0.92)",
-                  color: "#0a1424",
-                }}
-              >
-                开始
-              </button>
-            </div>
-          </div>
+          {/* 英文副标（用户要求保留） */}
+          <p className="text-white/60 text-xs md:text-sm leading-relaxed max-w-md mb-8">
+            Upload travel inspiration from anywhere.
+            <br />
+            AI finds the place. You start the adventure.
+          </p>
 
-          {/* 底部：三个英文 chapter 链接（点击弹地点） */}
+          {/* 上传截图框（v0.6.7 风格）→ 跳转到首页 #upload-anchor */}
+          <Link
+            href="/#upload-anchor"
+            className="group block max-w-md mb-8 rounded-2xl px-5 py-4 cursor-pointer hover:scale-[1.015] transition-all"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1.5px dashed rgba(255,255,255,0.22)",
+              backdropFilter: "blur(16px)",
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-base"
+                style={{ background: "rgba(255,255,255,0.10)" }}
+              >
+                ↑
+              </div>
+              <div className="text-left flex-1">
+                <div className="text-white/90 text-sm font-medium">
+                  Drop screenshot here
+                </div>
+                <div className="text-white/45 text-[11px] mt-0.5">
+                  点击跳转上传截图页
+                </div>
+              </div>
+              <div className="text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all">
+                →
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2.5 text-[10px] text-white/30">
+              <span>📸 Xiaohongshu</span>
+              <span className="text-white/15">·</span>
+              <span>🎵 TikTok</span>
+              <span className="text-white/15">·</span>
+              <span>📷 Instagram</span>
+            </div>
+          </Link>
+
+          {/* 底部统计行：3 项数据 + 实时同步 */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
+            className="flex items-center gap-12 mb-8"
+          >
+            {[
+              { value: stats.countries || countryCount, label: "Destinations Saved" },
+              { value: countryCount, label: "Countries" },
+              { value: routeCount, label: "Planned Routes" },
+            ].map((s, i) => (
+              <div key={i} className="text-center">
+                <div
+                  className="text-3xl md:text-4xl font-light text-white"
+                  style={{
+                    fontFamily: '"Playfair Display", serif',
+                    textShadow: "0 2px 16px rgba(0,0,0,0.35)",
+                  }}
+                >
+                  {s.value}
+                </div>
+                <div className="text-[9px] tracking-[0.3em] uppercase text-white/45 mt-1.5">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* 底部：三个英文 chapter 链接（v0.6.6-pre 风格） */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -307,7 +431,7 @@ export default function CoverPage() {
         </motion.div>
       </div>
 
-      {/* ─────── 右上统计卡 ─────── */}
+      {/* ─────── 右上统计卡（JOURNEY SO FAR，从 mock 取） ─────── */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -339,137 +463,72 @@ export default function CoverPage() {
         </div>
       </motion.div>
 
-      {/* ─────── 右侧著名地点列表（点击 → 切换背景） ─────── */}
+      {/* ─────── 右侧著名地点列表（5 个：World Map + 4 张用户实拍） ─────── */}
       <motion.div
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.8, delay: 1.4 }}
-        className="absolute right-8 top-1/2 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2 max-w-[20rem] pointer-events-none"
+        className="absolute right-8 top-1/2 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2 max-w-[17rem] pointer-events-none"
       >
-        <div className="text-[10px] tracking-[0.4em] uppercase text-white/35 mb-2 pointer-events-auto">
-          FEATURED LANDMARKS
+        <div className="flex items-center gap-2 mb-2 px-3 pointer-events-auto">
+          <Globe2 size={11} className="text-white/40" />
+          <div className="text-[10px] tracking-[0.4em] uppercase text-white/45">
+            FEATURED · 5 LANDS
+          </div>
         </div>
 
-        {(["world", ...Object.keys(SCENES).slice(1)] as Array<keyof typeof SCENES>).map(
-          (sceneId) => {
-            const scene = SCENES[sceneId];
-            const isActive = activeScene === sceneId;
-            return (
-              <button
-                key={sceneId}
-                onClick={() => setActiveScene(sceneId)}
-                className="group flex items-center gap-3 p-3 rounded-xl text-left pointer-events-auto transition-all"
+        {LANDMARKS.map((landmark) => {
+          const isActive = activeScene === landmark.key;
+          return (
+            <button
+              key={landmark.key}
+              onClick={() => setActiveScene(landmark.key)}
+              className="group flex items-center gap-3 p-2.5 rounded-xl text-left pointer-events-auto transition-all duration-300"
+              style={{
+                background: isActive
+                  ? "rgba(255,255,255,0.10)"
+                  : "rgba(255,255,255,0.025)",
+                border: isActive
+                  ? "1px solid rgba(255,255,255,0.22)"
+                  : "1px solid rgba(255,255,255,0.07)",
+                transform: isActive ? "translateX(-6px)" : "translateX(0)",
+                backdropFilter: "blur(20px)",
+              }}
+            >
+              <div
+                className="w-11 h-11 rounded-lg shrink-0 border overflow-hidden"
                 style={{
-                  background: isActive
-                    ? "rgba(255,255,255,0.08)"
-                    : "rgba(255,255,255,0.025)",
-                  border: isActive
-                    ? "1px solid rgba(255,255,255,0.15)"
-                    : "1px solid rgba(255,255,255,0.06)",
+                  backgroundImage: `url('${landmark.thumb}')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  borderColor: "rgba(255,255,255,0.12)",
                 }}
-              >
+              />
+              <div className="flex-1 min-w-0">
                 <div
-                  className="w-10 h-10 rounded-lg shrink-0 relative overflow-hidden"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.10)",
-                  }}
+                  className={`text-[13px] truncate font-medium ${
+                    isActive ? "text-white" : "text-white/85 group-hover:text-white"
+                  }`}
                 >
-                  {/* 不同场景用不同背景模拟缩略图 */}
-                  {sceneId === "world" && (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        backgroundImage: "url(/textures/earth-day.jpg)",
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                      }}
-                    />
-                  )}
-                  {sceneId === "iceland" && (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(160deg, #0a1f1a 0%, #0d4a25 50%, #1a3a5c 100%)",
-                      }}
-                    />
-                  )}
-                  {sceneId === "tokyo" && (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(165deg, #16114a 0%, #52155a 50%, #83206a 100%)",
-                      }}
-                    />
-                  )}
-                  {sceneId === "santorini" && (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(160deg, #256387 0%, #f2994a 50%, #f8c977 100%)",
-                      }}
-                    />
-                  )}
-                  {sceneId === "alps" && (
-                    <div
-                      className="absolute inset-0"
-                      style={{
-                        background:
-                          "linear-gradient(155deg, #6b3685 0%, #d97e3b 75%, #b8421e 100%)",
-                      }}
-                    />
-                  )}
+                  {landmark.name}
                 </div>
-
-                <div className="flex-1 min-w-0">
-                  <div
-                    className={`text-sm truncate transition-colors ${
-                      isActive ? "text-white" : "text-white/85 group-hover:text-white"
-                    }`}
-                  >
-                    {scene.label}
-                  </div>
-                  <div className="text-[10px] text-white/40 truncate mt-0.5">
-                    {sceneId === "world"
-                      ? "Real-time NASA imagery"
-                      : sceneId === "iceland"
-                        ? "Reykjavík · Iceland"
-                        : sceneId === "alps"
-                          ? "Matterhorn · Switzerland"
-                          : sceneId === "tokyo"
-                            ? "Shibuya · Japan"
-                            : "Cyclades · Greece"}
-                  </div>
+                <div className="text-white/45 text-[10px] truncate">
+                  {landmark.subtitle}
                 </div>
-
-                {isActive ? (
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                ) : (
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    className="text-white/30 group-hover:text-white/70 transition-colors shrink-0"
-                  >
-                    <path
-                      d="M9 6l6 6-6 6"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )}
-              </button>
-            );
-          }
-        )}
+              </div>
+              {isActive ? (
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              ) : (
+                <div className="text-white/30 group-hover:text-white/70 transition-colors text-sm">
+                  ›
+                </div>
+              )}
+            </button>
+          );
+        })}
       </motion.div>
 
-      {/* ─────── 底部 footer ─────── */}
+      {/* ─────── 底部 footer（v0.6.6-pre 风格） ─────── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -507,6 +566,10 @@ export default function CoverPage() {
   );
 }
 
+// ════════════════════════════════════════════════════════
+// Chapter 弹层（沿用 v0.6.6-pre）
+// ════════════════════════════════════════════════════════
+
 function ChapterPopup({
   chapter,
   onClose,
@@ -539,7 +602,6 @@ function ChapterPopup({
           backdropFilter: "blur(40px)",
         }}
       >
-        {/* 关闭按钮 */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 h-8 w-8 rounded-full bg-white/8 hover:bg-white/15 border border-white/15 text-white/70 hover:text-white transition-all flex items-center justify-center text-sm"
@@ -548,7 +610,6 @@ function ChapterPopup({
         </button>
 
         <div className="p-8">
-          {/* 标题 */}
           <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-2">
             {chapter.label}
           </div>
@@ -564,7 +625,6 @@ function ChapterPopup({
             </span>
           </div>
 
-          {/* 地点卡片网格 */}
           {items.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {items.map((work, i) => (
@@ -600,11 +660,8 @@ function ChapterPopup({
               ))}
             </div>
           ) : (
-            <div className="rounded-2xl p-12 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
-              <p className="text-white/40 text-sm">暂无此地目的地</p>
-              <p className="text-white/30 text-xs mt-2">
-                下一个远方，由你来标记
-              </p>
+            <div className="text-center text-white/40 py-12 text-sm">
+              暂无内容
             </div>
           )}
         </div>
