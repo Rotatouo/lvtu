@@ -4,190 +4,87 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { mockWorks } from "@/lib/mock-data";
+import {
+  IcelandScene,
+  TokyoScene,
+  SantoriniScene,
+  AlpsScene,
+} from "./Scenes";
 
 const GlobeView = dynamic(() => import("@/components/globe/GlobeView"), {
   ssr: false,
   loading: () => null,
 });
 
-// ─────── 背景场景（点击右侧地点切换） ───────
+// 场景配置：默认是世界地图（NASA图），其他是 SVG 风景场景
 const SCENES = {
-  world: {
-    label: "World Map",
-    type: "image" as const,
-    src: "/textures/earth-day.jpg",
-    gradient: "",
-  },
-  iceland: {
-    label: "Northern Lights",
-    type: "gradient" as const,
-    background:
-      "linear-gradient(170deg, #050b18 0%, #0a1f1a 25%, #0d4a25 50%, #1a3a5c 78%, #0a1224 100%)",
-    accent: "rgba(34, 211, 167, 0.4)", // aurora green
-  },
-  tokyo: {
-    label: "Tokyo Nights",
-    type: "gradient" as const,
-    background:
-      "linear-gradient(165deg, #06081a 0%, #16114a 35%, #52155a 70%, #83206a 90%, #1e1238 100%)",
-    accent: "rgba(236, 72, 153, 0.35)", // neon pink
-  },
-  santorini: {
-    label: "Santorini Sunset",
-    type: "gradient" as const,
-    background:
-      "linear-gradient(160deg, #0c2440 0%, #256387 30%, #f2994a 65%, #f8c977 85%, #6a3a23 100%)",
-    accent: "rgba(251, 191, 36, 0.4)", // amber
-  },
-  alps: {
-    label: "Golden Alps",
-    type: "gradient" as const,
-    background:
-      "linear-gradient(155deg, #1a1a2e 0%, #2c3370 20%, #6b3685 45%, #d97e3b 75%, #b8421e 100%)",
-    accent: "rgba(245, 158, 11, 0.4)", // amber
-  },
+  world: { label: "World Map", type: "image" as const, src: "/textures/earth-day.jpg" },
+  iceland: { label: "Northern Lights", type: "scene" as const, scene: "iceland" },
+  tokyo: { label: "Tokyo Nights", type: "scene" as const, scene: "tokyo" },
+  santorini: { label: "Santorini Sunset", type: "scene" as const, scene: "santorini" },
+  alps: { label: "Golden Alps", type: "scene" as const, scene: "alps" },
 };
 
-// 著名地点（用于右侧卡片 + 底部陈列）
+// 三个英文 chapter links（底部）
+type ChapterKey = "wanderlust" | "memories" | "trails";
+const chapters: {
+  key: ChapterKey;
+  label: string;
+  cn: string;
+  color: string;
+  filter: (w: typeof mockWorks[number]) => boolean;
+}[] = [
+  {
+    key: "wanderlust",
+    label: "THE WANDERLUST",
+    cn: "想去的地方",
+    color: "bg-cyan-400",
+    filter: (w) => w.status === "want_to_go",
+  },
+  {
+    key: "memories",
+    label: "MEMORIES MADE",
+    cn: "去过的地方",
+    color: "bg-amber-400",
+    filter: (w) => w.status === "been_there",
+  },
+  {
+    key: "trails",
+    label: "PRESENT TRAILS",
+    cn: "在路上",
+    color: "bg-violet-400",
+    filter: () => true,
+  },
+];
+
+// 右侧著名地点（点击切换背景）
 const destinations = [
-  { id: "iceland", name: "Golden Alps", subtitle: "Matterhorn · Switzerland" },
+  { id: "iceland", name: "Northern Lights", subtitle: "Reykjavík · Iceland" },
   { id: "alps", name: "Golden Alps", subtitle: "Matterhorn · Switzerland" },
   { id: "tokyo", name: "Tokyo Nights", subtitle: "Shibuya · Japan" },
   { id: "santorini", name: "Santorini Sunset", subtitle: "Cyclades · Greece" },
 ];
 
-// SVG 风景装饰（每场景不同的剪影）
-function SceneSilhouette({ sceneId }: { sceneId: string }) {
-  if (sceneId === "world") return null;
-  return (
-    <div className="absolute inset-0 overflow-hidden">
-      {/* Aurora 效果 / 城市灯 / 山影 */}
-      {sceneId === "iceland" && (
-        <>
-          {/* 极光波纹 */}
-          <div
-            className="absolute left-0 right-0"
-            style={{
-              top: "20%",
-              height: "40%",
-              background:
-                "linear-gradient(180deg, rgba(34,211,167,0.0) 0%, rgba(34,211,167,0.25) 35%, rgba(74,222,128,0.4) 50%, rgba(34,211,167,0.2) 70%, transparent 100%)",
-              filter: "blur(40px)",
-              transform: "rotate(-3deg)",
-            }}
-          />
-          {/* 山影 */}
-          <svg
-            className="absolute bottom-0 left-0 right-0 w-full"
-            viewBox="0 0 1200 250"
-            preserveAspectRatio="none"
-            style={{ height: "35vh" }}
-          >
-            <polygon
-              points="0,250 0,140 80,80 160,120 240,40 320,90 400,30 480,110 560,60 640,100 720,50 800,90 880,40 960,80 1040,60 1120,90 1200,70 1200,250"
-              fill="rgba(0,0,0,0.55)"
-            />
-            <polygon
-              points="0,250 0,180 100,140 220,170 340,130 460,170 580,140 700,170 820,130 940,170 1060,140 1200,170 1200,250"
-              fill="rgba(0,0,0,0.35)"
-            />
-          </svg>
-        </>
-      )}
-      {sceneId === "tokyo" && (
-        <>
-          {/* 霓虹光晕 */}
-          <div
-            className="absolute right-1/4 top-1/3 w-1/2 h-1/2 rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(236,72,153,0.4) 0%, transparent 60%)",
-              filter: "blur(60px)",
-            }}
-          />
-          {/* 城市天际线 */}
-          <svg
-            className="absolute bottom-0 left-0 right-0 w-full"
-            viewBox="0 0 1200 250"
-            preserveAspectRatio="none"
-            style={{ height: "40vh" }}
-          >
-            <polygon
-              points="0,250 0,200 60,160 100,180 100,80 140,80 140,140 180,140 180,200 240,200 240,120 280,120 280,180 320,180 320,60 360,60 360,140 400,140 400,100 440,100 440,170 480,170 480,40 520,40 520,130 560,130 560,90 600,90 600,150 640,150 640,70 680,70 680,120 720,120 720,50 760,50 760,110 800,110 800,80 840,80 840,150 880,150 880,100 920,100 920,160 960,160 960,60 1000,60 1000,130 1040,130 1040,90 1080,90 1080,170 1120,170 1120,100 1160,100 1160,180 1200,180 1200,250"
-              fill="rgba(0,0,0,0.6)"
-            />
-            <polygon
-              points="0,250 0,210 80,200 160,220 240,200 320,210 400,190 480,210 560,200 640,220 720,200 800,210 880,190 960,210 1040,200 1120,220 1200,200 1200,250"
-              fill="rgba(0,0,0,0.3)"
-            />
-          </svg>
-        </>
-      )}
-      {sceneId === "santorini" && (
-        <>
-          {/* 阳光光晕 */}
-          <div
-            className="absolute right-1/3 top-1/4 w-1/3 h-1/3 rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(251,191,36,0.5) 0%, transparent 70%)",
-              filter: "blur(50px)",
-            }}
-          />
-          {/* 海面 + 白色穹顶 */}
-          <svg
-            className="absolute bottom-0 left-0 right-0 w-full"
-            viewBox="0 0 1200 250"
-            preserveAspectRatio="none"
-            style={{ height: "35vh" }}
-          >
-            {/* 海水 */}
-            <rect x="0" y="180" width="1200" height="70" fill="rgba(20,40,70,0.5)" />
-            {/* 白色穹顶剪影 */}
-            <ellipse cx="200" cy="180" rx="40" ry="35" fill="rgba(255,255,255,0.4)" />
-            <rect x="160" y="180" width="80" height="50" fill="rgba(255,255,255,0.35)" />
-            <ellipse cx="500" cy="170" rx="50" ry="40" fill="rgba(255,255,255,0.45)" />
-            <rect x="450" y="170" width="100" height="60" fill="rgba(255,255,255,0.4)" />
-            <ellipse cx="850" cy="175" rx="45" ry="38" fill="rgba(255,255,255,0.4)" />
-            <rect x="805" y="175" width="90" height="55" fill="rgba(255,255,255,0.35)" />
-            {/* 远处小岛 */}
-            <ellipse cx="1050" cy="195" rx="60" ry="12" fill="rgba(255,255,255,0.2)" />
-          </svg>
-        </>
-      )}
-      {sceneId === "alps" && (
-        <>
-          {/* 落日光晕 */}
-          <div
-            className="absolute left-1/2 top-1/4 w-1/2 h-1/3 rounded-full"
-            style={{
-              background:
-                "radial-gradient(circle, rgba(245,158,11,0.4) 0%, transparent 70%)",
-              filter: "blur(60px)",
-            }}
-          />
-          {/* 山影 */}
-          <svg
-            className="absolute bottom-0 left-0 right-0 w-full"
-            viewBox="0 0 1200 300"
-            preserveAspectRatio="none"
-            style={{ height: "45vh" }}
-          >
-            <polygon
-              points="0,300 0,180 80,140 160,100 240,60 320,120 400,40 480,100 560,80 640,40 720,100 800,60 880,120 960,80 1040,40 1120,100 1200,140 1200,300"
-              fill="rgba(0,0,0,0.55)"
-            />
-            <polygon
-              points="0,300 0,220 100,200 200,180 300,210 400,190 500,220 600,180 700,200 800,180 900,210 1000,190 1100,200 1200,180 1200,300"
-              fill="rgba(0,0,0,0.35)"
-            />
-            {/* 金色阳光反射 */}
-            <ellipse cx="600" cy="240" rx="200" ry="6" fill="rgba(245,158,11,0.25)" />
-          </svg>
-        </>
-      )}
-    </div>
-  );
+function SceneLayer({ sceneKey }: { sceneKey: keyof typeof SCENES }) {
+  const scene = SCENES[sceneKey];
+  if (scene.type === "image") {
+    return (
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `url(${scene.src})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+    );
+  }
+  // SVG 场景
+  if (scene.scene === "iceland") return <IcelandScene />;
+  if (scene.scene === "tokyo") return <TokyoScene />;
+  if (scene.scene === "santorini") return <SantoriniScene />;
+  if (scene.scene === "alps") return <AlpsScene />;
+  return null;
 }
 
 function getStats() {
@@ -201,6 +98,7 @@ function getStats() {
 export default function CoverPage() {
   const [stats, setStats] = useState({ countries: 0, cities: 0, spots: 0 });
   const [activeScene, setActiveScene] = useState<keyof typeof SCENES>("world");
+  const [openChapter, setOpenChapter] = useState<ChapterKey | null>(null);
 
   useEffect(() => {
     setStats(getStats());
@@ -208,7 +106,7 @@ export default function CoverPage() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
-      {/* ─────── 背景层（带过渡） ─────── */}
+      {/* ─────── 背景层 ─────── */}
       <div className="absolute inset-0">
         <AnimatePresence mode="popLayout">
           <motion.div
@@ -218,17 +116,8 @@ export default function CoverPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2, ease: [0.4, 0, 0.2, 1] }}
             className="absolute inset-0"
-            style={
-              SCENES[activeScene].type === "image"
-                ? {
-                    backgroundImage: `url(${SCENES[activeScene].src})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center",
-                  }
-                : { background: SCENES[activeScene].background }
-            }
           >
-            {activeScene !== "world" && <SceneSilhouette sceneId={activeScene} />}
+            <SceneLayer sceneKey={activeScene} />
           </motion.div>
         </AnimatePresence>
 
@@ -271,7 +160,7 @@ export default function CoverPage() {
         )}
       </div>
 
-      {/* ─────── 顶部 nav（中文 plain text，无 handler） ─────── */}
+      {/* ─────── 顶部 nav（中文 plain text） ─────── */}
       <motion.nav
         initial={{ y: -16, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -292,7 +181,6 @@ export default function CoverPage() {
           </span>
         </div>
 
-        {/* 中央中文导航（plain text，无 handler，无玻璃胶囊） */}
         <div className="flex items-center gap-8">
           {["世界地图", "旅程记录", "探索灵感", "关于"].map((t) => (
             <a
@@ -300,14 +188,11 @@ export default function CoverPage() {
               className="relative text-white/70 hover:text-white/95 text-sm cursor-pointer transition-colors duration-200 group"
             >
               {t}
-              <span
-                className="absolute -bottom-1 left-0 h-px bg-white/60 transition-all duration-300 w-0 group-hover:w-full"
-              />
+              <span className="absolute -bottom-1 left-0 h-px bg-white/60 transition-all duration-300 w-0 group-hover:w-full" />
             </a>
           ))}
         </div>
 
-        {/* 右侧：登录按钮（保留玻璃药丸样式，与导航区分） */}
         <button className="px-5 py-2 rounded-full bg-white/8 hover:bg-white/12 backdrop-blur-md border border-white/10 text-white/85 text-sm transition-all">
           登录
         </button>
@@ -364,7 +249,7 @@ export default function CoverPage() {
             把每一份心之所向变成清晰的远方。
           </p>
 
-          {/* 输入框（去掉 📍，无 handler） */}
+          {/* 输入框 */}
           <div className="flex items-center gap-3 max-w-md mb-10">
             <div
               className="flex-1 rounded-full px-6 py-3.5 flex items-center gap-3"
@@ -380,7 +265,7 @@ export default function CoverPage() {
                 className="bg-transparent outline-none text-white/85 text-sm flex-1 placeholder:text-white/30"
               />
               <button
-                className="px-5 py-2 rounded-full text-sm text-white font-medium transition-all hover:scale-105 cursor-not-allowed opacity-60"
+                className="px-5 py-2 rounded-full text-sm text-white font-medium cursor-not-allowed opacity-60"
                 style={{
                   background: "rgba(255,255,255,0.92)",
                   color: "#0a1424",
@@ -391,28 +276,30 @@ export default function CoverPage() {
             </div>
           </div>
 
-          {/* 底部：著名地点直接陈列（替换原三个章节链接） */}
+          {/* 底部：三个英文 chapter 链接（点击弹地点） */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 1.2 }}
-            className="space-y-3"
           >
-            <div className="text-[10px] tracking-[0.4em] uppercase text-white/30">
+            <div className="text-[10px] tracking-[0.4em] uppercase text-white/30 mb-3">
               STORIES CURATED
             </div>
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-              {destinations.map((d, i) => (
-                <span
-                  key={d.id + d.name}
-                  className="flex items-center gap-2 group"
-                >
-                  <span
-                    className="h-1 w-1 rounded-full bg-white/30 group-hover:bg-white/60 transition-colors"
-                  />
-                  <span className="text-white/55 group-hover:text-white/85 transition-colors cursor-default">
-                    {d.name}
-                  </span>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] tracking-[0.3em] uppercase">
+              {chapters.map((ch, i) => (
+                <span key={ch.key} className="flex items-center gap-x-5">
+                  <button
+                    onClick={() => setOpenChapter(ch.key)}
+                    className="flex items-center gap-2 group text-white/55 hover:text-white/85 transition-colors"
+                  >
+                    <span
+                      className={`h-1 w-1 rounded-full ${ch.color} group-hover:scale-150 transition-transform`}
+                    />
+                    {ch.label}
+                  </button>
+                  {i < chapters.length - 1 && (
+                    <span className="text-white/15">·</span>
+                  )}
                 </span>
               ))}
             </div>
@@ -452,7 +339,7 @@ export default function CoverPage() {
         </div>
       </motion.div>
 
-      {/* ─────── 右侧著名地点探索列表（点击 → 切换背景） ─────── */}
+      {/* ─────── 右侧著名地点列表（点击 → 切换背景） ─────── */}
       <motion.div
         initial={{ opacity: 0, x: 30 }}
         animate={{ opacity: 1, x: 0 }}
@@ -463,7 +350,6 @@ export default function CoverPage() {
           FEATURED LANDMARKS
         </div>
 
-        {/* 五个：世界地图 + 4 个著名地点 */}
         {(["world", ...Object.keys(SCENES).slice(1)] as Array<keyof typeof SCENES>).map(
           (sceneId) => {
             const scene = SCENES[sceneId];
@@ -482,24 +368,59 @@ export default function CoverPage() {
                     : "1px solid rgba(255,255,255,0.06)",
                 }}
               >
-                {/* 小缩略图 */}
                 <div
                   className="w-10 h-10 rounded-lg shrink-0 relative overflow-hidden"
                   style={{
-                    background:
-                      scene.type === "image"
-                        ? `url(${scene.src}) center/cover`
-                        : scene.background,
                     border: "1px solid rgba(255,255,255,0.10)",
                   }}
                 >
-                  <div
-                    className="absolute inset-0"
-                    style={{
-                      background:
-                        "radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent 60%)",
-                    }}
-                  />
+                  {/* 不同场景用不同背景模拟缩略图 */}
+                  {sceneId === "world" && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        backgroundImage: "url(/textures/earth-day.jpg)",
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    />
+                  )}
+                  {sceneId === "iceland" && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(160deg, #0a1f1a 0%, #0d4a25 50%, #1a3a5c 100%)",
+                      }}
+                    />
+                  )}
+                  {sceneId === "tokyo" && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(165deg, #16114a 0%, #52155a 50%, #83206a 100%)",
+                      }}
+                    />
+                  )}
+                  {sceneId === "santorini" && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(160deg, #256387 0%, #f2994a 50%, #f8c977 100%)",
+                      }}
+                    />
+                  )}
+                  {sceneId === "alps" && (
+                    <div
+                      className="absolute inset-0"
+                      style={{
+                        background:
+                          "linear-gradient(155deg, #6b3685 0%, #d97e3b 75%, #b8421e 100%)",
+                      }}
+                    />
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
@@ -562,6 +483,16 @@ export default function CoverPage() {
         <span>Personal Universe</span>
       </motion.div>
 
+      {/* ─────── Chapter 弹层 ─────── */}
+      <AnimatePresence>
+        {openChapter && (
+          <ChapterPopup
+            chapter={chapters.find((c) => c.key === openChapter)!}
+            onClose={() => setOpenChapter(null)}
+          />
+        )}
+      </AnimatePresence>
+
       <style jsx global>{`
         @keyframes twinkle {
           from {
@@ -573,5 +504,111 @@ export default function CoverPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+function ChapterPopup({
+  chapter,
+  onClose,
+}: {
+  chapter: (typeof chapters)[number];
+  onClose: () => void;
+}) {
+  const items = mockWorks.filter(chapter.filter).slice(0, 8);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="fixed inset-0 z-50 flex items-end justify-center pb-24 md:pb-32"
+      style={{ background: "rgba(5,8,15,0.65)", backdropFilter: "blur(20px)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 60, opacity: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative max-w-3xl w-full mx-6 rounded-3xl overflow-hidden"
+        style={{
+          background: "rgba(10,15,25,0.85)",
+          border: "1px solid rgba(255,255,255,0.10)",
+          backdropFilter: "blur(40px)",
+        }}
+      >
+        {/* 关闭按钮 */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 h-8 w-8 rounded-full bg-white/8 hover:bg-white/15 border border-white/15 text-white/70 hover:text-white transition-all flex items-center justify-center text-sm"
+        >
+          ✕
+        </button>
+
+        <div className="p-8">
+          {/* 标题 */}
+          <div className="text-[10px] tracking-[0.4em] uppercase text-white/40 mb-2">
+            {chapter.label}
+          </div>
+          <div className="flex items-baseline gap-4 mb-6">
+            <h3
+              className="text-3xl font-light text-white/95"
+              style={{ fontFamily: '"Playfair Display", "Noto Serif SC", serif' }}
+            >
+              {chapter.cn}
+            </h3>
+            <span className="text-sm text-white/40">
+              {items.length} 个目的地
+            </span>
+          </div>
+
+          {/* 地点卡片网格 */}
+          {items.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {items.map((work, i) => (
+                <motion.div
+                  key={work.id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.06 * i }}
+                  className="rounded-2xl p-4 border border-white/8 hover:border-white/20 transition-colors"
+                  style={{ background: "rgba(255,255,255,0.03)" }}
+                >
+                  <div className="text-[10px] tracking-wider uppercase text-white/40 mb-1">
+                    {work.final_country}
+                  </div>
+                  <div className="text-white/90 text-base font-medium mb-0.5">
+                    {work.final_attraction || work.final_city}
+                  </div>
+                  <div className="text-white/50 text-xs">{work.final_city}</div>
+                  <div className="mt-3 inline-flex items-center gap-1.5 text-[10px] tracking-wider uppercase">
+                    {work.status === "been_there" ? (
+                      <>
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <span className="text-emerald-300/80">已抵达</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                        <span className="text-cyan-300/80">正启程</span>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl p-12 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
+              <p className="text-white/40 text-sm">暂无此地目的地</p>
+              <p className="text-white/30 text-xs mt-2">
+                下一个远方，由你来标记
+              </p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }
