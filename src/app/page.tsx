@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Search, X, LayoutGrid, Map, BookOpen, BarChart3, Image, Sparkles, Route } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Work, UploadStatus, Route as RouteType } from "@/types";
 import UploadZone from "@/components/UploadZone";
 import CardGrid from "@/components/CardGrid";
@@ -13,6 +14,14 @@ import ImageViewer from "@/components/ImageViewer";
 import EmptyState from "@/components/EmptyState";
 import UploadResultModal from "@/components/UploadResultModal";
 import JournalEditor from "@/components/JournalEditor";
+import LiquidCursor from "@/components/home/LiquidCursor";
+import {
+  MatterhornScene,
+  TrossachsScene,
+  LiRiverScene,
+  IcelandAuroraScene,
+  WorldMapScene,
+} from "@/components/home/SceneBackgrounds";
 
 const GlobeView = dynamic(() => import("@/components/globe/GlobeView"), {
   ssr: false,
@@ -20,7 +29,7 @@ const GlobeView = dynamic(() => import("@/components/globe/GlobeView"), {
 });
 
 // ════════════════════════════════════════════════════════
-// Atlas 风格 4 面板工作流展示（mockup 视觉）
+// Atlas 4 面板工作流
 // ════════════════════════════════════════════════════════
 
 function AtlasWorkflowShowcase() {
@@ -73,17 +82,7 @@ function AtlasWorkflowShowcase() {
   );
 }
 
-function PanelFrame({
-  num,
-  title,
-  cn,
-  children,
-}: {
-  num: string;
-  title: string;
-  cn: string;
-  children: React.ReactNode;
-}) {
+function PanelFrame({ num, title, cn, children }: { num: string; title: string; cn: string; children: React.ReactNode }) {
   return (
     <div
       className="rounded-2xl overflow-hidden relative group"
@@ -217,20 +216,8 @@ function Panel2Mockup() {
         />
         <div className="absolute" style={{ left: "70%", top: "38%" }}>
           <div className="relative">
-            <div
-              className="absolute inset-0 rounded-full bg-amber-400 animate-ping opacity-40"
-              style={{ width: "16px", height: "16px" }}
-            />
+            <div className="absolute inset-0 rounded-full bg-amber-400 animate-ping opacity-40" style={{ width: "16px", height: "16px" }} />
             <div className="relative w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg" />
-          </div>
-        </div>
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-          <div className="flex gap-1 text-[9px] text-white/50">
-            <span className="px-1.5 py-0.5 rounded bg-white/10">2D</span>
-            <span className="px-1.5 py-0.5 rounded bg-white/10">+</span>
-          </div>
-          <div className="text-[9px] text-white/50">
-            <span className="px-1.5 py-0.5 rounded bg-white/10">−</span>
           </div>
         </div>
       </div>
@@ -261,7 +248,7 @@ function Panel3Mockup() {
           Sensō-ji Temple
         </div>
         <div className="text-[9px] text-white/50 leading-relaxed line-clamp-3">
-          Sensō-ji 是东京最古老的佛教寺院，位于浅草。东京浅草寺创建于 628 年…
+          Sensō-ji 是东京最古老的佛教寺院，创建于 628 年…
         </div>
         <div className="flex gap-1.5 pt-1">
           <span className="text-[8px] px-1.5 py-0.5 rounded bg-white/8 text-white/60">Temple</span>
@@ -310,22 +297,63 @@ function Panel4Mockup() {
         ))}
       </div>
       <div className="flex justify-between text-[9px]">
-        <div>
-          <span className="text-white/85 font-medium">8 Days</span>
-          <span className="text-white/40 ml-1">Duration</span>
-        </div>
-        <div>
-          <span className="text-white/85 font-medium">4</span>
-          <span className="text-white/40 ml-1">Stops</span>
-        </div>
-        <div>
-          <span className="text-white/85 font-medium">1.2k km</span>
-          <span className="text-white/40 ml-1">Distance</span>
-        </div>
+        <div><span className="text-white/85 font-medium">8 Days</span><span className="text-white/40 ml-1">Duration</span></div>
+        <div><span className="text-white/85 font-medium">4</span><span className="text-white/40 ml-1">Stops</span></div>
+        <div><span className="text-white/85 font-medium">1.2k km</span><span className="text-white/40 ml-1">Distance</span></div>
       </div>
     </div>
   );
 }
+
+// ════════════════════════════════════════════════════════
+// 著名地点场景配置（依据用户提供的 4 张照片）
+// ════════════════════════════════════════════════════════
+
+type SceneKey = "world" | "matterhorn" | "trossachs" | "liriver" | "iceland";
+
+const LANDMARKS: {
+  key: SceneKey;
+  name: string;
+  subtitle: string;
+  thumb: string;
+  sceneComponent: () => React.ReactNode;
+}[] = [
+  {
+    key: "world",
+    name: "World Map",
+    subtitle: "Real-time NASA imagery",
+    thumb: "url('/textures/earth-day.jpg')",
+    sceneComponent: () => <WorldMapScene />,
+  },
+  {
+    key: "matterhorn",
+    name: "Matterhorn",
+    subtitle: "Zermatt · Switzerland",
+    thumb: "linear-gradient(160deg, #6b7d96 0%, #dde6f0 50%, #ffffff 100%)",
+    sceneComponent: () => <MatterhornScene />,
+  },
+  {
+    key: "trossachs",
+    name: "The Trossachs",
+    subtitle: "Stirlingshire · Scotland",
+    thumb: "linear-gradient(160deg, #4a1830 0%, #e8633c 70%, #f5b06c 100%)",
+    sceneComponent: () => <TrossachsScene />,
+  },
+  {
+    key: "liriver",
+    name: "Li River",
+    subtitle: "Guilin · China",
+    thumb: "linear-gradient(160deg, #806050 0%, #f5d8b8 50%, #d4a880 100%)",
+    sceneComponent: () => <LiRiverScene />,
+  },
+  {
+    key: "iceland",
+    name: "Jökulsárlón",
+    subtitle: "Aurora over glacier lagoon",
+    thumb: "linear-gradient(160deg, #02110a 0%, #22d3a7 50%, #0a2a30 100%)",
+    sceneComponent: () => <IcelandAuroraScene />,
+  },
+];
 
 // ════════════════════════════════════════════════════════
 // 主页面
@@ -346,6 +374,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "map">("card");
   const [heroMouseX, setHeroMouseX] = useState(0);
+  const [activeScene, setActiveScene] = useState<SceneKey>("world");
 
   const filteredWorks = useMemo(() => {
     if (!searchQuery.trim()) return works;
@@ -475,12 +504,16 @@ export default function Home() {
     destinations: works.length,
     countries: new Set(works.map((w) => w.final_country).filter(Boolean)).size,
     routes: routes.length,
-    accuracy: "97%",
   };
+
+  const currentScene = LANDMARKS.find((l) => l.key === activeScene);
 
   return (
     <div className="min-h-screen bg-[#06080d] text-white">
-      {/* ─────── 顶部 nav（与封面风格统一） ─────── */}
+      {/* ═══════════ 液态鼠标效果 ═══════════ */}
+      <LiquidCursor />
+
+      {/* ═══════════ 顶部 nav ═══════════ */}
       <nav className="absolute top-0 left-0 right-0 z-40 flex items-center justify-between px-10 py-6">
         <div className="flex items-center gap-2.5">
           <div
@@ -507,31 +540,54 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setShowManualAdd(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/8 hover:bg-white/15 backdrop-blur-md border border-white/10 text-white/85 text-sm transition-all"
-          >
-            <Plus size={13} /> 添加
-          </button>
-        </div>
+        <button
+          onClick={() => setShowManualAdd(true)}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/8 hover:bg-white/15 backdrop-blur-md border border-white/10 text-white/85 text-sm transition-all"
+        >
+          <Plus size={13} /> 添加
+        </button>
       </nav>
 
-      {/* ─────── HERO ─────── */}
+      {/* ═══════════ HERO ═══════════ */}
       <section
         className="relative h-screen min-h-[700px] w-full overflow-hidden"
         onMouseMove={handleHeroMouseMove}
       >
+        {/* 背景层：根据 activeScene 切换 */}
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 transition-transform duration-700"
           style={{
             transform: `translateX(${heroMouseX * 20}px)`,
-            transition: "transform 0.5s ease-out",
           }}
         >
-          <GlobeView works={works} routes={routes} timeMode="auto" />
+          <AnimatePresence mode="wait">
+            {activeScene === "world" ? (
+              <motion.div
+                key="world"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute inset-0"
+              >
+                <GlobeView works={works} routes={routes} timeMode="auto" />
+              </motion.div>
+            ) : (
+              <motion.div
+                key={activeScene}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute inset-0"
+              >
+                {currentScene?.sceneComponent()}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
+        {/* 左侧文字压暗 */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -555,18 +611,6 @@ export default function Home() {
               }}
             />
           ))}
-        </div>
-
-        {/* 左上 dreamers */}
-        <div className="absolute top-24 left-10 z-10 flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {["#fcd34d", "#f472b6", "#818cf8", "#34d399"].map((c, i) => (
-              <div key={i} className="w-7 h-7 rounded-full border-2" style={{ background: c, borderColor: "rgba(6,8,13,1)" }} />
-            ))}
-          </div>
-          <span className="text-[12px] text-white/75 tracking-wide">
-            <strong className="text-white/95">12,540</strong> dreamers are exploring the world
-          </span>
         </div>
 
         {/* 主文案 */}
@@ -598,96 +642,98 @@ export default function Home() {
             <span className="text-white/30 align-top text-3xl ml-1">.</span>
           </h1>
 
-          <p className="text-sm md:text-base text-white/50 max-w-md mb-8 leading-relaxed">
+          {/* dreamers 徽章放在标题和副标题之间（用户要求） */}
+          <div className="flex items-center gap-2.5 mb-4">
+            <div className="flex -space-x-2">
+              {["#fcd34d", "#f472b6", "#818cf8", "#34d399"].map((c, i) => (
+                <div key={i} className="w-6 h-6 rounded-full border-2" style={{ background: c, borderColor: "rgba(6,8,13,1)" }} />
+              ))}
+            </div>
+            <span className="text-[11px] text-white/65 tracking-wide">
+              <strong className="text-white/95">12,540</strong> dreamers are exploring the world
+            </span>
+          </div>
+
+          <p className="text-sm md:text-base text-white/55 max-w-md mb-12 leading-relaxed">
             Upload travel inspiration from anywhere.
             <br />
             AI finds the place. You start the adventure.
           </p>
 
-          {/* 上传卡 */}
-          <button
-            onClick={() => {
-              document.getElementById("upload-anchor")?.scrollIntoView({ behavior: "smooth" });
-            }}
-            className="group relative max-w-md rounded-2xl px-6 py-5 mb-6 cursor-pointer hover:scale-[1.02] transition-all"
-            style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1.5px dashed rgba(255,255,255,0.20)",
-              backdropFilter: "blur(20px)",
-            }}
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(255,255,255,0.08)" }}>↑</div>
-              <div className="text-left flex-1">
-                <div className="text-white/90 text-sm font-medium">Drop screenshot here</div>
-                <div className="text-white/50 text-[11px] mt-0.5">or click to upload</div>
-              </div>
-              <div className="text-white/30 group-hover:text-white/60 transition-colors">→</div>
-            </div>
-            <div className="flex items-center gap-1.5 mt-3 text-[10px] text-white/35">
-              <span>📸 Xiaohongshu</span>
-              <span className="text-white/15">·</span>
-              <span>🎵 TikTok</span>
-              <span className="text-white/15">·</span>
-              <span>📷 Instagram</span>
-            </div>
-          </button>
-
-          {/* 底部统计行 */}
-          <div className="absolute bottom-16 left-10 right-10 z-10 flex items-center justify-center gap-12 text-white/80 pointer-events-none">
-            {[
-              { value: stats.destinations, label: "Destinations Saved" },
-              { value: stats.countries, label: "Countries" },
-              { value: stats.routes, label: "Planned Routes" },
-              { value: stats.accuracy, label: "AI Recognition Accuracy" },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="text-4xl font-light text-white" style={{ fontFamily: '"Playfair Display", serif' }}>
-                  {s.value}
-                </div>
-                <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 mt-1">{s.label}</div>
-              </div>
-            ))}
-          </div>
+          {/* （输入框已删除） */}
         </div>
 
-        {/* 右上著名地点 */}
-        <div className="absolute top-1/2 right-10 -translate-y-1/2 z-10 hidden lg:flex flex-col gap-2 max-w-[16rem] pointer-events-none">
-          <div className="text-[10px] tracking-[0.4em] uppercase text-white/35 mb-2 px-3">FEATURED LANDMARKS</div>
+        {/* 底部统计：移到中线 + 移除 97% */}
+        <div className="absolute bottom-16 left-0 right-0 z-10 flex items-center justify-center gap-24 pointer-events-none">
           {[
-            { name: "Golden Alps", loc: "Matterhorn · Switzerland", grad: "linear-gradient(135deg, #fbbf24, #ea580c)" },
-            { name: "Tokyo Nights", loc: "Shibuya · Japan", grad: "linear-gradient(135deg, #1e1b4b, #ec4899)" },
-            { name: "Santorini Sunset", loc: "Cyclades · Greece", grad: "linear-gradient(135deg, #256387, #fbbf24)" },
-            { name: "Northern Lights", loc: "Reykjavík · Iceland", grad: "linear-gradient(135deg, #064e3b, #0891b2)" },
-          ].map((d) => (
-            <button
-              key={d.name}
-              className="group flex items-center gap-3 p-3 rounded-xl text-left pointer-events-auto transition-all"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                backdropFilter: "blur(20px)",
-              }}
-            >
-              <div className="w-10 h-10 rounded-lg shrink-0 border" style={{ background: d.grad, borderColor: "rgba(255,255,255,0.10)" }} />
-              <div className="flex-1 min-w-0">
-                <div className="text-white/85 text-sm truncate">{d.name}</div>
-                <div className="text-white/40 text-[10px] truncate">{d.loc}</div>
+            { value: stats.destinations, label: "Destinations Saved" },
+            { value: stats.countries, label: "Countries" },
+            { value: stats.routes, label: "Planned Routes" },
+          ].map((s, i) => (
+            <div key={i} className="text-center">
+              <div className="text-4xl font-light text-white" style={{ fontFamily: '"Playfair Display", serif' }}>
+                {s.value}
               </div>
-              <div className="text-white/30 group-hover:text-white/60 transition-colors text-xs">›</div>
-            </button>
+              <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 mt-1">{s.label}</div>
+            </div>
           ))}
         </div>
 
+        {/* 著名地点列表：5 个，含 World Map */}
+        <div className="absolute top-1/2 right-10 -translate-y-1/2 z-10 hidden lg:flex flex-col gap-2 max-w-[16rem] pointer-events-none">
+          <div className="text-[10px] tracking-[0.4em] uppercase text-white/35 mb-2 px-3">FEATURED LANDMARKS</div>
+          {LANDMARKS.map((d) => {
+            const isActive = activeScene === d.key;
+            return (
+              <button
+                key={d.key}
+                onClick={() => setActiveScene(d.key)}
+                className="group flex items-center gap-3 p-3 rounded-xl text-left pointer-events-auto transition-all"
+                style={{
+                  background: isActive
+                    ? "rgba(255,255,255,0.08)"
+                    : "rgba(255,255,255,0.025)",
+                  border: isActive
+                    ? "1px solid rgba(255,255,255,0.18)"
+                    : "1px solid rgba(255,255,255,0.06)",
+                  transform: isActive ? "translateX(-4px)" : "translateX(0)",
+                  transition: "all 0.3s ease",
+                }}
+              >
+                <div
+                  className="w-10 h-10 rounded-lg shrink-0 border"
+                  style={{
+                    background: d.thumb.startsWith("url(")
+                      ? `${d.thumb} center/cover`
+                      : d.thumb,
+                    borderColor: "rgba(255,255,255,0.10)",
+                  }}
+                />
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm truncate ${isActive ? "text-white" : "text-white/85 group-hover:text-white"}`}>
+                    {d.name}
+                  </div>
+                  <div className="text-white/45 text-[10px] truncate">{d.subtitle}</div>
+                </div>
+                {isActive ? (
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                ) : (
+                  <div className="text-white/30 group-hover:text-white/60 transition-colors text-xs">›</div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-[10px] tracking-[0.4em] uppercase text-white/30 pointer-events-none">
-          ↓ Scroll to continue
+          ↓ Hover for water ripples · Scroll to continue
         </div>
       </section>
 
-      {/* ─────── 4 面板工作流展示 ─────── */}
+      {/* 4 面板工作流 */}
       <AtlasWorkflowShowcase />
 
-      {/* ─────── 实际应用区（保留原功能） ─────── */}
+      {/* 实际应用区 */}
       <section id="upload-anchor" className="relative px-4 md:px-8 py-16" style={{ background: "rgba(5,8,13,0.7)" }}>
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
@@ -822,7 +868,7 @@ export default function Home() {
             <Route size={12} /> 路线
           </Link>
         </div>
-        <p className="text-white/30 text-[11px] mt-6">v0.7 · Atlas Style · AI-native Travel Companion</p>
+        <p className="text-white/30 text-[11px] mt-6">v0.8 · Atlas Style + Liquid Cursor · AI-native Travel</p>
       </footer>
 
       {/* Modals */}
