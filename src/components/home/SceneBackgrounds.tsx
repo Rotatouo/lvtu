@@ -1,14 +1,11 @@
 "use client";
 
 // 5 个著名地点背景：图片优先（用户上传），优雅降级到 SVG 电影级场景
-// - World Map: NASA earth-day.jpg + 经纬网格
+// - World Map: NASA earth-day.jpg 静态（无 filter 无 animation）
 // - Matterhorn / Trossachs / Li River / Jökulsárlón: 用户图片优先，缺失时用 SVG
 
-const PHOTO_BG =
-  "absolute inset-0 bg-cover bg-center will-change-transform";
-
 // ──────────────────────────────────────────────────────────
-// 通用：图片场景（Ken Burns + 渐变压暗 + vignette）
+// 通用：图片场景（cover 不缩放，无黑边）
 // ──────────────────────────────────────────────────────────
 
 function PhotoScene({
@@ -20,16 +17,15 @@ function PhotoScene({
   fallback?: React.ReactNode;
   children?: React.ReactNode;
 }) {
-  // 使用 <img> 检测加载失败，然后切换到 fallback
-  // 注意：背景图方式无法监听 onError，因此采用 <img> + 定位覆盖的方式
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden bg-black">
       <img
         src={src}
         alt=""
         loading="eager"
         decoding="async"
-        className={`${PHOTO_BG} object-cover animate-[kenburns_28s_ease-in-out_infinite_alternate]`}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ objectPosition: "center" }}
         onError={(e) => {
           (e.currentTarget as HTMLImageElement).style.display = "none";
           const fb = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null;
@@ -39,7 +35,7 @@ function PhotoScene({
       {/* 兜底层（图片加载失败时显示） */}
       <div className="absolute inset-0 hidden">{fallback}</div>
 
-      {/* 顶部压暗（左半文字区更易读） */}
+      {/* 左半压暗（让标题文字更易读） */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#06080d]/92 via-[#06080d]/55 to-[#06080d]/10" />
       {/* 底部压暗（统计行） */}
       <div className="absolute bottom-0 left-0 right-0 h-80 bg-gradient-to-t from-[#06080d]/85 via-[#06080d]/40 to-transparent" />
@@ -52,17 +48,6 @@ function PhotoScene({
         }}
       />
       {children}
-
-      <style jsx>{`
-        @keyframes kenburns {
-          0% {
-            transform: scale(1.04) translate(0, 0);
-          }
-          100% {
-            transform: scale(1.18) translate(-2%, -1.5%);
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -131,7 +116,6 @@ function TrossachsFallback() {
       <polygon points="0,1080 400,520 800,1080" fill="url(#tsMountain)" />
       <polygon points="600,1080 1100,400 1500,1080" fill="rgba(10,5,15,0.95)" />
       <polygon points="1200,1080 1700,560 1920,1080" fill="rgba(20,8,18,0.9)" />
-      {/* 湖面反光 */}
       <rect y="900" width="1920" height="180" fill="rgba(255,140,80,0.15)" />
     </svg>
   );
@@ -159,7 +143,6 @@ function LiRiverFallback() {
         </filter>
       </defs>
       <rect width="1920" height="1080" fill="url(#lrSky)" />
-      {/* 远山喀斯特峰林 */}
       <ellipse cx="960" cy="650" rx="1000" ry="90" fill="rgba(180,150,120,0.4)" filter="url(#lrMist)" />
       {Array.from({ length: 12 }).map((_, i) => {
         const x = i * 180 + 60;
@@ -173,10 +156,8 @@ function LiRiverFallback() {
           />
         );
       })}
-      {/* 江面 */}
       <rect y="850" width="1920" height="230" fill="rgba(120,100,70,0.35)" />
       <rect y="900" width="1920" height="180" fill="rgba(60,40,30,0.6)" />
-      {/* 倒影 */}
       {Array.from({ length: 6 }).map((_, i) => (
         <line
           key={`r${i}`}
@@ -217,7 +198,6 @@ function IcelandFallback() {
         </linearGradient>
       </defs>
       <rect width="1920" height="1080" fill="url(#icSky)" />
-      {/* 极光波动 */}
       <path
         d="M 0,250 Q 480,100 960,250 T 1920,250 L 1920,500 L 0,500 Z"
         fill="url(#icAurora)"
@@ -230,14 +210,11 @@ function IcelandFallback() {
           repeatCount="indefinite"
         />
       </path>
-      {/* 远山 */}
       <polygon points="0,1080 300,650 600,1080" fill="rgba(10,30,40,0.95)" />
       <polygon points="400,1080 800,580 1100,1080" fill="rgba(5,20,30,1)" />
       <polygon points="900,1080 1300,640 1700,1080" fill="rgba(10,30,40,0.95)" />
       <polygon points="1500,1080 1800,720 1920,1080" fill="rgba(5,20,30,1)" />
-      {/* 冰河湖面 */}
       <rect y="850" width="1920" height="230" fill="rgba(100,180,210,0.15)" />
-      {/* 浮冰 */}
       {[
         { x: 200, y: 920, w: 80, h: 30 },
         { x: 450, y: 960, w: 60, h: 20 },
@@ -264,10 +241,11 @@ function IcelandFallback() {
 // 公共导出
 // ──────────────────────────────────────────────────────────
 
-/** 世界地图背景（NASA 地球图 + 缓慢漂移 + 经纬网格） */
+/** 世界地图背景（v0.6.6-pre 风格：center 对齐、无 filter、无 animation） */
 export function WorldMapScene() {
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div className="absolute inset-0 overflow-hidden bg-black">
+      {/* 深空底色（万一图加载失败不会露出白底） */}
       <div
         className="absolute inset-0"
         style={{
@@ -275,18 +253,19 @@ export function WorldMapScene() {
             "radial-gradient(ellipse 80% 60% at 50% 50%, #0a1426 0%, #050810 60%, #02040a 100%)",
         }}
       />
+      {/* NASA earth-day.jpg：cover + center，不动不漂 */}
       <div
-        className="absolute inset-0 opacity-90"
+        className="absolute inset-0"
         style={{
           backgroundImage: "url('/textures/earth-day.jpg')",
           backgroundSize: "cover",
-          backgroundPosition: "center 30%",
-          filter: "saturate(0.85) contrast(1.05) brightness(0.95)",
-          animation: "earth-drift 60s ease-in-out infinite alternate",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
         }}
       />
+      {/* 经纬网格（subtle，仅作氛围） */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-10"
+        className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
       >
@@ -297,18 +276,9 @@ export function WorldMapScene() {
           <line key={`v${x}`} x1={x} y1="0" x2={x} y2="100" stroke="white" strokeWidth="0.15" />
         ))}
       </svg>
-      <div className="absolute inset-0 bg-gradient-to-t from-[#06080d] via-transparent to-[#06080d]/30" />
+      {/* 全局压暗：让前景文字更易读 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#06080d]/95 via-transparent to-[#06080d]/30" />
       <div className="absolute inset-0 bg-gradient-to-r from-[#06080d] via-[#06080d]/40 to-transparent" />
-      <style jsx>{`
-        @keyframes earth-drift {
-          0% {
-            background-position: 50% 30%;
-          }
-          100% {
-            background-position: 55% 35%;
-          }
-        }
-      `}</style>
     </div>
   );
 }
@@ -335,26 +305,12 @@ export function IcelandAuroraScene() {
   return (
     <PhotoScene src="/destinations/iceland.jpg" fallback={<IcelandFallback />}>
       <div
-        className="absolute inset-0 pointer-events-none mix-blend-screen opacity-50"
+        className="absolute inset-0 pointer-events-none mix-blend-screen opacity-40"
         style={{
           background:
-            "linear-gradient(125deg, transparent 30%, rgba(34,211,170,0.35) 45%, transparent 60%, rgba(96,165,250,0.25) 75%, transparent 100%)",
-          animation: "aurora-pulse 8s ease-in-out infinite",
+            "linear-gradient(125deg, transparent 30%, rgba(34,211,170,0.30) 45%, transparent 60%, rgba(96,165,250,0.20) 75%, transparent 100%)",
         }}
       />
-      <style jsx>{`
-        @keyframes aurora-pulse {
-          0%,
-          100% {
-            opacity: 0.3;
-            transform: translateX(0);
-          }
-          50% {
-            opacity: 0.6;
-            transform: translateX(-3%);
-          }
-        }
-      `}</style>
     </PhotoScene>
   );
 }

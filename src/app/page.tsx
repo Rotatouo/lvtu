@@ -685,45 +685,82 @@ export default function Home() {
             </motion.span>
           </h1>
 
-          {/* ⭐ Dreamers 徽章 - 放在标题和副标题之间 */}
+          {/* 中文大标（v0.6.6-pre 风格） */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.7 }}
-            className="flex items-center gap-2.5 mb-5 group cursor-default"
+            className="text-3xl md:text-4xl mb-5"
+            style={{
+              fontFamily: '"Noto Serif SC", serif',
+              fontWeight: 300,
+              letterSpacing: "0.3em",
+              color: "rgba(255,255,255,0.85)",
+            }}
           >
-            <div className="flex -space-x-2">
-              {["#fcd34d", "#f472b6", "#818cf8", "#34d399", "#fb923c"].map((c, i) => (
-                <motion.div
-                  key={i}
-                  className="w-6 h-6 rounded-full border-2"
-                  style={{ background: c, borderColor: "rgba(6,8,13,1)" }}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, delay: 0.85 + i * 0.06 }}
-                />
-              ))}
-            </div>
-            <span className="text-[11.5px] text-white/75 tracking-wide">
-              <strong className="text-white/95 font-medium">12,540</strong> dreamers are exploring the world
-            </span>
-            <motion.div
-              className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-            />
+            旅途
           </motion.div>
+
+          {/* 中英双副标 */}
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.78 }}
+            className="text-white/50 text-sm md:text-base leading-relaxed tracking-wider max-w-md mb-2"
+          >
+            一座属于你的微型世界地图。
+            <br />
+            把每一份心之所向变成清晰的远方。
+          </motion.p>
 
           <motion.p
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.85 }}
-            className="text-sm md:text-base text-white/60 max-w-md leading-relaxed"
+            className="text-white/60 text-xs md:text-sm leading-relaxed max-w-md mb-7"
           >
             Upload travel inspiration from anywhere.
             <br />
             AI finds the place. You start the adventure.
           </motion.p>
+
+          {/* 上传截图框（v0.6.7 风格） → 跳转到首屏外的上传区 */}
+          <Link
+            href="/#upload-anchor"
+            className="group block max-w-md mb-4 rounded-2xl px-5 py-4 cursor-pointer hover:scale-[1.015] transition-all"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              border: "1.5px dashed rgba(255,255,255,0.22)",
+              backdropFilter: "blur(16px)",
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-base"
+                style={{ background: "rgba(255,255,255,0.10)" }}
+              >
+                ↑
+              </div>
+              <div className="text-left flex-1">
+                <div className="text-white/90 text-sm font-medium">
+                  Drop screenshot here
+                </div>
+                <div className="text-white/45 text-[11px] mt-0.5">
+                  点击跳转上传截图页
+                </div>
+              </div>
+              <div className="text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all">
+                →
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2.5 text-[10px] text-white/30">
+              <span>📸 Xiaohongshu</span>
+              <span className="text-white/15">·</span>
+              <span>🎵 TikTok</span>
+              <span className="text-white/15">·</span>
+              <span>📷 Instagram</span>
+            </div>
+          </Link>
         </div>
 
         {/* ⭐ 底部统计行：3 个数值，居中，无 97% AI 准确率 */}
