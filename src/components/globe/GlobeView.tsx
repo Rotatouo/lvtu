@@ -165,7 +165,7 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
         `,
         uniforms: {
           uColor: { value: new THREE.Color("#4a9eff") },
-          uIntensity: { value: 0.12 },
+          uIntensity: { value: 0.08 },
         },
         transparent: true,
         blending: THREE.AdditiveBlending,
@@ -277,23 +277,23 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
       <group ref={globeGroupRef}>
         {/* 地球本体：真实贴图 + 法线 + 自发光 */}
         <mesh ref={meshRef}>
-          <sphereGeometry args={[1, 192, 192]} />
+          <sphereGeometry args={[1, 256, 256]} />
           <meshPhongMaterial
             map={textures.day}
             normalMap={textures.normal}
-            normalScale={new THREE.Vector2(0.35, 0.35)}
+            normalScale={new THREE.Vector2(0.25, 0.25)}
             specularMap={textures.specular}
-            specular={new THREE.Color("#222222")}
-            shininess={12}
+            specular={new THREE.Color("#1a1a1a")}
+            shininess={10}
             emissive={new THREE.Color("#2a3545")}
             emissiveIntensity={0.6}
             emissiveMap={textures.day}
           />
         </mesh>
 
-        {/* 夜间城市灯光层 */}
+        {/* 夜间城市灯光层（与地球完全贴合） */}
         <mesh ref={lightsRef}>
-          <sphereGeometry args={[1.001, 192, 192]} />
+          <sphereGeometry args={[1, 256, 256]} />
           <meshStandardMaterial
             map={textures.lights}
             transparent
@@ -313,13 +313,13 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
       </group>
 
       {/* 大气辉光（不随地球自转） */}
-      <mesh material={atmoMaterial} scale={1.06}>
-        <sphereGeometry args={[1, 128, 128]} />
+      <mesh material={atmoMaterial} scale={1.04}>
+        <sphereGeometry args={[1, 256, 256]} />
       </mesh>
 
       {/* 暖光大气（不随地球自转） */}
-      <mesh material={warmAtmoMaterial} scale={1.10}>
-        <sphereGeometry args={[1, 128, 128]} />
+      <mesh material={warmAtmoMaterial} scale={1.08}>
+        <sphereGeometry args={[1, 256, 256]} />
       </mesh>
     </group>
   );
