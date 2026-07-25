@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Search, X, LayoutGrid, Map, BookOpen, BarChart3, Image, Sparkles, Route } from "lucide-react";
+import {
+  Plus,
+  Search,
+  X,
+  LayoutGrid,
+  Map,
+  BookOpen,
+  BarChart3,
+  Image,
+  Sparkles,
+  Route,
+  Globe2,
+} from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
@@ -15,6 +27,7 @@ import EmptyState from "@/components/EmptyState";
 import UploadResultModal from "@/components/UploadResultModal";
 import JournalEditor from "@/components/JournalEditor";
 import LiquidCursor from "@/components/home/LiquidCursor";
+import CountUp from "@/components/home/CountUp";
 import {
   MatterhornScene,
   TrossachsScene,
@@ -29,7 +42,7 @@ const GlobeView = dynamic(() => import("@/components/globe/GlobeView"), {
 });
 
 // ════════════════════════════════════════════════════════
-// Atlas 4 面板工作流
+// Atlas 风格 4 面板工作流展示（mockup 视觉）
 // ════════════════════════════════════════════════════════
 
 function AtlasWorkflowShowcase() {
@@ -50,7 +63,8 @@ function AtlasWorkflowShowcase() {
             lineHeight: 1.1,
           }}
         >
-          From screenshot to story,<br />
+          From screenshot to story,
+          <br />
           <span
             style={{
               background: "linear-gradient(135deg, #d8e4f5 0%, #7da3d0 100%)",
@@ -220,6 +234,15 @@ function Panel2Mockup() {
             <div className="relative w-4 h-4 rounded-full bg-amber-400 border-2 border-white shadow-lg" />
           </div>
         </div>
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+          <div className="flex gap-1 text-[9px] text-white/50">
+            <span className="px-1.5 py-0.5 rounded bg-white/10">2D</span>
+            <span className="px-1.5 py-0.5 rounded bg-white/10">+</span>
+          </div>
+          <div className="text-[9px] text-white/50">
+            <span className="px-1.5 py-0.5 rounded bg-white/10">−</span>
+          </div>
+        </div>
       </div>
       <div className="text-[10px] text-cyan-300 underline">View Details →</div>
     </div>
@@ -306,7 +329,7 @@ function Panel4Mockup() {
 }
 
 // ════════════════════════════════════════════════════════
-// 著名地点场景配置（依据用户提供的 4 张照片）
+// 著名地点场景（5 个：世界地图 + 4 张真实风景照片）
 // ════════════════════════════════════════════════════════
 
 type SceneKey = "world" | "matterhorn" | "trossachs" | "liriver" | "iceland";
@@ -316,42 +339,42 @@ const LANDMARKS: {
   name: string;
   subtitle: string;
   thumb: string;
-  sceneComponent: () => React.ReactNode;
+  scene: () => React.ReactNode;
 }[] = [
   {
     key: "world",
     name: "World Map",
-    subtitle: "Real-time NASA imagery",
-    thumb: "url('/textures/earth-day.jpg')",
-    sceneComponent: () => <WorldMapScene />,
+    subtitle: "NASA · real-time imagery",
+    thumb: "/textures/earth-day.jpg",
+    scene: () => <WorldMapScene />,
   },
   {
     key: "matterhorn",
     name: "Matterhorn",
     subtitle: "Zermatt · Switzerland",
-    thumb: "linear-gradient(160deg, #6b7d96 0%, #dde6f0 50%, #ffffff 100%)",
-    sceneComponent: () => <MatterhornScene />,
+    thumb: "/destinations/matterhorn.jpg",
+    scene: () => <MatterhornScene />,
   },
   {
     key: "trossachs",
     name: "The Trossachs",
     subtitle: "Stirlingshire · Scotland",
-    thumb: "linear-gradient(160deg, #4a1830 0%, #e8633c 70%, #f5b06c 100%)",
-    sceneComponent: () => <TrossachsScene />,
+    thumb: "/destinations/trossachs.jpg",
+    scene: () => <TrossachsScene />,
   },
   {
     key: "liriver",
     name: "Li River",
     subtitle: "Guilin · China",
-    thumb: "linear-gradient(160deg, #806050 0%, #f5d8b8 50%, #d4a880 100%)",
-    sceneComponent: () => <LiRiverScene />,
+    thumb: "/destinations/li-river.jpg",
+    scene: () => <LiRiverScene />,
   },
   {
     key: "iceland",
     name: "Jökulsárlón",
     subtitle: "Aurora over glacier lagoon",
-    thumb: "linear-gradient(160deg, #02110a 0%, #22d3a7 50%, #0a2a30 100%)",
-    sceneComponent: () => <IcelandAuroraScene />,
+    thumb: "/destinations/iceland.jpg",
+    scene: () => <IcelandAuroraScene />,
   },
 ];
 
@@ -374,6 +397,7 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "map">("card");
   const [heroMouseX, setHeroMouseX] = useState(0);
+  const [heroMouseY, setHeroMouseY] = useState(0);
   const [activeScene, setActiveScene] = useState<SceneKey>("world");
 
   const filteredWorks = useMemo(() => {
@@ -442,7 +466,7 @@ export default function Home() {
   const handleDeleteWork = async (work: Work) => {
     const label = work.final_attraction || work.final_city || work.final_country || "未知地点";
     if (!window.confirm(`确定删除「${label}？`)) return;
-    setWorks((prev) => prev.filter((w) => w.id !== work.id));
+    setWorks((prev) => prev.filter((w) => w.id !== w.id));
     try {
       await fetch(`/api/works/${work.id}`, { method: "DELETE" });
       fetchWorks();
@@ -489,7 +513,9 @@ export default function Home() {
   const handleHeroMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
     setHeroMouseX(x);
+    setHeroMouseY(y);
   };
 
   if (loading) {
@@ -510,7 +536,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#06080d] text-white">
-      {/* ═══════════ 液态鼠标效果 ═══════════ */}
+      {/* ═══════════ 液态鼠标水纹效果（透明 + 即时变形） ═══════════ */}
       <LiquidCursor />
 
       {/* ═══════════ 顶部 nav ═══════════ */}
@@ -553,180 +579,290 @@ export default function Home() {
         className="relative h-screen min-h-[700px] w-full overflow-hidden"
         onMouseMove={handleHeroMouseMove}
       >
-        {/* 背景层：根据 activeScene 切换 */}
+        {/* 背景层：根据 activeScene 切换（真实照片 + 平滑淡入淡出 + 鼠标视差） */}
         <div
-          className="absolute inset-0 transition-transform duration-700"
+          className="absolute inset-0"
           style={{
-            transform: `translateX(${heroMouseX * 20}px)`,
+            transform: `translate3d(${heroMouseX * 22}px, ${heroMouseY * 14}px, 0) scale(1.06)`,
+            transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
-          <AnimatePresence mode="wait">
-            {activeScene === "world" ? (
-              <motion.div
-                key="world"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute inset-0"
-              >
-                <GlobeView works={works} routes={routes} timeMode="auto" />
-              </motion.div>
-            ) : (
-              <motion.div
-                key={activeScene}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute inset-0"
-              >
-                {currentScene?.sceneComponent()}
-              </motion.div>
-            )}
+          <AnimatePresence mode="sync">
+            <motion.div
+              key={activeScene}
+              initial={{ opacity: 0, scale: 1.08 }}
+              animate={{ opacity: 1, scale: 1.0 }}
+              exit={{ opacity: 0, scale: 1.02 }}
+              transition={{ duration: 1.6, ease: [0.4, 0, 0.2, 1] }}
+              className="absolute inset-0"
+            >
+              {currentScene?.scene()}
+            </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* 左侧文字压暗 */}
+        {/* 左侧文字压暗（让标题更易读） */}
         <div
-          className="absolute inset-0 pointer-events-none"
+          className="absolute inset-0 pointer-events-none z-10"
           style={{
             background:
-              "linear-gradient(90deg, rgba(6,8,13,0.95) 0%, rgba(6,8,13,0.55) 35%, rgba(6,8,13,0.10) 65%, transparent 100%)",
+              "linear-gradient(90deg, rgba(6,8,13,0.92) 0%, rgba(6,8,13,0.55) 38%, rgba(6,8,13,0.10) 70%, transparent 100%)",
+          }}
+        />
+        {/* 底部柔和压暗，让统计行更易读 */}
+        <div
+          className="absolute bottom-0 left-0 right-0 h-80 pointer-events-none z-10"
+          style={{
+            background:
+              "linear-gradient(to top, rgba(6,8,13,0.85) 0%, rgba(6,8,13,0.40) 50%, transparent 100%)",
           }}
         />
 
-        {/* 微星空 */}
-        <div className="absolute inset-0 pointer-events-none">
-          {Array.from({ length: 30 }).map((_, i) => (
-            <div
-              key={i}
-              className="absolute rounded-full bg-white"
-              style={{
-                width: Math.random() * 1.3 + 0.3 + "px",
-                height: Math.random() * 1.3 + 0.3 + "px",
-                top: Math.random() * 100 + "%",
-                left: Math.random() * 100 + "%",
-                opacity: 0.15 + Math.random() * 0.4,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* 主文案 */}
-        <div className="relative z-10 h-full flex flex-col justify-center px-10 md:px-20 max-w-[60%]">
-          <div className="text-[10px] tracking-[0.5em] uppercase text-white/40 mb-4">
+        {/* 主文案（带反向视差，形成深度感） */}
+        <div
+          className="relative z-20 h-full flex flex-col justify-center px-10 md:px-20 max-w-[60%]"
+          style={{
+            transform: `translate3d(${heroMouseX * -8}px, ${heroMouseY * -5}px, 0)`,
+            transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.1 }}
+            className="text-[10px] tracking-[0.5em] uppercase text-white/45 mb-5 flex items-center gap-3"
+          >
+            <span className="inline-block w-8 h-px bg-cyan-300/60" />
             A WORLD OF YOUR OWN
-          </div>
+          </motion.div>
 
           <h1
-            className="text-5xl md:text-7xl font-light text-white/95 mb-4 leading-[1]"
+            className="text-5xl md:text-7xl font-light text-white/95 leading-[1.05] mb-6"
             style={{
               fontFamily: '"Playfair Display", Georgia, serif',
               letterSpacing: "-0.02em",
             }}
           >
-            Every Saved Place
+            <motion.span
+              className="inline-block"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              Every Saved Place
+            </motion.span>
             <br />
-            <span style={{ fontStyle: "italic", color: "rgba(255,255,255,0.95)" }}>Begins a New</span>{" "}
-            <span
+            <motion.span
+              className="inline-block"
+              style={{ fontStyle: "italic", color: "rgba(255,255,255,0.95)" }}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            >
+              Begins a New
+            </motion.span>{" "}
+            <motion.span
+              className="inline-block"
               style={{
                 background: "linear-gradient(135deg, #d8e4f5 0%, #7da3d0 100%)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 fontStyle: "italic",
               }}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.55, ease: [0.16, 1, 0.3, 1] }}
             >
               Journey
-            </span>
-            <span className="text-white/30 align-top text-3xl ml-1">.</span>
+            </motion.span>
+            <motion.span
+              className="inline-block text-white/30 align-top text-3xl ml-1"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.9 }}
+            >
+              .
+            </motion.span>
           </h1>
 
-          {/* dreamers 徽章放在标题和副标题之间（用户要求） */}
-          <div className="flex items-center gap-2.5 mb-4">
+          {/* ⭐ Dreamers 徽章 - 放在标题和副标题之间 */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.7 }}
+            className="flex items-center gap-2.5 mb-5 group cursor-default"
+          >
             <div className="flex -space-x-2">
-              {["#fcd34d", "#f472b6", "#818cf8", "#34d399"].map((c, i) => (
-                <div key={i} className="w-6 h-6 rounded-full border-2" style={{ background: c, borderColor: "rgba(6,8,13,1)" }} />
+              {["#fcd34d", "#f472b6", "#818cf8", "#34d399", "#fb923c"].map((c, i) => (
+                <motion.div
+                  key={i}
+                  className="w-6 h-6 rounded-full border-2"
+                  style={{ background: c, borderColor: "rgba(6,8,13,1)" }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.4, delay: 0.85 + i * 0.06 }}
+                />
               ))}
             </div>
-            <span className="text-[11px] text-white/65 tracking-wide">
-              <strong className="text-white/95">12,540</strong> dreamers are exploring the world
+            <span className="text-[11.5px] text-white/75 tracking-wide">
+              <strong className="text-white/95 font-medium">12,540</strong> dreamers are exploring the world
             </span>
-          </div>
+            <motion.div
+              className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+            />
+          </motion.div>
 
-          <p className="text-sm md:text-base text-white/55 max-w-md mb-12 leading-relaxed">
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.85 }}
+            className="text-sm md:text-base text-white/60 max-w-md leading-relaxed"
+          >
             Upload travel inspiration from anywhere.
             <br />
             AI finds the place. You start the adventure.
-          </p>
-
-          {/* （输入框已删除） */}
+          </motion.p>
         </div>
 
-        {/* 底部统计：移到中线 + 移除 97% */}
-        <div className="absolute bottom-16 left-0 right-0 z-10 flex items-center justify-center gap-24 pointer-events-none">
+        {/* ⭐ 底部统计行：3 个数值，居中，无 97% AI 准确率 */}
+        <div className="absolute bottom-14 left-0 right-0 z-20 flex items-center justify-center gap-20 md:gap-28 pointer-events-none">
           {[
             { value: stats.destinations, label: "Destinations Saved" },
             { value: stats.countries, label: "Countries" },
             { value: stats.routes, label: "Planned Routes" },
           ].map((s, i) => (
-            <div key={i} className="text-center">
-              <div className="text-4xl font-light text-white" style={{ fontFamily: '"Playfair Display", serif' }}>
-                {s.value}
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
+              className="text-center group"
+            >
+              <div
+                className="text-4xl md:text-5xl font-light text-white"
+                style={{
+                  fontFamily: '"Playfair Display", serif',
+                  textShadow: "0 2px 20px rgba(0,0,0,0.4)",
+                }}
+              >
+                <CountUp end={s.value} duration={1200 + i * 200} />
               </div>
-              <div className="text-[10px] tracking-[0.3em] uppercase text-white/40 mt-1">{s.label}</div>
-            </div>
+              <div className="text-[10px] tracking-[0.3em] uppercase text-white/55 mt-2">
+                {s.label}
+              </div>
+              <motion.div
+                className="h-px mt-2 mx-auto bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent"
+                initial={{ width: 0 }}
+                animate={{ width: 48 }}
+                transition={{ duration: 1.2, delay: 1.4 + i * 0.12 }}
+              />
+            </motion.div>
           ))}
         </div>
 
-        {/* 著名地点列表：5 个，含 World Map */}
-        <div className="absolute top-1/2 right-10 -translate-y-1/2 z-10 hidden lg:flex flex-col gap-2 max-w-[16rem] pointer-events-none">
-          <div className="text-[10px] tracking-[0.4em] uppercase text-white/35 mb-2 px-3">FEATURED LANDMARKS</div>
-          {LANDMARKS.map((d) => {
+        {/* ⭐ 著名地点列表：5 个（World Map + 4 张真实风景照），点击平滑切换 */}
+        <motion.div
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-1/2 right-8 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2 max-w-[16.5rem]"
+          style={{
+            transform: `translate3d(calc(-50% + ${heroMouseX * 12}px), calc(-50% + ${heroMouseY * -8}px), 0)`,
+            transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2 px-3">
+            <Globe2 size={11} className="text-white/40" />
+            <div className="text-[10px] tracking-[0.4em] uppercase text-white/45">
+              FEATURED · 5 LANDS
+            </div>
+            <motion.div
+              className="flex-1 h-px bg-gradient-to-r from-white/15 to-transparent ml-2"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 1.2, delay: 1.0 }}
+              style={{ transformOrigin: "left" }}
+            />
+          </div>
+          {LANDMARKS.map((d, idx) => {
             const isActive = activeScene === d.key;
             return (
-              <button
+              <motion.button
                 key={d.key}
                 onClick={() => setActiveScene(d.key)}
-                className="group flex items-center gap-3 p-3 rounded-xl text-left pointer-events-auto transition-all"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5, delay: 0.75 + idx * 0.08 }}
+                whileHover={{ scale: 1.025 }}
+                whileTap={{ scale: 0.97 }}
+                className="group flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-400 relative overflow-hidden"
                 style={{
                   background: isActive
-                    ? "rgba(255,255,255,0.08)"
+                    ? "rgba(255,255,255,0.10)"
                     : "rgba(255,255,255,0.025)",
                   border: isActive
-                    ? "1px solid rgba(255,255,255,0.18)"
-                    : "1px solid rgba(255,255,255,0.06)",
-                  transform: isActive ? "translateX(-4px)" : "translateX(0)",
-                  transition: "all 0.3s ease",
+                    ? "1px solid rgba(255,255,255,0.22)"
+                    : "1px solid rgba(255,255,255,0.07)",
+                  transform: isActive ? "translateX(-6px)" : "translateX(0)",
+                  backdropFilter: "blur(20px)",
                 }}
               >
+                {/* hover 光晕 */}
                 <div
-                  className="w-10 h-10 rounded-lg shrink-0 border"
+                  className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{
-                    background: d.thumb.startsWith("url(")
-                      ? `${d.thumb} center/cover`
-                      : d.thumb,
-                    borderColor: "rgba(255,255,255,0.10)",
+                    background:
+                      "linear-gradient(135deg, rgba(125,180,255,0.10) 0%, transparent 60%)",
                   }}
                 />
+                <motion.div
+                  className="w-11 h-11 rounded-lg shrink-0 border overflow-hidden relative"
+                  style={{
+                    backgroundImage: `url('${d.thumb}')`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    borderColor: "rgba(255,255,255,0.12)",
+                  }}
+                  whileHover={{ scale: 1.08, rotate: 1 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                >
+                  {isActive && (
+                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/15 to-white/30" />
+                  )}
+                  <div className="absolute inset-0 ring-1 ring-inset ring-white/0 group-hover:ring-white/30 transition-all duration-300" />
+                </motion.div>
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm truncate ${isActive ? "text-white" : "text-white/85 group-hover:text-white"}`}>
+                  <div
+                    className={`text-[13px] truncate font-medium ${
+                      isActive ? "text-white" : "text-white/85 group-hover:text-white"
+                    }`}
+                  >
                     {d.name}
                   </div>
                   <div className="text-white/45 text-[10px] truncate">{d.subtitle}</div>
                 </div>
                 {isActive ? (
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <motion.div
+                    className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  />
                 ) : (
-                  <div className="text-white/30 group-hover:text-white/60 transition-colors text-xs">›</div>
+                  <div className="text-white/30 group-hover:text-white/70 group-hover:translate-x-1 transition-all duration-300 text-sm">
+                    ›
+                  </div>
                 )}
-              </button>
+              </motion.button>
             );
           })}
-        </div>
+        </motion.div>
 
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 text-[10px] tracking-[0.4em] uppercase text-white/30 pointer-events-none">
-          ↓ Hover for water ripples · Scroll to continue
+        {/* 底部滚动提示 */}
+        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 text-[10px] tracking-[0.4em] uppercase text-white/35 pointer-events-none flex items-center gap-2">
+          <span className="w-1 h-1 rounded-full bg-cyan-300/60 animate-pulse" />
+          移动鼠标感受水纹 · 下滑探索更多
         </div>
       </section>
 
@@ -868,7 +1004,7 @@ export default function Home() {
             <Route size={12} /> 路线
           </Link>
         </div>
-        <p className="text-white/30 text-[11px] mt-6">v0.8 · Atlas Style + Liquid Cursor · AI-native Travel</p>
+        <p className="text-white/30 text-[11px] mt-6">v0.6.9 · Atlas · World Map + 4 Lands · Liquid Cursor</p>
       </footer>
 
       {/* Modals */}
