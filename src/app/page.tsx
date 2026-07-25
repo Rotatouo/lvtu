@@ -532,6 +532,13 @@ export default function Home() {
     routes: routes.length,
   };
 
+  // 章节数据同步（mock + API 都同步：直接基于 works 状态计算）
+  const chapterCounts = {
+    wanderlust: works.filter((w) => w.status === "want_to_go").length,
+    memories: works.filter((w) => w.status === "been_there").length,
+    trails: works.length,
+  };
+
   const currentScene = LANDMARKS.find((l) => l.key === activeScene);
 
   return (
@@ -685,39 +692,12 @@ export default function Home() {
             </motion.span>
           </h1>
 
-          {/* 中文大标（v0.6.6-pre 风格） */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.7 }}
-            className="text-3xl md:text-4xl mb-5"
-            style={{
-              fontFamily: '"Noto Serif SC", serif',
-              fontWeight: 300,
-              letterSpacing: "0.3em",
-              color: "rgba(255,255,255,0.85)",
-            }}
-          >
-            旅途
-          </motion.div>
-
           {/* 中英双副标 */}
           <motion.p
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.78 }}
-            className="text-white/50 text-sm md:text-base leading-relaxed tracking-wider max-w-md mb-2"
-          >
-            一座属于你的微型世界地图。
-            <br />
-            把每一份心之所向变成清晰的远方。
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.85 }}
-            className="text-white/60 text-xs md:text-sm leading-relaxed max-w-md mb-7"
+            transition={{ duration: 0.7, delay: 0.7 }}
+            className="text-white/60 text-sm md:text-base leading-relaxed max-w-md mb-3"
           >
             Upload travel inspiration from anywhere.
             <br />
@@ -763,8 +743,8 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* ⭐ 底部统计行：3 个数值，居中，无 97% AI 准确率 */}
-        <div className="absolute bottom-14 left-0 right-0 z-20 flex items-center justify-center gap-20 md:gap-28 pointer-events-none">
+        {/* ⭐ 底部统计行：3 个数值，居中，无 97% AI 准确率（原首页样式 + 更大间距） */}
+        <div className="absolute bottom-14 left-0 right-0 z-20 flex items-center justify-center gap-28 md:gap-40 pointer-events-none">
           {[
             { value: stats.destinations, label: "Destinations Saved" },
             { value: stats.countries, label: "Countries" },
@@ -778,7 +758,7 @@ export default function Home() {
               className="text-center group"
             >
               <div
-                className="text-4xl md:text-5xl font-light text-white"
+                className="text-5xl md:text-6xl font-light text-white"
                 style={{
                   fontFamily: '"Playfair Display", serif',
                   textShadow: "0 2px 20px rgba(0,0,0,0.4)",
@@ -786,25 +766,25 @@ export default function Home() {
               >
                 <CountUp end={s.value} duration={1200 + i * 200} />
               </div>
-              <div className="text-[10px] tracking-[0.3em] uppercase text-white/55 mt-2">
+              <div className="text-[10px] tracking-[0.3em] uppercase text-white/55 mt-2.5">
                 {s.label}
               </div>
               <motion.div
-                className="h-px mt-2 mx-auto bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent"
+                className="h-px mt-2.5 mx-auto bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent"
                 initial={{ width: 0 }}
-                animate={{ width: 48 }}
+                animate={{ width: 56 }}
                 transition={{ duration: 1.2, delay: 1.4 + i * 0.12 }}
               />
             </motion.div>
           ))}
         </div>
 
-        {/* ⭐ 著名地点列表：5 个（World Map + 4 张真实风景照），点击平滑切换 */}
+        {/* ⭐ 著名地点列表：5 个（World Map + 4 张真实风景照），点击平滑切换（放大 1/3 + pop-out 动效） */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute top-1/2 right-8 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2 max-w-[16.5rem]"
+          className="absolute top-1/2 right-8 -translate-y-1/2 z-20 hidden lg:flex flex-col gap-2.5 max-w-[22rem]"
           style={{
             transform: `translate3d(calc(-50% + ${heroMouseX * 12}px), calc(-50% + ${heroMouseY * -8}px), 0)`,
             transition: "transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -832,9 +812,12 @@ export default function Home() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: 0.75 + idx * 0.08 }}
-                whileHover={{ scale: 1.025 }}
+                whileHover={{
+                  scale: 1.035,
+                  x: -10, // pop-out 向左
+                }}
                 whileTap={{ scale: 0.97 }}
-                className="group flex items-center gap-3 p-2.5 rounded-xl text-left transition-all duration-400 relative overflow-hidden"
+                className="group flex items-center gap-3.5 p-3 rounded-2xl text-left transition-all duration-400 relative overflow-hidden"
                 style={{
                   background: isActive
                     ? "rgba(255,255,255,0.10)"
@@ -842,27 +825,29 @@ export default function Home() {
                   border: isActive
                     ? "1px solid rgba(255,255,255,0.22)"
                     : "1px solid rgba(255,255,255,0.07)",
-                  transform: isActive ? "translateX(-6px)" : "translateX(0)",
+                  transform: isActive ? "translateX(-10px)" : "translateX(0)",
                   backdropFilter: "blur(20px)",
                 }}
               >
-                {/* hover 光晕 */}
+                {/* hover 光晕（更强） */}
                 <div
                   className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                   style={{
                     background:
-                      "linear-gradient(135deg, rgba(125,180,255,0.10) 0%, transparent 60%)",
+                      "linear-gradient(135deg, rgba(125,180,255,0.18) 0%, transparent 65%)",
                   }}
                 />
                 <motion.div
-                  className="w-11 h-11 rounded-lg shrink-0 border overflow-hidden relative"
+                  className="w-15 h-15 rounded-xl shrink-0 border overflow-hidden relative"
                   style={{
                     backgroundImage: `url('${d.thumb}')`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                     borderColor: "rgba(255,255,255,0.12)",
+                    width: "60px",
+                    height: "60px",
                   }}
-                  whileHover={{ scale: 1.08, rotate: 1 }}
+                  whileHover={{ scale: 1.12, rotate: 1.5 }}
                   transition={{ type: "spring", stiffness: 260, damping: 20 }}
                 >
                   {isActive && (
@@ -872,13 +857,13 @@ export default function Home() {
                 </motion.div>
                 <div className="flex-1 min-w-0">
                   <div
-                    className={`text-[13px] truncate font-medium ${
+                    className={`text-[14px] truncate font-medium transition-colors ${
                       isActive ? "text-white" : "text-white/85 group-hover:text-white"
                     }`}
                   >
                     {d.name}
                   </div>
-                  <div className="text-white/45 text-[10px] truncate">{d.subtitle}</div>
+                  <div className="text-white/45 text-[10.5px] truncate">{d.subtitle}</div>
                 </div>
                 {isActive ? (
                   <motion.div
@@ -1024,24 +1009,60 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer - 3 个 chapter 链接 + 数字徽章（数据同步 works） */}
       <footer className="relative px-10 py-16 text-center border-t border-white/5">
-        <div className="text-[10px] tracking-[0.4em] uppercase text-white/30 mb-4">ROUTATOUO · JOURNEY · 旅途</div>
-        <div className="flex items-center justify-center gap-8 text-[11px] text-white/50">
-          <Link href="/journals" className="hover:text-white/80 transition-colors flex items-center gap-1.5">
-            <BookOpen size={12} /> 日记
-          </Link>
-          <Link href="/postcards" className="hover:text-white/80 transition-colors flex items-center gap-1.5">
-            <Image size={12} /> 明信片
-          </Link>
-          <Link href="/dashboard" className="hover:text-white/80 transition-colors flex items-center gap-1.5">
-            <BarChart3 size={12} /> 看板
-          </Link>
-          <Link href="/routes" className="hover:text-white/80 transition-colors flex items-center gap-1.5">
-            <Route size={12} /> 路线
-          </Link>
+        <div className="text-[10px] tracking-[0.4em] uppercase text-white/30 mb-6">
+          STORIES CURATED · 章节速览
         </div>
-        <p className="text-white/30 text-[11px] mt-6">v0.6.9 · Atlas · World Map + 4 Lands · Liquid Cursor</p>
+        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+          {[
+            {
+              key: "wanderlust",
+              label: "THE WANDERLUST",
+              cn: "想去的地方",
+              count: chapterCounts.wanderlust,
+              color: "bg-cyan-400",
+              href: "/journals?status=want_to_go",
+            },
+            {
+              key: "memories",
+              label: "MEMORIES MADE",
+              cn: "去过的地方",
+              count: chapterCounts.memories,
+              color: "bg-amber-400",
+              href: "/journals?status=been_there",
+            },
+            {
+              key: "trails",
+              label: "PRESENT TRAILS",
+              cn: "在路上",
+              count: chapterCounts.trails,
+              color: "bg-violet-400",
+              href: "/journals",
+            },
+          ].map((ch, i) => (
+            <Link
+              key={ch.key}
+              href={ch.href}
+              className="group flex items-center gap-3 text-white/55 hover:text-white/85 transition-colors"
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${ch.color} group-hover:scale-150 transition-transform`} />
+              <span className="text-[11px] tracking-[0.3em] uppercase font-medium">
+                {ch.label}
+              </span>
+              <span className="text-[10px] text-white/40 group-hover:text-white/70 transition-colors">
+                · {ch.cn}
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-white/8 group-hover:bg-white/15 text-[10px] text-white/70 tracking-wider border border-white/10 transition-all">
+                {ch.count}
+              </span>
+              {i < 2 && (
+                <span className="text-white/15 ml-2 select-none">·</span>
+              )}
+            </Link>
+          ))}
+        </div>
+        <p className="text-white/30 text-[11px] mt-8">v0.7.2 · Atlas · World Map + 5 Lands · Minimal Cursor</p>
       </footer>
 
       {/* Modals */}
