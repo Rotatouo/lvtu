@@ -275,18 +275,16 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
 
       {/* 地球+标点+路线 放在同一旋转组，转就一起转 */}
       <group ref={globeGroupRef}>
-        {/* 地球本体：真实贴图 + 法线 + 高光 + 自发光（确保始终可见） */}
+        {/* 地球本体：真实贴图 + 法线 + 自发光 */}
         <mesh ref={meshRef}>
-          <sphereGeometry args={[1, 96, 96]} />
+          <sphereGeometry args={[1, 192, 192]} />
           <meshPhongMaterial
             map={textures.day}
             normalMap={textures.normal}
-            normalScale={new THREE.Vector2(0.85, 0.85)}
+            normalScale={new THREE.Vector2(0.35, 0.35)}
             specularMap={textures.specular}
-            specular={new THREE.Color("#333333")}
-            shininess={18}
-            bumpMap={textures.normal}
-            bumpScale={0.05}
+            specular={new THREE.Color("#222222")}
+            shininess={12}
             emissive={new THREE.Color("#2a3545")}
             emissiveIntensity={0.6}
             emissiveMap={textures.day}
@@ -295,7 +293,7 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
 
         {/* 夜间城市灯光层 */}
         <mesh ref={lightsRef}>
-          <sphereGeometry args={[1.003, 96, 96]} />
+          <sphereGeometry args={[1.001, 192, 192]} />
           <meshStandardMaterial
             map={textures.lights}
             transparent
@@ -316,12 +314,12 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
 
       {/* 大气辉光（不随地球自转） */}
       <mesh material={atmoMaterial} scale={1.06}>
-        <sphereGeometry args={[1, 64, 64]} />
+        <sphereGeometry args={[1, 128, 128]} />
       </mesh>
 
       {/* 暖光大气（不随地球自转） */}
       <mesh material={warmAtmoMaterial} scale={1.10}>
-        <sphereGeometry args={[1, 64, 64]} />
+        <sphereGeometry args={[1, 128, 128]} />
       </mesh>
     </group>
   );
