@@ -197,19 +197,8 @@ git push origin master
 pnpm build
 pnpm start
 ```
-
 ---
-
-## 💰 费用
-
-| 资源 | 免费额度 | 预估 |
-|---|---|---|
-| Vercel | 100GB 带宽/月 | ¥0 |
-| Supabase | 500MB DB + 1GB 存储 | ¥0 |
-| Gemini 2.0 Flash | 1500次/天 | ¥0 |
-| GitHub | 无限 public repo | ¥0 |
-
----
+<br>
 
 ## 🏷️ 版本历史
 
