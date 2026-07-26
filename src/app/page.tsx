@@ -18,6 +18,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Work, UploadStatus, Route as RouteType } from "@/types";
+import { mockWorks, mockRoutes } from "@/lib/mock-data";
 import UploadZone from "@/components/UploadZone";
 import CardGrid from "@/components/CardGrid";
 import EditDrawer from "@/components/EditDrawer";
@@ -443,10 +444,17 @@ export default function Home() {
       .then((r) => r.json())
       .then((d) => setRecs(d.recommendations || []))
       .catch(() => {});
+    // 路由：先显示 mock（防 0 数据），API 返回成功时覆盖
+    setRoutes(mockRoutes);
     fetch("/api/routes")
-      .then((r) => r.json())
-      .then((d) => setRoutes(d.routes || []))
-      .catch(() => {});
+      .then((r) => (r.ok ? r.json() : Promise.reject("api fail")))
+      .then((d) => {
+        const list: RouteType[] = d.routes || [];
+        if (list.length > 0) setRoutes(list);
+      })
+      .catch(() => {
+        // 保持 mockRoutes 作为兜底
+      });
   }, [fetchWorks]);
 
   const handleUploadResult = (work: Work) => {
@@ -586,44 +594,30 @@ export default function Home() {
         className="relative h-screen min-h-[700px] w-full overflow-hidden"
         onMouseMove={handleHeroMouseMove}
       >
-        {/* 背景层：根据 activeScene 切换（真实照片 + 平滑淡入淡出 + 鼠标视差） */}
-        <div
-          className="absolute inset-0"
-          style={{
-            transform: `translate3d(${heroMouseX * 22}px, ${heroMouseY * 14}px, 0) scale(1.06)`,
-            transition: "transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
-          }}
-        >
-          <AnimatePresence mode="sync">
+        {/* 背景层：与 cover 完全一致（一个 div + 不加 transform/scale/底部渐变） */}
+        <div className="absolute inset-0">
+          <AnimatePresence mode="popLayout">
             <motion.div
               key={activeScene}
-              initial={{ opacity: 0, scale: 1.08 }}
-              animate={{ opacity: 1, scale: 1.0 }}
-              exit={{ opacity: 0, scale: 1.02 }}
-              transition={{ duration: 1.6, ease: [0.4, 0, 0.2, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1] }}
               className="absolute inset-0"
             >
               {currentScene?.scene()}
             </motion.div>
           </AnimatePresence>
-        </div>
 
-        {/* 左侧文字压暗（让标题更易读） */}
-        <div
-          className="absolute inset-0 pointer-events-none z-10"
-          style={{
-            background:
-              "linear-gradient(90deg, rgba(6,8,13,0.92) 0%, rgba(6,8,13,0.55) 38%, rgba(6,8,13,0.10) 70%, transparent 100%)",
-          }}
-        />
-        {/* 底部柔和压暗，让统计行更易读 */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-80 pointer-events-none z-10"
-          style={{
-            background:
-              "linear-gradient(to top, rgba(6,8,13,0.85) 0%, rgba(6,8,13,0.40) 50%, transparent 100%)",
-          }}
-        />
+          {/* 左侧文字压暗（让标题更易读，与 cover 一致） */}
+          <div
+            className="absolute inset-0 pointer-events-none z-10"
+            style={{
+              background:
+                "linear-gradient(90deg, rgba(6,8,13,0.95) 0%, rgba(6,8,13,0.75) 35%, rgba(6,8,13,0.25) 65%, rgba(6,8,13,0.05) 100%)",
+            }}
+          />
+        </div>
 
         {/* 主文案（带反向视差，形成深度感） */}
         <div
@@ -778,6 +772,37 @@ export default function Home() {
             </motion.div>
           ))}
         </div>
+
+        {/* ⭐ Hero 内的 STORIES CURATED 章节链接（cover 风格，左下） */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1.6 }}
+          className="absolute bottom-32 left-10 md:left-20 z-20"
+        >
+          <div className="text-[10px] tracking-[0.4em] uppercase text-white/35 mb-3">
+            STORIES CURATED
+          </div>
+          <div className="flex items-center gap-x-4 gap-y-2 text-[11px] tracking-[0.3em] uppercase flex-wrap max-w-md">
+            {[
+              { key: "wanderlust", label: "THE WANDERLUST", color: "bg-cyan-400" },
+              { key: "memories", label: "MEMORIES MADE", color: "bg-amber-400" },
+              { key: "trails", label: "PRESENT TRAILS", color: "bg-violet-400" },
+            ].map((ch, i) => (
+              <span key={ch.key} className="flex items-center gap-x-4">
+                <button
+                  className="flex items-center gap-2 group text-white/55 hover:text-white/85 transition-colors"
+                >
+                  <span
+                    className={`h-1 w-1 rounded-full ${ch.color} group-hover:scale-150 transition-transform`}
+                  />
+                  {ch.label}
+                </button>
+                {i < 2 && <span className="text-white/15">·</span>}
+              </span>
+            ))}
+          </div>
+        </motion.div>
 
         {/* ⭐ 著名地点列表：5 个（World Map + 4 张真实风景照），点击平滑切换（放大 1/3 + pop-out 动效） */}
         <motion.div
