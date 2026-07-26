@@ -241,11 +241,11 @@ function IcelandFallback() {
 // 公共导出
 // ──────────────────────────────────────────────────────────
 
-/** 世界地图背景（v0.6.6-pre 风格：center 对齐、无 filter、无 animation） */
+/** 世界地图背景（v0.6.6-pre 风格：cover + center） */
 export function WorldMapScene() {
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
-      {/* 深空底色（万一图加载失败不会露出白底） */}
+      {/* 深空底色 */}
       <div
         className="absolute inset-0"
         style={{
@@ -253,7 +253,7 @@ export function WorldMapScene() {
             "radial-gradient(ellipse 80% 60% at 50% 50%, #0a1426 0%, #050810 60%, #02040a 100%)",
         }}
       />
-      {/* NASA earth-day.jpg：cover + center，不动不漂 */}
+      {/* NASA earth-day.jpg：cover + center（v0.6.6-pre 同款） */}
       <div
         className="absolute inset-0"
         style={{
@@ -263,7 +263,7 @@ export function WorldMapScene() {
           backgroundRepeat: "no-repeat",
         }}
       />
-      {/* 经纬网格（subtle，仅作氛围） */}
+      {/* 经纬网格（subtle） */}
       <svg
         className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
         viewBox="0 0 100 100"

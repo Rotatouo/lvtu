@@ -882,9 +882,9 @@ export default function Home() {
         </motion.div>
 
         {/* 底部滚动提示 */}
-        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-20 text-[10px] tracking-[0.4em] uppercase text-white/35 pointer-events-none flex items-center gap-2">
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 text-[10px] tracking-[0.4em] uppercase text-white/35 pointer-events-none flex items-center gap-2">
           <span className="w-1 h-1 rounded-full bg-cyan-300/60 animate-pulse" />
-          移动鼠标感受水纹 · 下滑探索更多
+          下滑探索更多
         </div>
       </section>
 
@@ -1009,60 +1009,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - 3 个 chapter 链接 + 数字徽章（数据同步 works） */}
+      {/* Footer - 3 个 chapter 链接（v0.6.6-pre 极简风格） */}
       <footer className="relative px-10 py-16 text-center border-t border-white/5">
-        <div className="text-[10px] tracking-[0.4em] uppercase text-white/30 mb-6">
-          STORIES CURATED · 章节速览
+        <div className="text-[10px] tracking-[0.4em] uppercase text-white/30 mb-4">
+          STORIES CURATED
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] tracking-[0.3em] uppercase">
           {[
-            {
-              key: "wanderlust",
-              label: "THE WANDERLUST",
-              cn: "想去的地方",
-              count: chapterCounts.wanderlust,
-              color: "bg-cyan-400",
-              href: "/journals?status=want_to_go",
-            },
-            {
-              key: "memories",
-              label: "MEMORIES MADE",
-              cn: "去过的地方",
-              count: chapterCounts.memories,
-              color: "bg-amber-400",
-              href: "/journals?status=been_there",
-            },
-            {
-              key: "trails",
-              label: "PRESENT TRAILS",
-              cn: "在路上",
-              count: chapterCounts.trails,
-              color: "bg-violet-400",
-              href: "/journals",
-            },
+            { key: "wanderlust", label: "THE WANDERLUST", color: "bg-cyan-400" },
+            { key: "memories", label: "MEMORIES MADE", color: "bg-amber-400" },
+            { key: "trails", label: "PRESENT TRAILS", color: "bg-violet-400" },
           ].map((ch, i) => (
-            <Link
-              key={ch.key}
-              href={ch.href}
-              className="group flex items-center gap-3 text-white/55 hover:text-white/85 transition-colors"
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${ch.color} group-hover:scale-150 transition-transform`} />
-              <span className="text-[11px] tracking-[0.3em] uppercase font-medium">
+            <span key={ch.key} className="flex items-center gap-x-5">
+              <button
+                onClick={() => {/* 弹层已在前文处理 */}}
+                className="flex items-center gap-2 group text-white/55 hover:text-white/85 transition-colors"
+              >
+                <span
+                  className={`h-1 w-1 rounded-full ${ch.color} group-hover:scale-150 transition-transform`}
+                />
                 {ch.label}
-              </span>
-              <span className="text-[10px] text-white/40 group-hover:text-white/70 transition-colors">
-                · {ch.cn}
-              </span>
-              <span className="px-2 py-0.5 rounded-full bg-white/8 group-hover:bg-white/15 text-[10px] text-white/70 tracking-wider border border-white/10 transition-all">
-                {ch.count}
-              </span>
-              {i < 2 && (
-                <span className="text-white/15 ml-2 select-none">·</span>
-              )}
-            </Link>
+              </button>
+              {i < 2 && <span className="text-white/15">·</span>}
+            </span>
           ))}
         </div>
-        <p className="text-white/30 text-[11px] mt-8">v0.7.2 · Atlas · World Map + 5 Lands · Minimal Cursor</p>
+        <p className="text-white/30 text-[11px] mt-8">v0.7.3 · Atlas · World Map + 5 Lands</p>
       </footer>
 
       {/* Modals */}
