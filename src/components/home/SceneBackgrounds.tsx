@@ -241,45 +241,17 @@ function IcelandFallback() {
 // 公共导出
 // ──────────────────────────────────────────────────────────
 
-/** 世界地图背景（v0.6.6-pre 风格：cover + center） */
+/** 世界地图背景（与 CoverPage WorldBackground 同款：仅一个 div，不加任何额外遮罩/网格） */
 export function WorldMapScene() {
   return (
-    <div className="absolute inset-0 overflow-hidden bg-black">
-      {/* 深空底色 */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 60% at 50% 50%, #0a1426 0%, #050810 60%, #02040a 100%)",
-        }}
-      />
-      {/* NASA earth-day.jpg：cover + center（v0.6.6-pre 同款） */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: "url('/textures/earth-day.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      />
-      {/* 经纬网格（subtle） */}
-      <svg
-        className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-      >
-        {[20, 40, 60, 80].map((y) => (
-          <line key={`h${y}`} x1="0" y1={y} x2="100" y2={y} stroke="white" strokeWidth="0.15" />
-        ))}
-        {[25, 50, 75].map((x) => (
-          <line key={`v${x}`} x1={x} y1="0" x2={x} y2="100" stroke="white" strokeWidth="0.15" />
-        ))}
-      </svg>
-      {/* 全局压暗：让前景文字更易读 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#06080d]/95 via-transparent to-[#06080d]/30" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#06080d] via-[#06080d]/40 to-transparent" />
-    </div>
+    <div
+      className="absolute inset-0"
+      style={{
+        backgroundImage: "url('/textures/earth-day.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    />
   );
 }
 
