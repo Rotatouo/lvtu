@@ -50,6 +50,18 @@ const LOCATION_FIELDS: readonly LocationField[] = [
 const CLUE_TIERS: readonly ClueTier[] = ["text", "landmark", "weak"];
 const DECISIONS: readonly ExpectedDecision[] = ["confirm", "review", "manual"];
 
+const COUNTRY_ALIASES = new Map<string, string>([
+  ["中国", "中国"],
+  ["China", "中国"],
+  ["中华人民共和国", "中国"],
+]);
+
+const BEIJING_ALIASES = new Map<string, string>([
+  ["北京", "北京"],
+  ["Beijing", "北京"],
+  ["北京市", "北京"],
+]);
+
 function normalizeLocationValue(
   field: LocationField,
   value: string | null
@@ -59,10 +71,13 @@ function normalizeLocationValue(
   const trimmed = value.trim();
 
   if (field === "country") {
-    return trimmed === "中华人民共和国" ? "中国" : trimmed;
+    return COUNTRY_ALIASES.get(trimmed) ?? trimmed;
   }
 
   if (field === "region") {
+    const alias = BEIJING_ALIASES.get(trimmed);
+    if (alias) return alias;
+
     return trimmed.replace(
       /(?:壮族自治区|回族自治区|维吾尔自治区|特别行政区|自治区|省|市)$/u,
       ""
@@ -70,6 +85,9 @@ function normalizeLocationValue(
   }
 
   if (field === "city") {
+    const alias = BEIJING_ALIASES.get(trimmed);
+    if (alias) return alias;
+
     return trimmed.replace(/(?:自治州|地区|市)$/u, "");
   }
 

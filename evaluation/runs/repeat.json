@@ -1,0 +1,317 @@
+[
+  {
+    "runId": "repeat:eval-01:1",
+    "sampleId": "eval-01",
+    "mode": "repeat",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:07.354Z",
+    "durationMs": 1802,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "王府井大街",
+      "confidence": "high",
+      "evidence": "图片中的路牌显示“王府井大街”，背景为Prada店铺，位于北京王府井地区。",
+      "lat": 39.9126,
+      "lng": 116.4041,
+      "openingNote": null
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-01:2",
+    "sampleId": "eval-01",
+    "mode": "repeat",
+    "attempt": 2,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:09.159Z",
+    "durationMs": 1280,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "王府井大街",
+      "confidence": "high",
+      "evidence": "图片中的路牌显示“王府井大街”，背景为Prada店铺，位于北京王府井地区。",
+      "lat": 39.9124,
+      "lng": 116.4053,
+      "openingNote": null
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-01:3",
+    "sampleId": "eval-01",
+    "mode": "repeat",
+    "attempt": 3,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:10.440Z",
+    "durationMs": 1763,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "王府井大街",
+      "confidence": "high",
+      "evidence": "图片中的路牌显示“王府井大街”，背景为Prada店铺，位于北京王府井地区。",
+      "lat": 39.9165,
+      "lng": 116.4038,
+      "openingNote": null
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-02:1",
+    "sampleId": "eval-02",
+    "mode": "repeat",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:12.207Z",
+    "durationMs": 1343,
+    "output": {
+      "country": "中国",
+      "region": null,
+      "city": null,
+      "attraction": "东大桥路",
+      "confidence": "high",
+      "evidence": "绿色路牌上清晰显示“东大桥路”及其拼音“DONGDAQIAO LU”，表明这是位于中国的某条道路。",
+      "lat": null,
+      "lng": null,
+      "openingNote": null
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "repeat:eval-02:2",
+    "sampleId": "eval-02",
+    "mode": "repeat",
+    "attempt": 2,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:13.551Z",
+    "durationMs": 1175,
+    "output": {
+      "country": "中国",
+      "region": null,
+      "city": null,
+      "attraction": null,
+      "confidence": "low",
+      "evidence": "东大桥路 (DONGDAQIAO LU) 是一个在中国常见的街道名称，但具体位置需要更多信息来确定。",
+      "lat": null,
+      "lng": null,
+      "openingNote": null
+    },
+    "decision": "manual"
+  },
+  {
+    "runId": "repeat:eval-02:3",
+    "sampleId": "eval-02",
+    "mode": "repeat",
+    "attempt": 3,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:14.727Z",
+    "durationMs": 1355,
+    "output": {
+      "country": "中国",
+      "region": "山东省",
+      "city": "青岛市",
+      "attraction": null,
+      "confidence": "high",
+      "evidence": "东大桥路 (DONGDAQIAO LU) 是青岛市的一条道路，位于市南区。",
+      "lat": 36.0653,
+      "lng": 120.3784,
+      "openingNote": null
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "repeat:eval-11:1",
+    "sampleId": "eval-11",
+    "mode": "repeat",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:16.084Z",
+    "durationMs": 1392,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "八达岭长城",
+      "confidence": "high",
+      "evidence": "图片显示的是位于中国北京的八达岭长城，其特征为蜿蜒的城墙和周围的绿色山丘。",
+      "lat": 40.4328,
+      "lng": 116.0195,
+      "openingNote": null
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-11:2",
+    "sampleId": "eval-11",
+    "mode": "repeat",
+    "attempt": 2,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:17.480Z",
+    "durationMs": 1748,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "八达岭长城",
+      "confidence": "high",
+      "evidence": "图片显示的是位于中国北京的八达岭长城，其特征为蜿蜒的城墙和周围的绿色山丘。",
+      "lat": 40.4328,
+      "lng": 116.0158,
+      "openingNote": null
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-11:3",
+    "sampleId": "eval-11",
+    "mode": "repeat",
+    "attempt": 3,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:19.229Z",
+    "durationMs": 1522,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "八达岭长城",
+      "confidence": "high",
+      "evidence": "图片显示的是位于中国北京的八达岭长城，其特征为蜿蜒的城墙和周围的绿色山丘。",
+      "lat": 40.4328,
+      "lng": 116.0195,
+      "openingNote": null
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-12:1",
+    "sampleId": "eval-12",
+    "mode": "repeat",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:20.752Z",
+    "durationMs": 1473,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "故宫博物院",
+      "confidence": "high",
+      "evidence": "图片显示的是位于北京的故宫博物院，其标志性的红色墙壁、金色屋顶和护城河是故宫的典型特征。",
+      "lat": 39.9167,
+      "lng": 116.3972,
+      "openingNote": "故宫博物院全年开放，但需提前预约门票。"
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-12:2",
+    "sampleId": "eval-12",
+    "mode": "repeat",
+    "attempt": 2,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:22.227Z",
+    "durationMs": 1463,
+    "output": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "故宫博物院",
+      "confidence": "high",
+      "evidence": "图片显示的是故宫博物院的角楼，位于北京市中心，是中国明清两代的皇家宫殿，也是世界上现存规模最大、保存最完整的木质结构古建筑之一。",
+      "lat": 39.9166,
+      "lng": 116.3972,
+      "openingNote": "故宫博物院全年开放，但需提前预约门票。"
+    },
+    "decision": "confirm"
+  },
+  {
+    "runId": "repeat:eval-12:3",
+    "sampleId": "eval-12",
+    "mode": "repeat",
+    "attempt": 3,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:23.691Z",
+    "durationMs": 1408,
+    "output": {
+      "country": "中国",
+      "region": null,
+      "city": "北京",
+      "attraction": "故宫博物院",
+      "confidence": "high",
+      "evidence": "图片显示的是位于北京的故宫博物院，其标志性的红色墙壁、金色屋顶和护城河是故宫的典型特征。",
+      "lat": 39.916668,
+      "lng": 116.397228,
+      "openingNote": "故宫博物院全年开放，但需提前预约门票。"
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "repeat:eval-21:1",
+    "sampleId": "eval-21",
+    "mode": "repeat",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:25.100Z",
+    "durationMs": 1676,
+    "output": {
+      "country": "China",
+      "region": null,
+      "city": "Shanghai",
+      "attraction": null,
+      "confidence": "high",
+      "evidence": "The image depicts a tree-lined street in Shanghai, China, with characteristic architecture and vehicles. The presence of Chinese license plates and the style of the trees (likely Plane trees) further support this identification.",
+      "lat": 31.2304,
+      "lng": 121.4737,
+      "openingNote": null
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "repeat:eval-21:2",
+    "sampleId": "eval-21",
+    "mode": "repeat",
+    "attempt": 2,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:26.778Z",
+    "durationMs": 1437,
+    "output": {
+      "country": "中国",
+      "region": "华东地区",
+      "city": "上海市",
+      "attraction": null,
+      "confidence": "high",
+      "evidence": "街道两旁绿树成荫，车辆行驶有序，行人活动自然，具有典型的城市街道特征。",
+      "lat": 31.2304,
+      "lng": 121.4737,
+      "openingNote": null
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "repeat:eval-21:3",
+    "sampleId": "eval-21",
+    "mode": "repeat",
+    "attempt": 3,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T19:41:28.216Z",
+    "durationMs": 1533,
+    "output": {
+      "country": "中国",
+      "region": "华东地区",
+      "city": "上海市",
+      "attraction": null,
+      "confidence": "high",
+      "evidence": "街道两旁绿树成荫，车辆行驶有序，行人和骑自行车的人在人行道上活动，典型的上海城市街道景象。",
+      "lat": 31.2304,
+      "lng": 121.4737,
+      "openingNote": null
+    },
+    "decision": "review"
+  }
+]

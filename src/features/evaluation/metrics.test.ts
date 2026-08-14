@@ -184,4 +184,29 @@ describe("calculateMetrics", () => {
     });
     expect(report.badcaseIds).toEqual(["eval-01"]);
   });
+
+  it("normalizes explicit China and Beijing aliases but keeps attractions strict", () => {
+    const report = calculateMetrics([
+      sample({
+        expected: {
+          country: "中国",
+          region: "北京市",
+          city: "北京市",
+          attraction: "天坛公园祈年殿",
+        },
+        actual: {
+          country: "China",
+          region: "Beijing",
+          city: "Beijing",
+          attraction: "Temple of Heaven",
+        },
+      }),
+    ]);
+
+    expect(report.fields.country).toEqual({ correct: 1, total: 1, rate: 1 });
+    expect(report.fields.region).toEqual({ correct: 1, total: 1, rate: 1 });
+    expect(report.fields.city).toEqual({ correct: 1, total: 1, rate: 1 });
+    expect(report.fields.attraction).toEqual({ correct: 0, total: 1, rate: 0 });
+    expect(report.badcaseIds).toEqual(["eval-01"]);
+  });
 });
