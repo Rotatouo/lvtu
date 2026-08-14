@@ -17,6 +17,7 @@ interface ClassifyOptions {
   apiKey?: string;
   baseUrl?: string;
   fetcher?: typeof fetch;
+  prompt?: string;
   signal?: AbortSignal;
 }
 
@@ -99,7 +100,9 @@ export async function classifyTravelImage(
               { type: "image_url", image_url: { url: imageUrl } },
               {
                 type: "text",
-                text: "识别这张旅行图片的地点。只返回 JSON，字段为 country、region、city、attraction、confidence(high|medium|low)、evidence、lat、lng、opening_note。没有可靠依据的字段返回 null，不要猜测。",
+                text:
+                  options.prompt ??
+                  "识别这张旅行图片的地点。只返回 JSON，字段为 country、region、city、attraction、confidence(high|medium|low)、evidence、lat、lng、opening_note。没有可靠依据的字段返回 null，不要猜测。",
               },
             ],
           },

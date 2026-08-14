@@ -218,6 +218,19 @@ export function buildRepeatJobs(
   return jobs;
 }
 
+export function buildRetestJobs(
+  samples: EvaluationSample[],
+  sampleIds: EvaluationId[],
+): EvaluationJob[] {
+  const samplesById = new Map(samples.map((sample) => [sample.id, sample]));
+
+  return [...new Set(sampleIds)].map((sampleId) => {
+    const selectedSample = samplesById.get(sampleId);
+    if (!selectedSample) throw new Error(`UNKNOWN_SAMPLE_ID:${sampleId}`);
+    return buildJob(selectedSample, "retest", 1);
+  });
+}
+
 export function resumePendingJobs(
   jobs: EvaluationJob[],
   existingRuns: EvaluationRun[],

@@ -30,20 +30,21 @@ const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const MANIFEST_PATH = resolve(REPOSITORY_ROOT, "evaluation/manifest.json");
 const MODEL = "qwen-vl-plus";
 
-type Classifier = (
+export type Classifier = (
   bytes: ArrayBuffer,
   mimeType: string,
-  options: { apiKey: string },
+  options: { apiKey: string; prompt?: string },
 ) => Promise<InferenceResult>;
 
 type CliSelection =
   | { mode: "main" }
   | { mode: "repeat"; sampleIds: EvaluationId[]; times: number };
 
-interface RunEvaluationJobsOptions {
+export interface RunEvaluationJobsOptions {
   jobs: EvaluationJob[];
   existingRuns: EvaluationRun[];
   apiKey: string;
+  prompt?: string;
   classify?: Classifier;
   readImage?: (imagePath: string) => Promise<ArrayBuffer>;
   persist: (runs: EvaluationRun[]) => Promise<void>;
@@ -120,6 +121,7 @@ export async function runEvaluationJobs({
   jobs,
   existingRuns,
   apiKey,
+  prompt,
   classify = classifyTravelImage,
   readImage = readImageFromRepository,
   persist,
@@ -135,7 +137,11 @@ export async function runEvaluationJobs({
 
     try {
       const imageBytes = await readImage(job.imagePath);
-      output = await classify(imageBytes, "image/webp", { apiKey });
+      output = await classify(
+        imageBytes,
+        "image/webp",
+        prompt === undefined ? { apiKey } : { apiKey, prompt },
+      );
     } catch (error) {
       if (!(error instanceof DashScopeError)) throw error;
       const durationMs = Math.max(0, now() - startedAtMs);

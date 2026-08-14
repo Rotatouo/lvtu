@@ -86,4 +86,32 @@ describe("classifyTravelImage", () => {
       "data:image/png;base64,AQID",
     );
   });
+
+  it("overrides the request prompt when one is supplied", async () => {
+    const fetcher = vi.fn().mockResolvedValue(
+      Response.json({
+        choices: [
+          {
+            message: {
+              content:
+                '{"country":null,"region":null,"city":null,"attraction":null,"confidence":"low","evidence":"No unique clue","lat":null,"lng":null,"opening_note":null}',
+            },
+          },
+        ],
+      }),
+    );
+
+    await classifyTravelImage(new ArrayBuffer(2), "image/webp", {
+      apiKey: "test-credential",
+      fetcher,
+      prompt: "Use only visible evidence. Do not guess.",
+    });
+
+    const [, request] = fetcher.mock.calls[0];
+    const body = JSON.parse(String(request.body));
+    expect(body.messages[0].content[1]).toEqual({
+      type: "text",
+      text: "Use only visible evidence. Do not guess.",
+    });
+  });
 });

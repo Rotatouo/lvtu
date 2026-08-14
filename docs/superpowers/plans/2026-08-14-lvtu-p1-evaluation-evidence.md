@@ -33,7 +33,7 @@
 
 ## 任务 1：定义评测 Schema 与人工标注清单
 
-- [ ] **步骤 1：编写失败的清单校验测试**
+- [x] **步骤 1：编写失败的清单校验测试**
 
 ```ts
 it("requires exactly ten samples per clue tier", () => {
@@ -46,21 +46,21 @@ it("requires a verified source note for every sample", () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/evaluation/validate.test.ts`
 
 预期：FAIL，校验模块不存在。
 
-- [ ] **步骤 3：实现类型与校验**
+- [x] **步骤 3：实现类型与校验**
 
 每个样本固定包含：`id`、`imagePath`、`clueTier`、`sourceNote`、`expected` 四字段、`expectedDecision`、`verificationNote`。ID 必须是 `eval-01` 至 `eval-30`，三类各 10 张。
 
-- [ ] **步骤 4：用户准备并核验 30 张图片**
+- [x] **步骤 4：用户准备并核验 30 张图片**
 
 用户按固定文件名放入图片，填写准确地点和核验依据；实现者运行校验器。若公开平台素材没有明确授权，改用用户自有截图或具备公开使用条件的图片，不以技术手段绕过授权。
 
-- [ ] **步骤 5：运行校验测试并提交**
+- [x] **步骤 5：运行校验测试并提交**
 
 ```powershell
 pnpm test:run src/features/evaluation/validate.test.ts
@@ -70,7 +70,7 @@ git commit -m "data: add verified evaluation manifest"
 
 ## 任务 2：实现字段级与决策级指标
 
-- [ ] **步骤 1：编写失败的指标口径测试**
+- [x] **步骤 1：编写失败的指标口径测试**
 
 ```ts
 it("scores each location field independently", () => {
@@ -86,13 +86,13 @@ it("treats a justified null on an unidentifiable sample as correct", () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/evaluation/metrics.test.ts`
 
 预期：FAIL，`calculateMetrics` 不存在。
 
-- [ ] **步骤 3：实现纯函数指标计算**
+- [x] **步骤 3：实现纯函数指标计算**
 
 输出结构固定为：
 
@@ -100,13 +100,13 @@ it("treats a justified null on an unidentifiable sample as correct", () => {
 interface EvaluationReport {
   sampleCount: 30;
   fields: Record<"country" | "region" | "city" | "attraction", { correct: number; total: number; rate: number }>;
-  decisions: { confirm: number; review: number; manual: number };
+  decisions: Record<"confirm" | "review" | "manual", { count: number; total: number; rate: number }>;
   tiers: Record<"text" | "landmark" | "weak", TierMetrics>;
   badcaseIds: string[];
 }
 ```
 
-- [ ] **步骤 4：运行测试和局部 lint**
+- [x] **步骤 4：运行测试和局部 lint**
 
 ```powershell
 pnpm test:run src/features/evaluation/metrics.test.ts
@@ -115,7 +115,7 @@ pnpm exec eslint src/features/evaluation/metrics.ts
 
 预期：全部通过。
 
-- [ ] **步骤 5：提交指标计算**
+- [x] **步骤 5：提交指标计算**
 
 ```powershell
 git add src/features/evaluation
@@ -124,23 +124,23 @@ git commit -m "feat: add evaluation metrics"
 
 ## 任务 3：运行 30 张主评测与 15 次重复测试
 
-- [ ] **步骤 1：实现安全评测脚本**
+- [x] **步骤 1：实现安全评测脚本**
 
 脚本先检查 `DASHSCOPE_API_KEY` 是否存在，只输出样本 ID、耗时、成功或公开错误代码；不得输出环境变量、Authorization header 或完整 Base64。每完成一张便原子写入临时文件并重命名，支持从已有 ID 继续。
 
-- [ ] **步骤 2：验证缺少环境变量时安全退出**
+- [x] **步骤 2：验证缺少环境变量时安全退出**
 
 运行：`Remove-Item Env:DASHSCOPE_API_KEY -ErrorAction SilentlyContinue; pnpm exec tsx scripts/run-evaluation.mts --main`
 
 预期：退出码 1，输出 `DASHSCOPE_API_KEY is not configured`，不生成运行记录。
 
-- [ ] **步骤 3：由用户在本机环境配置变量后运行主评测**
+- [x] **步骤 3：由用户在本机环境配置变量后运行主评测**
 
 运行：`pnpm exec tsx scripts/run-evaluation.mts --main`
 
 预期：`evaluation/runs/main.json` 含 30 条记录，每个 ID 唯一。
 
-- [ ] **步骤 4：运行重复测试**
+- [x] **步骤 4：运行重复测试**
 
 选择 `text` 2 张、`landmark` 2 张、`weak` 1 张，每张调用 3 次：
 
@@ -148,7 +148,7 @@ git commit -m "feat: add evaluation metrics"
 
 预期：`evaluation/runs/repeat.json` 含 15 条记录。
 
-- [ ] **步骤 5：构建报告并校验数量**
+- [x] **步骤 5：构建报告并校验数量**
 
 运行：
 
@@ -159,7 +159,7 @@ pnpm test:run src/features/evaluation
 
 预期：`report.json.sampleCount === 30`，重复记录为 15 条，不混入主指标。
 
-- [ ] **步骤 6：提交真实评测记录**
+- [x] **步骤 6：提交真实评测记录**
 
 ```powershell
 git add evaluation/runs evaluation/report.json scripts
@@ -168,25 +168,25 @@ git commit -m "data: record qwen evaluation runs"
 
 ## 任务 4：归因 3 至 5 个真实 Badcase
 
-- [ ] **步骤 1：从报告中选取真实错误**
+- [x] **步骤 1：从报告中选取真实错误**
 
 至少覆盖弱线索过度推断、文字与画面冲突、粒度不一致三类；若某类未在真实运行中出现，不得虚构，改选实际出现的错误类型。
 
-- [ ] **步骤 2：为每个 Badcase 写结构化记录**
+- [x] **步骤 2：为每个 Badcase 写结构化记录**
 
 每项包含 `expected`、`actual`、`risk`、`rootCauseHypothesis`、`productStrategy` 和 `retestRunIds`。原因使用“假设”措辞，除非有 Prompt 对照实验支持因果结论。
 
-- [ ] **步骤 3：执行策略复测**
+- [x] **步骤 3：执行策略复测**
 
 只修改一个变量：Prompt 或输出规则；保留改动前后运行 ID。复测结果无改善也要如实记录。
 
-- [ ] **步骤 4：运行 Schema 和数量测试**
+- [x] **步骤 4：运行 Schema 和数量测试**
 
 运行：`pnpm test:run src/features/evaluation`
 
 预期：Badcase 数量在 3 至 5，每项引用存在的主评测和复测记录。
 
-- [ ] **步骤 5：提交 Badcase**
+- [x] **步骤 5：提交 Badcase**
 
 ```powershell
 git add evaluation src/features/evaluation

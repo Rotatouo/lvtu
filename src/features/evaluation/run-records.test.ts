@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -10,6 +10,7 @@ import type { EvaluationSample } from "./types";
 import {
   buildMainJobs,
   buildRepeatJobs,
+  buildRetestJobs,
   deriveDecision,
   resumePendingJobs,
   validateEvaluationRuns,
@@ -17,8 +18,12 @@ import {
 } from "./run-records";
 // @ts-expect-error -- Vitest resolves .mts imports; the app tsconfig disallows TS extensions.
 import { parseCliArgs, readExistingRuns, runCli, runEvaluationJobs, writeRunsAtomically } from "../../../scripts/run-evaluation.mts";
+// @ts-expect-error -- Vitest resolves .mts imports; the app tsconfig disallows TS extensions.
+import { BADCASE_IDS, CAUTIOUS_PROMPT, runBadcaseRetest } from "../../../scripts/run-badcase-retest.mts";
 
 const STARTED_AT = "2026-08-15T00:00:00.000Z";
+const EXPECTED_CAUTIOUS_PROMPT =
+  "Identify the travel location using only text visibly present in the image or a uniquely identifiable landmark. Generic road names must not be used to infer a city. If similar landmarks cannot be distinguished with confidence, lower the confidence and leave uncertain location fields null. Do not guess. Return only JSON with country, region, city, attraction, confidence (high|medium|low), evidence, lat, lng, and opening_note.";
 
 function inference(overrides: Partial<InferenceResult> = {}): InferenceResult {
   return {
@@ -221,6 +226,30 @@ describe("evaluation jobs", () => {
     );
   });
 
+  it("builds one retest attempt for each selected sample", () => {
+    expect(
+      buildRetestJobs(
+        [sample(4), sample(8), sample(11)],
+        ["eval-04", "eval-11"],
+      ),
+    ).toEqual([
+      {
+        runId: "retest:eval-04:1",
+        sampleId: "eval-04",
+        imagePath: "evaluation/images/eval-04.webp",
+        mode: "retest",
+        attempt: 1,
+      },
+      {
+        runId: "retest:eval-11:1",
+        sampleId: "eval-11",
+        imagePath: "evaluation/images/eval-11.webp",
+        mode: "retest",
+        attempt: 1,
+      },
+    ]);
+  });
+
   it("resumes by removing jobs with completed run IDs", () => {
     const jobs = buildMainJobs([sample(1), sample(2)]);
 
@@ -300,6 +329,33 @@ describe("evaluation CLI", () => {
     ]);
   });
 
+  it("passes a supplied prompt only to the classifier options", async () => {
+    const classify = vi.fn().mockResolvedValue(inference());
+    const persist = vi.fn().mockResolvedValue(undefined);
+
+    await runEvaluationJobs({
+      jobs: buildRetestJobs([sample(4)], ["eval-04"]),
+      existingRuns: [],
+      apiKey: "test-key",
+      prompt: "Cautious prompt",
+      classify,
+      readImage: vi.fn().mockResolvedValue(new ArrayBuffer(2)),
+      persist,
+      log: vi.fn(),
+      now: vi
+        .fn()
+        .mockReturnValueOnce(Date.parse(STARTED_AT))
+        .mockReturnValueOnce(Date.parse(STARTED_AT) + 5),
+    });
+
+    expect(classify).toHaveBeenCalledWith(
+      expect.any(ArrayBuffer),
+      "image/webp",
+      { apiKey: "test-key", prompt: "Cautious prompt" },
+    );
+    expect(persist.mock.calls[0][0][0]).not.toHaveProperty("prompt");
+  });
+
   it("logs only the public DashScope error code for a failed job", async () => {
     const log = vi.fn();
     const persist = vi.fn();
@@ -338,6 +394,93 @@ describe("evaluation CLI", () => {
 
       expect(JSON.parse(await readFile(target, "utf8"))).toHaveLength(2);
       expect(await readdir(directory)).toEqual(["main.json"]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("badcase retest CLI", () => {
+  it("uses the fixed badcase IDs and cautious prompt", () => {
+    expect(BADCASE_IDS).toEqual([
+      "eval-04",
+      "eval-08",
+      "eval-11",
+      "eval-21",
+      "eval-25",
+    ]);
+    expect(CAUTIOUS_PROMPT).toBe(EXPECTED_CAUTIOUS_PROMPT);
+  });
+
+  it("fails before reading files without an API key", async () => {
+    await expect(
+      runBadcaseRetest({
+        environment: { NODE_ENV: "test" },
+        manifestPath: "missing-manifest.json",
+        targetPath: "must-not-be-created.json",
+      }),
+    ).rejects.toThrow("DASHSCOPE_API_KEY is not configured");
+  });
+
+  it("resumes validated retests and atomically persists each remaining run", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "lvtu-badcase-retest-"));
+    const manifestPath = join(directory, "manifest.json");
+    const targetPath = join(directory, "runs", "retest.json");
+    const manifest = Array.from({ length: 30 }, (_, index) => sample(index + 1));
+    const existingRun = completedRun({
+      runId: "retest:eval-04:1",
+      sampleId: "eval-04",
+      mode: "retest",
+    });
+    const classify = vi.fn().mockResolvedValue(inference());
+    const log = vi.fn();
+    let clock = Date.parse(STARTED_AT);
+
+    try {
+      await writeRunsAtomically(targetPath, [existingRun]);
+      await writeFile(manifestPath, JSON.stringify(manifest), "utf8");
+
+      const runs = await runBadcaseRetest({
+        environment: {
+          NODE_ENV: "test",
+          DASHSCOPE_API_KEY: "test-key",
+        },
+        manifestPath,
+        targetPath,
+        classify,
+        readImage: vi.fn().mockResolvedValue(new ArrayBuffer(2)),
+        log,
+        now: () => {
+          const current = clock;
+          clock += 5;
+          return current;
+        },
+      });
+
+      expect(runs.map((run) => run.runId)).toEqual([
+        "retest:eval-04:1",
+        "retest:eval-08:1",
+        "retest:eval-11:1",
+        "retest:eval-21:1",
+        "retest:eval-25:1",
+      ]);
+      expect(classify).toHaveBeenCalledTimes(4);
+      expect(classify.mock.calls.map((call) => call[2])).toEqual(
+        Array.from({ length: 4 }, () => ({
+          apiKey: "test-key",
+          prompt: EXPECTED_CAUTIOUS_PROMPT,
+        })),
+      );
+      expect(log.mock.calls.flat()).toEqual([
+        "eval-08 5ms success",
+        "eval-11 5ms success",
+        "eval-21 5ms success",
+        "eval-25 5ms success",
+      ]);
+
+      const persisted = JSON.parse(await readFile(targetPath, "utf8"));
+      expect(validateEvaluationRuns(persisted, "retest")).toEqual(runs);
+      expect(await readdir(join(directory, "runs"))).toEqual(["retest.json"]);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
