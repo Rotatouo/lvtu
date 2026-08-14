@@ -72,7 +72,7 @@
 - 创建：`src/test/setup.ts`
 - 修改：`next.config.ts`
 
-- [ ] **步骤 1：修复 pnpm 11 构建许可并添加测试依赖和脚本**
+- [x] **步骤 1：修复 pnpm 11 构建许可并添加测试依赖和脚本**
 
 先把 `pnpm-workspace.yaml` 从旧的 `ignoredBuiltDependencies` 改为明确布尔许可；只批准锁文件已包含、Next.js 运行所需的两个原生依赖：
 
@@ -105,7 +105,7 @@ pnpm add -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-li
 
 预期：`pnpm install --frozen-lockfile` 可执行；`package.json` 与 `pnpm-lock.yaml` 只增加上述测试与脚本依赖。
 
-- [ ] **步骤 2：创建 Vitest 配置和测试初始化**
+- [x] **步骤 2：创建 Vitest 配置和测试初始化**
 
 ```ts
 // vitest.config.mts
@@ -128,7 +128,7 @@ export default defineConfig({
 import "@testing-library/jest-dom/vitest";
 ```
 
-- [ ] **步骤 3：修正 Next.js 根目录与构建器配置**
+- [x] **步骤 3：修正 Next.js 根目录与构建器配置**
 
 ```ts
 // next.config.ts
@@ -143,19 +143,19 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 ```
 
-- [ ] **步骤 4：运行空测试、现有 lint 与构建，记录红灯**
+- [x] **步骤 4：运行空测试、现有 lint 与构建，记录红灯**
 
 运行：
 
 ```powershell
-pnpm test:run -- --passWithNoTests
+pnpm test:run --passWithNoTests
 pnpm lint
 pnpm build
 ```
 
 预期：空测试通过；lint 仍报告历史问题；build 仍因旧 `/api/classify` 的 Supabase 模块初始化失败。这两个红灯将在任务 7 收口。
 
-- [ ] **步骤 5：提交基线配置**
+- [x] **步骤 5：提交基线配置**
 
 ```powershell
 git add package.json pnpm-lock.yaml pnpm-workspace.yaml vitest.config.mts src/test/setup.ts next.config.ts
