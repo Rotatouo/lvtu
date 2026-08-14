@@ -200,7 +200,7 @@ describe("replaySamples", () => {
 
 预期：FAIL，模块 `./replay-samples` 不存在。
 
-- [ ] **步骤 3：实现数据类型**
+- [x] **步骤 3：实现数据类型**
 
 ```ts
 export type Confidence = "high" | "medium" | "low";
@@ -269,7 +269,7 @@ git commit -m "feat: add verified replay samples"
 - 创建：`src/features/portfolio/components/HumanReviewForm.tsx`
 - 创建：`src/features/portfolio/components/HumanReviewForm.test.tsx`
 
-- [ ] **步骤 1：编写失败的纯函数和组件测试**
+- [x] **步骤 1：编写失败的纯函数和组件测试**
 
 ```ts
 import { expect, it } from "vitest";
@@ -299,13 +299,13 @@ it("submits edited final values and preserves the AI values", () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/portfolio/session-collection.test.ts src/features/portfolio/components/HumanReviewForm.test.tsx`
 
 预期：FAIL，函数和组件不存在。
 
-- [ ] **步骤 3：实现最小会话收藏逻辑**
+- [x] **步骤 3：实现最小会话收藏逻辑**
 
 ```ts
 export function upsertConfirmedPlace(
@@ -316,11 +316,11 @@ export function upsertConfirmedPlace(
 }
 ```
 
-- [ ] **步骤 4：实现证据展示与人工确认表单**
+- [x] **步骤 4：实现证据展示与人工确认表单**
 
 `InferenceEvidence` 必须显示模式标签、置信度文字、`evidence` 和四个 AI 原始字段。`HumanReviewForm` 用受控输入初始化 `verified` 值，提交时创建新的 `final` 对象和 ISO 时间，不修改 `sample.ai`。
 
-- [ ] **步骤 5：运行测试和局部 lint**
+- [x] **步骤 5：运行测试和局部 lint**
 
 ```powershell
 pnpm test:run src/features/portfolio/session-collection.test.ts src/features/portfolio/components/HumanReviewForm.test.tsx
@@ -329,7 +329,7 @@ pnpm exec eslint src/features/portfolio/session-collection.ts src/features/portf
 
 预期：全部通过，无 lint 输出。
 
-- [ ] **步骤 6：提交人工确认链路**
+- [x] **步骤 6：提交人工确认链路**
 
 ```powershell
 git add src/features/portfolio
