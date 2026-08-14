@@ -665,7 +665,7 @@ pnpm start -- -p 3100
 
 `docs/verification/p0-browser-checklist.md` 记录视口、步骤、结果和截图路径。每个修复后重新运行相关组件测试和截图检查。
 
-- [ ] **步骤 6：最终提交 P0**
+- [x] **步骤 6：最终提交 P0**
 
 ```powershell
 git add src docs/verification
