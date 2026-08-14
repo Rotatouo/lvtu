@@ -10,6 +10,7 @@ export function TravelPath() {
       <svg viewBox="0 0 520 180">
         <motion.path
           animate={{ pathLength: 1, opacity: 1 }}
+          data-testid="travel-path-motion"
           d="M12 148 C96 62 158 164 239 92 S383 16 508 54"
           fill="none"
           initial={reduceMotion ? false : { pathLength: 0, opacity: 0.35 }}
