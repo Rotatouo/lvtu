@@ -438,7 +438,7 @@ git commit -m "feat: add stateless live classification"
 - 创建：`src/features/portfolio/components/ExperienceLab.tsx`
 - 创建：`src/features/portfolio/components/ExperienceLab.test.tsx`
 
-- [ ] **步骤 1：编写失败的模式切换和错误降级测试**
+- [x] **步骤 1：编写失败的模式切换和错误降级测试**
 
 ```tsx
 it("clearly separates replay and live modes", () => {
@@ -458,17 +458,17 @@ it("offers replay after a live request fails", async () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/portfolio/components/ExperienceLab.test.tsx`
 
 预期：FAIL，组件不存在。
 
-- [ ] **步骤 3：实现三个组件**
+- [x] **步骤 3：实现三个组件**
 
 `ExperienceLab` 管理 `mode`、选中样本、实时结果和会话收藏；`ReplaySampleList` 使用可见文本同时表达线索类别与决策状态；`LiveClassifier` 只接受单张图片并向 `/api/classify-live` 提交。所有 tab、输入和状态须有可访问名称。
 
-- [ ] **步骤 4：运行组件测试和局部 lint**
+- [x] **步骤 4：运行组件测试和局部 lint**
 
 运行：
 
@@ -479,7 +479,7 @@ pnpm exec eslint src/features/portfolio/components/ExperienceLab.tsx src/feature
 
 预期：全部通过。
 
-- [ ] **步骤 5：提交双模式体验**
+- [x] **步骤 5：提交双模式体验**
 
 ```powershell
 git add src/features/portfolio/components
