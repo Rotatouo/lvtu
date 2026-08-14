@@ -170,7 +170,7 @@ git commit -m "test: add portfolio test baseline"
 - 创建：`src/features/portfolio/replay-samples.test.ts`
 - 创建：`public/portfolio/samples/sample-01.webp` 至 `sample-06.webp`
 
-- [ ] **步骤 1：编写失败的数据完整性测试**
+- [x] **步骤 1：编写失败的数据完整性测试**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -194,7 +194,7 @@ describe("replaySamples", () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/portfolio/replay-samples.test.ts`
 
@@ -245,7 +245,7 @@ export interface ConfirmedPlace {
 
 用户将 6 张允许公开展示的脱敏截图放入上述固定路径，并为每张提供可核验地点。实现者把一次真实 `qwen-vl-plus` 输出原样写入 `ai`，把用户核验答案写入 `verified`。六张必须满足 `confirm/review/manual` 各两张；不得为了配平篡改模型输出。
 
-- [ ] **步骤 5：实现 `replaySamples` 并运行测试**
+- [x] **步骤 5：实现 `replaySamples` 并运行测试**
 
 实现时一次性写入 `sample-01` 至 `sample-06` 六条完整对象。每条都包含类型定义要求的全部字段，并直接引用该图片对应的真实调用记录与人工核验记录；不得提交示例常量、空字符串、虚构地点或省略项。
 
@@ -253,7 +253,7 @@ export interface ConfirmedPlace {
 
 预期：2 tests PASS。
 
-- [ ] **步骤 6：提交静态数据契约**
+- [x] **步骤 6：提交静态数据契约**
 
 ```powershell
 git add src/features/portfolio public/portfolio/samples
@@ -502,7 +502,7 @@ git commit -m "feat: add replay and live experience lab"
 - 修改：`src/app/layout.tsx`
 - 修改：`src/app/globals.css`
 
-- [ ] **步骤 1：编写失败的页面结构测试**
+- [x] **步骤 1：编写失败的页面结构测试**
 
 ```tsx
 it("renders the approved portfolio narrative in order", () => {
@@ -519,13 +519,13 @@ it("renders the approved portfolio narrative in order", () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/portfolio/components/PortfolioPage.test.tsx`
 
 预期：FAIL，现有首页仍显示旧导航和 Mock 工作流。
 
-- [ ] **步骤 3：把 `src/app/page.tsx` 收缩为组合层**
+- [x] **步骤 3：把 `src/app/page.tsx` 收缩为组合层**
 
 ```tsx
 import { AboutSection } from "@/features/portfolio/components/AboutSection";
@@ -547,15 +547,15 @@ export default function Home() {
 }
 ```
 
-- [ ] **步骤 4：实现 Field Notes token 与响应式布局**
+- [x] **步骤 4：实现 Field Notes token 与响应式布局**
 
 在 `globals.css` 定义 `--paper`、`--ink`、`--field-green`、`--signal-lime`、`--line`、`--muted`；所有章节使用全宽带状布局和受限内容宽度。390px 宽度下体验区按样本 → 模型证据 → 人工确认单列排列，固定控件不得超出视口。
 
-- [ ] **步骤 5：实现氛围与 reduced-motion**
+- [x] **步骤 5：实现氛围与 reduced-motion**
 
 `TravelPath` 使用 Framer Motion 绘制一次性路径进入；旅行照片仅在首屏和章节锚点使用轻微裁切过渡；模式、字段标记和确认状态使用 150–300ms 动画。CSS 与组件同时检查 `prefers-reduced-motion`，关闭路径绘制、景深位移和计数动画。
 
-- [ ] **步骤 6：更新 Metadata**
+- [x] **步骤 6：更新 Metadata**
 
 ```ts
 export const metadata: Metadata = {
@@ -564,7 +564,7 @@ export const metadata: Metadata = {
 };
 ```
 
-- [ ] **步骤 7：运行页面测试、局部 lint 和构建**
+- [x] **步骤 7：运行页面测试、局部 lint 和构建**
 
 ```powershell
 pnpm test:run src/features/portfolio/components/PortfolioPage.test.tsx
@@ -574,7 +574,7 @@ pnpm build
 
 预期：页面测试和局部 lint 通过；构建如果仍失败，只能来自未移除的旧 Supabase Route Handler，任务 7 收口。
 
-- [ ] **步骤 8：提交案例首页**
+- [x] **步骤 8：提交案例首页**
 
 ```powershell
 git add src/app src/features/portfolio/components

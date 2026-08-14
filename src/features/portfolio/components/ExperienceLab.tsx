@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
 import { upsertConfirmedPlace } from "../session-collection";
@@ -40,40 +41,55 @@ export function ExperienceLab({ samples }: { samples: ReplaySample[] }) {
   }
 
   return (
-    <section aria-labelledby="experience-title" id="experience">
-      <header>
-        <p>Experience lab</p>
+    <section aria-labelledby="experience-title" className="portfolio-band experience-section" id="experience">
+      <header className="portfolio-shell experience-header">
+        <div>
+          <p>Experience lab</p>
         <h2 id="experience-title">从模型判断到人工确认</h2>
-        <p>本次收藏 {collection.length} 个地点</p>
+          <span>选择一条真实记录，查看模型原始值，再决定是否接受或修改。</span>
+        </div>
+        <p className="collection-count"><strong>{collection.length}</strong> 本次收藏</p>
       </header>
-      <div aria-label="体验模式" role="tablist">
-        <button
-          aria-selected={mode === "replay"}
-          onClick={returnToReplay}
-          role="tab"
-          type="button"
-        >
-          评测回放
-        </button>
-        <button
-          aria-selected={mode === "live"}
-          onClick={() => setMode("live")}
-          role="tab"
-          type="button"
-        >
-          实时识别
-        </button>
-      </div>
+      <div className="portfolio-shell">
+        <div aria-label="体验模式" className="experience-tabs" role="tablist">
+          <button
+            aria-selected={mode === "replay"}
+            onClick={returnToReplay}
+            role="tab"
+            type="button"
+          >
+            评测回放
+          </button>
+          <button
+            aria-selected={mode === "live"}
+            onClick={() => setMode("live")}
+            role="tab"
+            type="button"
+          >
+            实时识别
+          </button>
+        </div>
 
       {mode === "replay" ? (
         selected ? (
-          <div>
+          <div className="experience-workspace">
             <ReplaySampleList
               onSelect={setSelected}
               samples={samples}
               selectedId={selected.id}
             />
-            <InferenceEvidence result={toReviewable(selected)} />
+            <div className="evidence-column">
+              <figure className="selected-sample-image">
+                <Image
+                  alt={selected.imageAlt}
+                  fill
+                  sizes="(max-width: 760px) 100vw, 36vw"
+                  src={selected.imageSrc}
+                />
+                <figcaption>{selected.title} · {selected.sourceNote}</figcaption>
+              </figure>
+              <InferenceEvidence result={toReviewable(selected)} />
+            </div>
             <HumanReviewForm
               onConfirm={(place) =>
                 setCollection((current) => upsertConfirmedPlace(current, place))
@@ -82,12 +98,13 @@ export function ExperienceLab({ samples }: { samples: ReplaySample[] }) {
             />
           </div>
         ) : (
-          <p>评测记录正在准备中</p>
+          <p className="empty-message">评测记录正在准备中</p>
         )
       ) : (
-        <div>
+        <div className="live-workspace">
           <LiveClassifier
             onResult={setLiveResult}
+            onRequestStart={() => setLiveResult(null)}
             onReturnToReplay={returnToReplay}
           />
           {activeResult ? (
@@ -103,6 +120,7 @@ export function ExperienceLab({ samples }: { samples: ReplaySample[] }) {
           ) : null}
         </div>
       )}
+      </div>
     </section>
   );
 }

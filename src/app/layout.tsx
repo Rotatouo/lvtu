@@ -9,8 +9,8 @@ import "@fontsource/noto-serif-sc/500.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "旅途 - Journey",
-  description: "一座属于你的微型世界地图 - A world of your own",
+  title: "旅途｜AI 产品案例",
+  description: "从旅行截图识别到人工确认的 AI 应用产品案例，包含真实体验、探索性评测与 Badcase 复盘。",
 };
 
 export default function RootLayout({
@@ -20,17 +20,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body
-        className="antialiased"
-        style={{
-          background: "#06080d",
-          color: "#fff",
-          fontFamily:
-            '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        }}
-      >
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }

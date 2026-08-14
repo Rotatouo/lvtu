@@ -59,13 +59,14 @@ function HumanReviewFormFields({
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="review-form" onSubmit={handleSubmit}>
       <fieldset>
         <legend>核对并确认最终地点</legend>
         {(Object.keys(fieldLabels) as Array<keyof LocationFields>).map((key) => (
           <label key={key}>
             <span>{fieldLabels[key]}</span>
             <input
+              autoComplete="off"
               name={key}
               onChange={(event) => updateField(key, event.target.value)}
               value={finalFields[key]}
@@ -73,7 +74,7 @@ function HumanReviewFormFields({
           </label>
         ))}
       </fieldset>
-      <button type="submit">确认并加入本次收藏</button>
+      <button className="primary-action" type="submit">确认并加入本次收藏</button>
     </form>
   );
 }

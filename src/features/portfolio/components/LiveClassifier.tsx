@@ -7,11 +7,13 @@ import type { InferenceResult, ReviewableResult } from "../types";
 
 interface LiveClassifierProps {
   onResult: (result: ReviewableResult) => void;
+  onRequestStart: () => void;
   onReturnToReplay: () => void;
 }
 
 export function LiveClassifier({
   onResult,
+  onRequestStart,
   onReturnToReplay,
 }: LiveClassifierProps) {
   const [file, setFile] = useState<File | null>(null);
@@ -25,6 +27,7 @@ export function LiveClassifier({
       return;
     }
 
+    onRequestStart();
     setLoading(true);
     setError(null);
     const formData = new FormData();
@@ -65,10 +68,10 @@ export function LiveClassifier({
   }
 
   return (
-    <div>
-      <p>实时模型调用</p>
-      <form onSubmit={handleSubmit}>
-        <label>
+    <div className="live-classifier">
+      <p className="section-label">实时模型调用</p>
+      <form className="live-upload-form" onSubmit={handleSubmit}>
+        <label className="file-picker">
           <span>选择旅行截图</span>
           <input
             accept="image/jpeg,image/png,image/webp"
@@ -76,13 +79,13 @@ export function LiveClassifier({
             type="file"
           />
         </label>
-        <button disabled={loading} type="submit">
+        <button className="primary-action" disabled={!file || loading} type="submit">
           <ImageUp aria-hidden="true" size={18} />
           {loading ? "正在识别" : "开始识别"}
         </button>
       </form>
       {error ? (
-        <div role="alert">
+        <div className="inline-error" role="alert">
           <p>{error}</p>
           <button onClick={onReturnToReplay} type="button">
             返回评测记录回放

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import type { ReplaySample } from "../types";
 
 const clueLabels = {
@@ -25,20 +27,23 @@ export function ReplaySampleList({
   onSelect,
 }: ReplaySampleListProps) {
   return (
-    <div aria-label="评测样本" role="list">
+    <ul aria-label="评测样本" className="replay-list">
       {samples.map((sample) => (
-        <button
-          aria-current={sample.id === selectedId ? "true" : undefined}
-          key={sample.id}
-          onClick={() => onSelect(sample)}
-          role="listitem"
-          type="button"
-        >
-          <strong>{sample.title}</strong>
-          <span>{clueLabels[sample.clueType]}</span>
-          <span>{decisionLabels[sample.decision]}</span>
-        </button>
+        <li className="replay-list-item" key={sample.id}>
+          <button
+            aria-current={sample.id === selectedId ? "true" : undefined}
+            className="replay-item"
+            onClick={() => onSelect(sample)}
+            type="button"
+          >
+            <Image alt="" height={54} src={sample.imageSrc} width={72} />
+            <span className="replay-item-copy">
+              <strong>{sample.title}</strong>
+              <small>{clueLabels[sample.clueType]} · {decisionLabels[sample.decision]}</small>
+            </span>
+          </button>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

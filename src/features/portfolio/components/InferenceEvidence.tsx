@@ -19,13 +19,13 @@ export function InferenceEvidence({ result }: { result: ReviewableResult }) {
   >;
 
   return (
-    <section aria-labelledby="inference-evidence-title">
-      <div>
+    <section aria-labelledby="inference-evidence-title" className="inference-evidence">
+      <div className="evidence-meta">
         <p>{result.mode === "live" ? "实时模型调用" : "真实评测记录"}</p>
         <p>{confidenceLabels[result.ai.confidence]}</p>
       </div>
       <h3 id="inference-evidence-title">模型原始结果</h3>
-      <dl>
+      <dl className="evidence-fields">
         {fields.map(([key, label]) => (
           <div key={key}>
             <dt>{label}</dt>
@@ -33,9 +33,9 @@ export function InferenceEvidence({ result }: { result: ReviewableResult }) {
           </div>
         ))}
       </dl>
-      <p>
+      <p className="evidence-reason">
         <strong>判断依据</strong>
-        {result.ai.evidence}
+        <span>{result.ai.evidence}</span>
       </p>
     </section>
   );
