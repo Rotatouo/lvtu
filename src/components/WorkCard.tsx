@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { MapPin, Heart, CheckCircle2, Trash2, BookOpen, Route } from "lucide-react";
 import RouteSelect from "./RouteSelect";
 import type { Work } from "@/types";
@@ -45,11 +46,14 @@ export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelet
       {/* 图片 */}
       <div className="aspect-[4/3] bg-gray-100 relative overflow-hidden">
         {work.image_url ? (
-          <img
-            src={work.image_url}
+          <Image
             alt={displayLabel}
             className="w-full h-full object-cover"
+            fill
             loading="lazy"
+            sizes="(max-width: 640px) 50vw, 20vw"
+            src={work.image_url}
+            unoptimized
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-300">

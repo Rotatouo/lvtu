@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -40,16 +40,20 @@ function makeNumIcon(color: string, num: number) {
 function FitBounds({ works }: { works: Array<{ lat: number; lng: number }> }) {
   const map = useMap();
   const doneKey = useRef("");
-  const done = useRef(false);
   const deps = works.map((w) => `${w.lat},${w.lng}`).join("|");
-  if (doneKey.current !== deps) { doneKey.current = deps; done.current = false; }
-  if (done.current || works.length === 0) return null;
-  done.current = true;
-  if (works.length === 1) {
-    map.setView([works[0].lat, works[0].lng], 10);
-  } else {
-    map.fitBounds(L.latLngBounds(works.map((w) => [w.lat, w.lng] as L.LatLngTuple)), { padding: [40, 40], maxZoom: 14 });
-  }
+
+  useEffect(() => {
+    if (doneKey.current === deps) return;
+    doneKey.current = deps;
+    if (works.length === 0) return;
+
+    if (works.length === 1) {
+      map.setView([works[0].lat, works[0].lng], 10);
+    } else {
+      map.fitBounds(L.latLngBounds(works.map((w) => [w.lat, w.lng] as L.LatLngTuple)), { padding: [40, 40], maxZoom: 14 });
+    }
+  }, [deps, map, works]);
+
   return null;
 }
 

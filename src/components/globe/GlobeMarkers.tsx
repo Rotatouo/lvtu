@@ -22,7 +22,7 @@ interface GlobeMarkersProps {
   onSelectWork?: (work: Work) => void;
 }
 
-export default function GlobeMarkers({ works, routes, onSelectWork }: GlobeMarkersProps) {
+export default function GlobeMarkers({ works, routes }: GlobeMarkersProps) {
   // 找出所有在路线中的 work_id
   const routedWorkIds = useMemo(() => {
     const ids = new Set<string>();

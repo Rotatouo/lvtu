@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
 import { mockWorks, mockRoutes } from "@/lib/mock-data";
 
@@ -13,12 +13,14 @@ interface CoverGlobeProps {
   entering: boolean;
 }
 
-export default function CoverGlobe({ entering }: CoverGlobeProps) {
-  const [mounted, setMounted] = useState(false);
+const subscribeToHydration = () => () => {};
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export default function CoverGlobe({ entering }: CoverGlobeProps) {
+  const mounted = useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
 
   if (!mounted) return null;
 

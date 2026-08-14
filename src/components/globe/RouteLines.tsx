@@ -59,7 +59,7 @@ function RouteLine({ route }: { route: Route }) {
     for (let i = 0; i < flowCount; i++) {
       flowPts.push({
         t: i / flowCount,
-        speed: 0.15 + Math.random() * 0.1, // 每个光点速度略有不同
+        speed: 0.15 + ((i * 0.61803398875 + flowCount * 0.38196601125) % 1) * 0.1,
       });
     }
 
@@ -67,10 +67,9 @@ function RouteLine({ route }: { route: Route }) {
   }, [route]);
 
   // 流动光点动画
-  useFrame((state) => {
+  useFrame(() => {
     if (!flowRef.current || !curve || flowPoints.length === 0) return;
 
-    const t = state.clock.elapsedTime;
     const positions = flowRef.current.geometry.attributes.position.array as Float32Array;
 
     flowPoints.forEach((fp, i) => {
@@ -84,8 +83,6 @@ function RouteLine({ route }: { route: Route }) {
     flowRef.current.geometry.attributes.position.needsUpdate = true;
   });
 
-  if (!curve || points.length < 2) return null;
-
   // 流动光点的几何体
   const flowGeometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -93,6 +90,8 @@ function RouteLine({ route }: { route: Route }) {
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     return g;
   }, [flowPoints.length]);
+
+  if (!curve || points.length < 2) return null;
 
   return (
     <group>

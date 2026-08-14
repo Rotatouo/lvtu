@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { X, Sparkles, Loader2, Camera, Check, Save, RefreshCw } from "lucide-react";
 import type { Work, Journal } from "@/types";
 
@@ -74,20 +75,24 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
 
   // 恢复草稿
   useEffect(() => {
-    try {
-      const draft = localStorage.getItem(draftKey);
-      if (draft) {
-        const d = JSON.parse(draft);
-        if (d.quoteInput) setQuoteInput(d.quoteInput);
-        if (d.content) setContent(d.content);
-        if (d.timeMode) setTimeMode(d.timeMode);
-        if (d.exactDate) setExactDate(d.exactDate);
-        if (d.yearMonth) setYearMonth(d.yearMonth);
-        if (d.monthOnly) setMonthOnly(d.monthOnly);
-        if (d.holiday) setHoliday(d.holiday);
-        setDraftRestored(true);
-      }
-    } catch { /* ignore */ }
+    const restoreDraft = window.setTimeout(() => {
+      try {
+        const draft = localStorage.getItem(draftKey);
+        if (draft) {
+          const d = JSON.parse(draft);
+          if (d.quoteInput) setQuoteInput(d.quoteInput);
+          if (d.content) setContent(d.content);
+          if (d.timeMode) setTimeMode(d.timeMode);
+          if (d.exactDate) setExactDate(d.exactDate);
+          if (d.yearMonth) setYearMonth(d.yearMonth);
+          if (d.monthOnly) setMonthOnly(d.monthOnly);
+          if (d.holiday) setHoliday(d.holiday);
+          setDraftRestored(true);
+        }
+      } catch { /* ignore */ }
+    }, 0);
+
+    return () => window.clearTimeout(restoreDraft);
   }, [draftKey]);
 
   const handleSaveDraft = () => {
@@ -338,7 +343,7 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
             <input ref={photoInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
             {photoUrl ? (
               <div className="relative inline-block">
-                <img src={photoUrl} alt="" className="w-24 h-24 object-cover rounded-lg" />
+                <Image src={photoUrl} alt="" width={96} height={96} unoptimized loading="eager" className="w-24 h-24 object-cover rounded-lg" />
                 <button onClick={() => { setPhotoUrl(null); if (photoInputRef.current) photoInputRef.current.value = ""; }}
                   className="absolute -top-1 -right-1 p-0.5 bg-red-500 text-white rounded-full"><X className="w-3 h-3" /></button>
               </div>

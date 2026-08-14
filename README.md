@@ -131,7 +131,6 @@ src/
 │   │   ├── LiquidCursor.tsx  # 极简光标（圆环 + bloom）
 │   │   └── CountUp.tsx       # 数字滚动动画（IntersectionObserver）
 │   │
-│   ├── UploadZone.tsx        # 拖拽/点击上传区域
 │   ├── CardGrid.tsx          # 作品卡片网格（dnd-kit 拖拽排序）
 │   ├── EditDrawer.tsx        # 作品编辑侧边抽屉
 │   ├── ManualAddModal.tsx    # 手动添加弹窗

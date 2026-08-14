@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, Download, Check, Loader2, Image } from "lucide-react";
+import NextImage from "next/image";
+import { ArrowLeft, Download, Check, Loader2, Image as ImageIcon } from "lucide-react";
 import html2canvas from "html2canvas";
 import type { Journal, Work } from "@/types";
 
@@ -27,11 +28,11 @@ function PostcardCanvas({ journal, template, work }: { journal: JournalWithWork;
   if (template === "vintage") {
     return (
       <div className="w-[360px] flex border-2 border-amber-300" style={{ background: "#FFF8E7", fontFamily: "Georgia, serif" }}>
-        {journal.photo_url && <img src={journal.photo_url} alt="" className="w-40 h-48 object-cover" />}
+        {journal.photo_url && <NextImage src={journal.photo_url} alt="" width={160} height={192} unoptimized loading="eager" className="w-40 h-48 object-cover" />}
         <div className="flex-1 p-4 flex flex-col justify-center gap-2">
           <h3 className="text-base font-bold text-amber-900">{label}</h3>
           <p className="text-[10px] text-amber-700">{location}</p>
-          {journal.quote && <p className="text-xs italic text-amber-800">"{journal.quote}"</p>}
+          {journal.quote && <p className="text-xs italic text-amber-800">&quot;{journal.quote}&quot;</p>}
           <p className="text-[11px] text-amber-900 leading-relaxed">{journal.content}</p>
           <p className="text-[10px] text-amber-600 mt-auto">{date}</p>
         </div>
@@ -42,11 +43,11 @@ function PostcardCanvas({ journal, template, work }: { journal: JournalWithWork;
   if (template === "fresh") {
     return (
       <div className="w-[360px] bg-white rounded-xl shadow-lg overflow-hidden border border-blue-100">
-        {journal.photo_url && <img src={journal.photo_url} alt="" className="w-full h-44 object-cover" />}
+        {journal.photo_url && <NextImage src={journal.photo_url} alt="" width={360} height={176} unoptimized loading="eager" className="w-full h-44 object-cover" />}
         <div className="p-4">
           <h3 className="text-base font-bold text-blue-600">{label}</h3>
           <p className="text-[11px] text-gray-500 mb-2">{location}</p>
-          {journal.quote && <p className="text-xs italic text-purple-500 mb-1">"{journal.quote}"</p>}
+          {journal.quote && <p className="text-xs italic text-purple-500 mb-1">&quot;{journal.quote}&quot;</p>}
           <p className="text-sm text-gray-700 leading-relaxed">{journal.content}</p>
           <p className="text-[11px] text-gray-400 mt-3">{date}</p>
         </div>
@@ -57,11 +58,11 @@ function PostcardCanvas({ journal, template, work }: { journal: JournalWithWork;
   // minimal
   return (
     <div className="w-[360px] bg-white overflow-hidden">
-      {journal.photo_url && <img src={journal.photo_url} alt="" className="w-full h-56 object-cover grayscale" />}
+      {journal.photo_url && <NextImage src={journal.photo_url} alt="" width={360} height={224} unoptimized loading="eager" className="w-full h-56 object-cover grayscale" />}
       <div className="p-4">
         <h3 className="text-lg font-light tracking-wider text-black">{label}</h3>
         <p className="text-[10px] text-gray-400 mb-3">{location} · {date}</p>
-        {journal.quote && <p className="text-xs text-gray-600 italic mb-1">"{journal.quote}"</p>}
+        {journal.quote && <p className="text-xs text-gray-600 italic mb-1">&quot;{journal.quote}&quot;</p>}
         <p className="text-sm text-gray-800 leading-relaxed">{journal.content}</p>
       </div>
     </div>
@@ -138,7 +139,7 @@ export default function PostcardsPage() {
 
         {!loading && journals.length === 0 && (
           <div className="text-center py-20 space-y-1">
-            <Image className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+            <ImageIcon className="w-10 h-10 text-gray-300 mx-auto mb-2" />
             <p className="text-gray-400 text-sm">还没有可做明信片的日记</p>
             <p className="text-gray-300 text-xs">先写几篇带照片的日记再来制作明信片吧</p>
           </div>
@@ -160,7 +161,7 @@ export default function PostcardsPage() {
                         isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200 dark:border-gray-700 opacity-70 hover:opacity-100"
                       }`}
                     >
-                      {j.photo_url && <img src={j.photo_url} alt="" className="w-full h-20 object-cover" />}
+                      {j.photo_url && <NextImage src={j.photo_url} alt="" width={240} height={80} unoptimized loading="eager" className="w-full h-20 object-cover" />}
                       <div className="p-2 text-left">
                         <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
                           {j.works && (j.works.final_attraction || j.works.final_city)}

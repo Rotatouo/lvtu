@@ -34,7 +34,7 @@ export async function GET() {
 
     // 批量拿关联 works
     const workIds = [...new Set((allItems || []).map((i) => i.work_id))];
-    let workMap = new Map();
+    const workMap = new Map();
     if (workIds.length > 0) {
       const { data: works } = await serviceClient
         .from("works")

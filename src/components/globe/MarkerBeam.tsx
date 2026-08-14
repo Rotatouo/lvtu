@@ -16,7 +16,7 @@ interface MarkerBeamProps {
 // 数字用圆圈数字
 const NUMS = ["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫","⑬","⑭","⑮","⑯","⑰","⑱","⑲","⑳"];
 
-export default function MarkerBeam({ position, color, number, height = 0.1, label }: MarkerBeamProps) {
+export default function MarkerBeam({ position, color, number, height = 0.1 }: MarkerBeamProps) {
   const beamRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {

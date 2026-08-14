@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Trash2, Loader2, GripVertical } from "lucide-react";
-import type { Route } from "@/types";
+import type { Route, RouteItem } from "@/types";
 import {
   DndContext,
   closestCenter,
@@ -20,7 +21,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-function SortableItem({ item, route }: { item: any; route: Route }) {
+function SortableItem({ item }: { item: RouteItem }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const work = item.work;
@@ -29,7 +30,7 @@ function SortableItem({ item, route }: { item: any; route: Route }) {
       <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab">
         <GripVertical className="w-3.5 h-3.5" />
       </button>
-      {work?.image_thumb && <img src={work.image_thumb} alt="" className="w-8 h-8 object-cover rounded" />}
+      {work?.image_thumb && <Image src={work.image_thumb} alt="" width={32} height={32} unoptimized loading="eager" className="w-8 h-8 object-cover rounded" />}
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-700 dark:text-gray-200 truncate">
           {work?.final_attraction || work?.final_city || "?"}
@@ -47,17 +48,29 @@ export default function RoutesPage() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const fetchRoutes = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/routes");
-      const d = await res.json();
-      setRoutes(d.routes || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+  const loadRoutes = useCallback(async (): Promise<Route[]> => {
+    const res = await fetch("/api/routes");
+    const data: { routes?: Route[] } = await res.json();
+    return data.routes || [];
   }, []);
 
-  useEffect(() => { fetchRoutes(); }, [fetchRoutes]);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchRoutes() {
+      try {
+        const nextRoutes = await loadRoutes();
+        if (!cancelled) setRoutes(nextRoutes);
+      } catch { /* ignore */ }
+      finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchRoutes();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRoutes]);
 
   const handleDelete = async (route: Route) => {
     if (!window.confirm(`删除路线「${route.name}」?`)) return;
@@ -138,7 +151,7 @@ export default function RoutesPage() {
                   >
                     <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
                       {items.map((item) => (
-                        <SortableItem key={item.id} item={item} route={route} />
+                        <SortableItem key={item.id} item={item} />
                       ))}
                     </SortableContext>
                   </DndContext>

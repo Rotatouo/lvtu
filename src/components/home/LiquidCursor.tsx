@@ -15,7 +15,6 @@ export default function LiquidCursor() {
     const bloom = bloomRef.current;
     if (!cursor || !bloom) return;
 
-    let rafId = 0;
     let lastX = 0;
     let lastY = 0;
     let lastT = 0;
@@ -55,7 +54,6 @@ export default function LiquidCursor() {
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseleave", onLeave);
       document.removeEventListener("mouseleave", onLeave);
-      cancelAnimationFrame(rafId);
     };
   }, []);
 

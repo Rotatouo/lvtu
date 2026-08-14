@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   DndContext,
   closestCenter,
@@ -64,9 +64,12 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   // 排序模式:所有作品按 sort_order 排列
-  const sortedWorks = sortMode
-    ? [...works].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
-    : [];
+  const sortedWorks = useMemo(
+    () => sortMode
+      ? [...works].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+      : [],
+    [sortMode, works],
+  );
 
   // 分组模式
   const tree = buildGroupTree(works);

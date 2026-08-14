@@ -1,9 +1,11 @@
 "use client";
 
+/* eslint-disable react-hooks/immutability -- R3F frame callbacks intentionally mutate Three.js scene objects and shader uniforms. */
+
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { useRef, useState, useMemo, useEffect, useCallback, use } from "react";
+import { useRef, useState, useMemo, useEffect, useSyncExternalStore } from "react";
 import StarrySky, { AtmosphereDust } from "./StarrySky";
 import GlobeMarkers from "./GlobeMarkers";
 import RouteLines from "./RouteLines";
@@ -131,9 +133,9 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
   const dirLightRef = useRef<THREE.DirectionalLight>(null);
   const ambLightRef = useRef<THREE.AmbientLight>(null);
   const globeGroupRef = useRef<THREE.Group>(null);
-  const { clock, gl, scene } = useThree();
+  const { clock } = useThree();
 
-  const lastInteractionRef = useRef(Date.now());
+  const lastInteractionRef = useRef(0);
   const isAutoRotatingRef = useRef(false);
 
   // 自然大气 shader（极薄、柔和、几乎融入太空）
@@ -217,10 +219,10 @@ function Earth({ timeMode, textures, works, routes, onSelectWork }: { timeMode: 
   );
 
   useFrame(() => {
-    const t = clock.getElapsedTime();
+    const elapsedTime = clock.getElapsedTime();
 
     // 12 秒无操作自转（整个地球组一起转，标点和路线跟着转）
-    if (Date.now() - lastInteractionRef.current > 12000) {
+    if (elapsedTime - lastInteractionRef.current > 12) {
       if (!isAutoRotatingRef.current) isAutoRotatingRef.current = true;
       if (globeGroupRef.current) globeGroupRef.current.rotation.y += 0.0003;
     }
@@ -336,14 +338,29 @@ function isWebGLAvailable(): boolean {
   }
 }
 
+function subscribeToWebGLAvailability() {
+  return () => {};
+}
+
+let cachedWebGLAvailability: boolean | undefined;
+
+function getWebGLSnapshot(): boolean | null {
+  cachedWebGLAvailability ??= isWebGLAvailable();
+  return cachedWebGLAvailability;
+}
+
+function getWebGLServerSnapshot(): boolean | null {
+  return null;
+}
+
 // ─── 主组件 ───
 export default function GlobeView({ works, routes, onSelectWork, timeMode = "auto" }: GlobeViewProps) {
-  const [webglOk, setWebglOk] = useState<boolean | null>(null);
+  const webglOk = useSyncExternalStore(
+    subscribeToWebGLAvailability,
+    getWebGLSnapshot,
+    getWebGLServerSnapshot
+  );
   const textures = useEarthTextures();
-
-  useEffect(() => {
-    setWebglOk(isWebGLAvailable());
-  }, []);
 
   if (webglOk === false) {
     return (

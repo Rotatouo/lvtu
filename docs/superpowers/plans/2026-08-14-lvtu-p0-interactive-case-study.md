@@ -590,7 +590,7 @@ git commit -m "feat: rebuild home as AI product case study"
 - 修改：`eslint.config.mjs`
 - 修改：P0 触及的所有 lint 报错文件
 
-- [ ] **步骤 1：为旧接口写兼容性测试**
+- [x] **步骤 1：为旧接口写兼容性测试**
 
 `/api/classify` 不再初始化 Supabase；它应返回 308 或调用同一无状态分类实现。推荐保留 API 路径并调用 `classify-live` 共用函数，避免旧链接直接 404。
 
@@ -602,21 +602,21 @@ it("does not require Supabase configuration", async () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认旧接口红灯**
+- [x] **步骤 2：运行测试确认旧接口红灯**
 
 运行：`pnpm test:run src/app/api/classify/route.test.ts`
 
 预期：FAIL，导入时抛出 `supabaseUrl is required`。
 
-- [ ] **步骤 3：改造旧接口并删除首页对旧 API 的引用**
+- [x] **步骤 3：改造旧接口并删除首页对旧 API 的引用**
 
 把文件上传、校验和模型调用复用到无状态实现；不得写 Supabase。旧 `src/lib/supabase.ts` 仅由隐藏页面接口延迟调用，不能在模块顶层创建客户端。
 
-- [ ] **步骤 4：清理整仓 lint 历史错误**
+- [x] **步骤 4：清理整仓 lint 历史错误**
 
 优先删除已经不再引用的旧首页内部代码和 imports。隐藏功能保留源码时，修复确定性 lint 问题；对于 React Three Fiber 中经确认属于命令式渲染模式的规则冲突，仅对具体文件和具体规则添加带原因的 override，禁止全局关闭 `react-hooks` 规则。
 
-- [ ] **步骤 5：运行全部质量门禁**
+- [x] **步骤 5：运行全部质量门禁**
 
 ```powershell
 pnpm test:run
@@ -627,7 +627,7 @@ git diff --check
 
 预期：测试全部通过；lint 0 errors；Webpack 生产构建成功；无空白错误。
 
-- [ ] **步骤 6：提交质量收口**
+- [x] **步骤 6：提交质量收口**
 
 ```powershell
 git add src/app/api src/lib/supabase.ts eslint.config.mjs
