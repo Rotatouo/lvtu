@@ -195,7 +195,7 @@ git commit -m "docs: document model badcases"
 
 ## 任务 5：实现评测、稳定性与 Badcase 页面章节
 
-- [ ] **步骤 1：编写失败的渲染测试**
+- [x] **步骤 1：编写失败的渲染测试**
 
 ```tsx
 it("renders only metrics from the generated report", () => {
@@ -211,17 +211,17 @@ it("compares original and final fields in a badcase", () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试确认失败**
+- [x] **步骤 2：运行测试确认失败**
 
 运行：`pnpm test:run src/features/evaluation/components`
 
 预期：FAIL，组件不存在。
 
-- [ ] **步骤 3：实现三个章节并接入首页**
+- [x] **步骤 3：实现三个章节并接入首页**
 
 指标使用真实分子、分母和百分比；三类样本支持筛选；稳定性表格显示字段一致性和置信度变化；Badcase 可切换 AI 原始值与人工核验值。颜色之外必须有文字标签。
 
-- [ ] **步骤 4：运行测试、lint、构建和浏览器截图**
+- [x] **步骤 4：运行测试、lint、构建和浏览器截图**
 
 ```powershell
 pnpm test:run
@@ -231,7 +231,7 @@ pnpm build
 
 预期：全部通过。随后验证 1440×900 与 390×844，确保图表标签和长地名不溢出。
 
-- [ ] **步骤 5：提交 P1 页面**
+- [x] **步骤 5：提交 P1 页面**
 
 ```powershell
 git add src evaluation/report.json

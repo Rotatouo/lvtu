@@ -1,5 +1,13 @@
 import { AboutSection } from "@/features/portfolio/components/AboutSection";
-import { EvaluationPreview } from "@/features/portfolio/components/EvaluationPreview";
+import { BadcaseSection } from "@/features/evaluation/components/BadcaseSection";
+import { EvaluationSection } from "@/features/evaluation/components/EvaluationSection";
+import { StabilitySection } from "@/features/evaluation/components/StabilitySection";
+import {
+  portfolioBadcases,
+  portfolioEvidenceCallCount,
+  portfolioEvaluationReport,
+  portfolioRetestRuns,
+} from "@/features/evaluation/portfolio-data";
 import { ExperienceLab } from "@/features/portfolio/components/ExperienceLab";
 import { FactStrip } from "@/features/portfolio/components/FactStrip";
 import { PortfolioHero } from "@/features/portfolio/components/PortfolioHero";
@@ -14,10 +22,26 @@ export default function Home() {
       <a className="skip-link" href="#experience">跳到核心体验</a>
       <PortfolioNav />
       <PortfolioHero />
-      <FactStrip />
+      <FactStrip evidenceCallCount={portfolioEvidenceCallCount} />
       <ExperienceLab samples={replaySamples} />
       <RoleSection />
-      <EvaluationPreview />
+      <div className="portfolio-band evaluation-evidence-band" id="evaluation">
+        <div className="portfolio-shell">
+          <EvaluationSection report={portfolioEvaluationReport} />
+        </div>
+      </div>
+      <StabilitySection
+        stability={portfolioEvaluationReport.stability}
+        repeatRunCount={portfolioEvaluationReport.repeatRunCount}
+      />
+      <div className="portfolio-band badcase-evidence-band">
+        <div className="portfolio-shell">
+          <BadcaseSection
+            badcases={portfolioBadcases}
+            retestRuns={portfolioRetestRuns}
+          />
+        </div>
+      </div>
       <RetrospectiveSection />
       <AboutSection />
     </main>

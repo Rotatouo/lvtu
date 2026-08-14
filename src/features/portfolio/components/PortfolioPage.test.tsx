@@ -23,6 +23,18 @@ describe("portfolio home", () => {
     expect(
       screen.getByRole("heading", { name: "为什么主动删掉大而全。" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "30 张探索性评测" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "同一张图，模型会不会给出同一个答案？",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "错误案例与复测证据" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("50 次真实调用")).toBeInTheDocument();
     expect(document.body).not.toHaveTextContent("不是");
   });
 
