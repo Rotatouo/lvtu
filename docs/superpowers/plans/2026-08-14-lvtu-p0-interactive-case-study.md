@@ -344,7 +344,7 @@ git commit -m "feat: add human review flow"
 - 创建：`src/app/api/classify-live/route.ts`
 - 创建：`src/app/api/classify-live/route.test.ts`
 
-- [ ] **步骤 1：编写失败的 DashScope 解析测试**
+- [x] **步骤 1：编写失败的 DashScope 解析测试**
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -371,7 +371,7 @@ describe("parseDashScopeContent", () => {
 });
 ```
 
-- [ ] **步骤 2：编写失败的 Route Handler 测试**
+- [x] **步骤 2：编写失败的 Route Handler 测试**
 
 ```ts
 import { describe, expect, it, vi } from "vitest";
@@ -386,17 +386,17 @@ it("rejects unsupported files before calling the model", async () => {
 });
 ```
 
-- [ ] **步骤 3：运行测试确认失败**
+- [x] **步骤 3：运行测试确认失败**
 
 运行：`pnpm test:run src/lib/dashscope.test.ts src/app/api/classify-live/route.test.ts`
 
 预期：FAIL，模块不存在。
 
-- [ ] **步骤 4：实现模型客户端**
+- [x] **步骤 4：实现模型客户端**
 
 `classifyTravelImage` 接收 `ArrayBuffer`、MIME 和注入式 `fetch`，从 `process.env.DASHSCOPE_API_KEY` 读取密钥，使用 `AbortSignal.timeout(20_000)`，调用 `qwen-vl-plus`。错误只返回以下公开代码：`MODEL_NOT_CONFIGURED`、`MODEL_TIMEOUT`、`MODEL_UPSTREAM_ERROR`、`MODEL_RESPONSE_INVALID`；错误消息和日志不得包含请求头或密钥。
 
-- [ ] **步骤 5：实现无数据库 Route Handler**
+- [x] **步骤 5：实现无数据库 Route Handler**
 
 ```ts
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
@@ -413,7 +413,7 @@ export async function POST(request: Request) {
 }
 ```
 
-- [ ] **步骤 6：运行测试、局部 lint 和无环境变量构建**
+- [x] **步骤 6：运行测试、局部 lint 和无环境变量构建**
 
 ```powershell
 pnpm test:run src/lib/dashscope.test.ts src/app/api/classify-live/route.test.ts
@@ -423,7 +423,7 @@ pnpm build
 
 预期：测试和 lint 通过；构建不再因新接口要求 Supabase。旧 `/api/classify` 仍可能触发失败，在任务 7 处理。
 
-- [ ] **步骤 7：提交实时识别接口**
+- [x] **步骤 7：提交实时识别接口**
 
 ```powershell
 git add src/lib/dashscope.ts src/lib/dashscope.test.ts src/app/api/classify-live
