@@ -1,0 +1,112 @@
+[
+  {
+    "id": "badcase-01",
+    "sampleId": "eval-04",
+    "baselineRunId": "main:eval-04:1",
+    "category": "text-prior-conflict",
+    "expected": {
+      "country": "中国",
+      "region": "上海市",
+      "city": "上海市",
+      "attraction": "金陵中路"
+    },
+    "actual": {
+      "country": "中国",
+      "region": "江苏省",
+      "city": "南京市",
+      "attraction": "金陵中路"
+    },
+    "risk": "道路名识别正确但城市归属错误，高置信度自动写入会把上海收藏放到南京。",
+    "rootCauseHypothesis": "假设：模型把“金陵”当作南京的强知识先验，没有保留同名道路跨城市存在的可能性。",
+    "productStrategy": "道路文字可用于生成候选地点，城市层级必须复核。谨慎 Prompt 复测仍判断为南京，只把结果从确认降为复核，问题未解决。",
+    "retestRunIds": ["retest:eval-04:1"]
+  },
+  {
+    "id": "badcase-02",
+    "sampleId": "eval-08",
+    "baselineRunId": "main:eval-08:1",
+    "category": "ocr-geography-drift",
+    "expected": {
+      "country": "中国",
+      "region": "吉林省",
+      "city": "长春市",
+      "attraction": "富锦路"
+    },
+    "actual": {
+      "country": "中国",
+      "region": "广东省",
+      "city": "广州市",
+      "attraction": "东富锦路"
+    },
+    "risk": "OCR 多读一个字后继续推断错误城市，单次识别错误被放大为完整地点错误。",
+    "rootCauseHypothesis": "假设：模型先把街牌误读为“东富锦路”，再用并不可靠的道路名联想补齐广州。",
+    "productStrategy": "界面分开展示可见文字和推断出的行政层级，通用路名不能触发城市自动确认。复测移除了错误省市，但新增了错误建筑名，只取得部分改善。",
+    "retestRunIds": ["retest:eval-08:1"]
+  },
+  {
+    "id": "badcase-03",
+    "sampleId": "eval-11",
+    "baselineRunId": "main:eval-11:1",
+    "category": "landmark-granularity",
+    "expected": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "慕田峪长城"
+    },
+    "actual": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "八达岭长城"
+    },
+    "risk": "大类地标正确但具体景区错误，会让路线、门票和导航信息全部偏离。",
+    "rootCauseHypothesis": "假设：不同长城段共享城墙、敌楼和山地特征，单张远景不足以支持具体分段判断。",
+    "productStrategy": "相似地标只自动确认到可靠粒度，具体分段进入复核。复测输出“长城”并转为复核，自动化边界得到改善。",
+    "retestRunIds": ["retest:eval-11:1"]
+  },
+  {
+    "id": "badcase-04",
+    "sampleId": "eval-21",
+    "baselineRunId": "main:eval-21:1",
+    "category": "weak-over-inference",
+    "expected": {
+      "country": "中国",
+      "region": null,
+      "city": null,
+      "attraction": null
+    },
+    "actual": {
+      "country": "中国",
+      "region": "江苏省",
+      "city": "南京市",
+      "attraction": null
+    },
+    "risk": "普通街景被高置信度归入具体城市，用户很难从模型解释中发现这是无依据猜测。",
+    "rootCauseHypothesis": "假设：林荫道路、车辆和建筑风格触发了城市视觉先验，但画面没有唯一定位线索。",
+    "productStrategy": "弱线索样本默认手动处理，省市字段保持空值。复测降为低置信度并仅保留国家，结果明显改善。",
+    "retestRunIds": ["retest:eval-21:1"]
+  },
+  {
+    "id": "badcase-05",
+    "sampleId": "eval-25",
+    "baselineRunId": "main:eval-25:1",
+    "category": "weak-over-inference",
+    "expected": {
+      "country": "中国",
+      "region": null,
+      "city": null,
+      "attraction": null
+    },
+    "actual": {
+      "country": "中国",
+      "region": "北京市",
+      "city": "北京市",
+      "attraction": "王府井大街"
+    },
+    "risk": "模型证据提到“文昌南路”，结论却写入“王府井大街”，内部冲突仍被判为高置信度确认。",
+    "rootCauseHypothesis": "假设：历史街景和摊位形态触发北京商业街先验，覆盖了模型自己识别出的道路文字。",
+    "productStrategy": "加入证据与结论一致性检查，冲突时禁止自动确认。复测移除了错误省市，但仍把可见路名当作具体景点，只取得部分改善。",
+    "retestRunIds": ["retest:eval-25:1"]
+  }
+]

@@ -2,16 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { Globe2 } from "lucide-react";
 import { mockWorks } from "@/lib/mock-data";
 import type { Route as RouteType } from "@/types";
-
-const GlobeView = dynamic(() => import("@/components/globe/GlobeView"), {
-  ssr: false,
-  loading: () => null,
-});
 
 // ──────────────────────────────────────────────────────────
 // 5 个著名地点（World Map + 4 张用户实拍）
@@ -141,21 +135,35 @@ function getMockStats() {
   return { countries: countries.size, cities: cities.size, spots: spots.size };
 }
 
+function deterministicFraction(index: number, salt: number) {
+  let value =
+    Math.imul(index + 1, 0x45d9f3b) ^ Math.imul(salt + 1, 0x119de1f3);
+  value = Math.imul(value ^ (value >>> 16), 0x45d9f3b);
+  return ((value ^ (value >>> 16)) >>> 0) / 4294967296;
+}
+
+const MOCK_STATS = getMockStats();
+const WORLD_STARS = Array.from({ length: 50 }, (_, index) => ({
+  width: deterministicFraction(index, 0) * 1.3 + 0.3,
+  height: deterministicFraction(index, 1) * 1.3 + 0.3,
+  top: deterministicFraction(index, 2) * 100,
+  left: deterministicFraction(index, 3) * 100,
+  opacity: 0.15 + deterministicFraction(index, 4) * 0.4,
+  duration: 3 + deterministicFraction(index, 5) * 4,
+  delay: deterministicFraction(index, 6) * 3,
+}));
+
 // ════════════════════════════════════════════════════════
 // 主页面
 // ════════════════════════════════════════════════════════
 
 export default function CoverPage() {
-  const [stats, setStats] = useState({ countries: 0, cities: 0, spots: 0 });
   const [activeScene, setActiveScene] = useState<SceneKey>("world");
   const [openChapter, setOpenChapter] = useState<ChapterKey | null>(null);
   const [routeCount, setRouteCount] = useState(0);
   const [countryCount, setCountryCount] = useState(0);
 
   useEffect(() => {
-    // Mock 部分（city/spot 从 mock-data 取）
-    setStats(getMockStats());
-
     // 真实 API 部分（countries、routes 从 /api 取）
     fetch("/api/routes")
       .then((r) => (r.ok ? r.json() : { routes: [] }))
@@ -213,19 +221,17 @@ export default function CoverPage() {
         {/* 微星空（仅在世界地图场景下） */}
         {activeScene === "world" && (
           <div className="absolute inset-0 pointer-events-none">
-            {Array.from({ length: 50 }).map((_, i) => (
+            {WORLD_STARS.map((star, i) => (
               <div
                 key={i}
                 className="absolute rounded-full bg-white"
                 style={{
-                  width: Math.random() * 1.3 + 0.3 + "px",
-                  height: Math.random() * 1.3 + 0.3 + "px",
-                  top: Math.random() * 100 + "%",
-                  left: Math.random() * 100 + "%",
-                  opacity: 0.15 + Math.random() * 0.4,
-                  animation: `twinkle ${3 + Math.random() * 4}s ease-in-out ${
-                    Math.random() * 3
-                  }s infinite alternate`,
+                  width: `${star.width}px`,
+                  height: `${star.height}px`,
+                  top: `${star.top}%`,
+                  left: `${star.left}%`,
+                  opacity: star.opacity,
+                  animation: `twinkle ${star.duration}s ease-in-out ${star.delay}s infinite alternate`,
                 }}
               />
             ))}
@@ -379,7 +385,7 @@ export default function CoverPage() {
             className="flex items-center gap-12 mb-8"
           >
             {[
-              { value: stats.countries || countryCount, label: "Destinations Saved" },
+              { value: MOCK_STATS.countries || countryCount, label: "Destinations Saved" },
               { value: countryCount, label: "Countries" },
               { value: routeCount, label: "Planned Routes" },
             ].map((s, i) => (
@@ -453,12 +459,12 @@ export default function CoverPage() {
               className="text-4xl font-light text-white/95"
               style={{ fontFamily: '"Playfair Display", serif' }}
             >
-              {stats.countries}
+              {MOCK_STATS.countries}
             </span>
             <span className="text-xs text-white/50">countries</span>
           </div>
           <div className="text-[11px] text-white/50">
-            {stats.cities} 城市 · {stats.spots} 景点
+            {MOCK_STATS.cities} 城市 · {MOCK_STATS.spots} 景点
           </div>
         </div>
       </motion.div>

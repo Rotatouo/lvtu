@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { X, CloudSun, Loader2, BookOpen } from "lucide-react";
 import type { Work } from "@/types";
 
@@ -53,10 +54,13 @@ export default function ImageViewer({ work, onClose }: ImageViewerProps) {
       {/* 图片 */}
       <div className="max-w-4xl max-h-[55vh] md:max-h-[85vh] flex-shrink-0">
         {work.image_url ? (
-          <img
-            src={work.image_url}
+          <Image
             alt={displayLabel}
             className="max-w-full max-h-[55vh] md:max-h-[85vh] object-contain rounded-lg"
+            height={1200}
+            src={work.image_url}
+            unoptimized
+            width={1600}
           />
         ) : (
           <div className="w-64 h-64 bg-gray-800 rounded-lg flex items-center justify-center text-gray-500">

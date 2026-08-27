@@ -1,0 +1,107 @@
+[
+  {
+    "runId": "retest:eval-04:1",
+    "sampleId": "eval-04",
+    "mode": "retest",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T20:12:38.775Z",
+    "durationMs": 2074,
+    "output": {
+      "country": "China",
+      "region": "Jiangsu Province",
+      "city": "Nanjing",
+      "attraction": null,
+      "confidence": "high",
+      "evidence": "The street sign reads '金陵中路' (Jinling Rd. (M)), which is a well-known street in Nanjing, China.",
+      "lat": 32.0615,
+      "lng": 118.7969,
+      "openingNote": null
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "retest:eval-08:1",
+    "sampleId": "eval-08",
+    "mode": "retest",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T20:12:40.855Z",
+    "durationMs": 1659,
+    "output": {
+      "country": "China",
+      "region": null,
+      "city": null,
+      "attraction": "药材楼 (Yàocái Lóu)",
+      "confidence": "high",
+      "evidence": "The sign on the building reads '药材楼' which translates to 'Herbal Medicine Building,' a specific landmark.",
+      "lat": 31.2004,
+      "lng": 121.4733,
+      "openingNote": "The location appears to be an urban area with a mix of residential and commercial buildings."
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "retest:eval-11:1",
+    "sampleId": "eval-11",
+    "mode": "retest",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T20:12:42.518Z",
+    "durationMs": 2154,
+    "output": {
+      "country": "China",
+      "region": "Beijing",
+      "city": null,
+      "attraction": "Great Wall of China",
+      "confidence": "high",
+      "evidence": "The image depicts a section of the Great Wall of China, identifiable by its distinctive stone construction and winding path through mountainous terrain covered in dense greenery. The presence of a watchtower is also characteristic of this landmark.",
+      "lat": 40.4319078,
+      "lng": 116.5704928,
+      "openingNote": "The Great Wall of China is one of the most iconic landmarks in the world, stretching over 13,000 miles and offering breathtaking views of the surrounding landscape."
+    },
+    "decision": "review"
+  },
+  {
+    "runId": "retest:eval-21:1",
+    "sampleId": "eval-21",
+    "mode": "retest",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T20:12:44.674Z",
+    "durationMs": 1465,
+    "output": {
+      "country": "China",
+      "region": null,
+      "city": null,
+      "attraction": null,
+      "confidence": "low",
+      "evidence": "The image shows a tree-lined street with vehicles and pedestrians, typical of many cities in China. The presence of Chinese characters on the license plates and signage suggests the location is in China, but specific city or landmark identification is not possible from the visible text alone.",
+      "lat": null,
+      "lng": null,
+      "openingNote": null
+    },
+    "decision": "manual"
+  },
+  {
+    "runId": "retest:eval-25:1",
+    "sampleId": "eval-25",
+    "mode": "retest",
+    "attempt": 1,
+    "model": "qwen-vl-plus",
+    "startedAt": "2026-08-14T20:12:46.141Z",
+    "durationMs": 1430,
+    "output": {
+      "country": "China",
+      "region": null,
+      "city": null,
+      "attraction": "Wenchang Nanlu",
+      "confidence": "high",
+      "evidence": "The street sign in the image reads '文昌南路' (Wenchang Nanlu), which is a specific street name.",
+      "lat": 39.9042,
+      "lng": 116.4074,
+      "openingNote": "Wenchang Nanlu is a well-known street in Beijing, China."
+    },
+    "decision": "review"
+  }
+]

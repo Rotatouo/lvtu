@@ -130,22 +130,26 @@ export default function DashboardPage() {
     };
   }, [works, journals]);
 
-  // AI 推荐
-  const loadRecs = async () => {
-    if (recsLoading || recs.length > 0) return;
-    setRecsLoading(true);
-    try {
-      const res = await fetch("/api/recommend");
-      const data = await res.json();
-      setRecs(data.recommendations || []);
-    } catch { /* ignore */ }
-    finally { setRecsLoading(false); }
-  };
-
   useEffect(() => {
-    if (!loading && works.filter((w) => w.is_confirmed).length > 0) {
-      loadRecs();
+    if (loading || !works.some((w) => w.is_confirmed)) return;
+
+    let cancelled = false;
+    async function loadRecs() {
+      setRecsLoading(true);
+      try {
+        const res = await fetch("/api/recommend");
+        const data = await res.json();
+        if (!cancelled) setRecs(data.recommendations || []);
+      } catch { /* ignore */ }
+      finally {
+        if (!cancelled) setRecsLoading(false);
+      }
     }
+
+    loadRecs();
+    return () => {
+      cancelled = true;
+    };
   }, [loading, works]);
 
   const handleAddRec = async (name: string) => {

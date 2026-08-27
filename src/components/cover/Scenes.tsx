@@ -2,6 +2,19 @@
 
 // 电影级 SVG 风景场景（无需外部图片，渐变 + 多层 SVG 模拟真实摄影氛围）
 
+const ICELAND_STARS = Array.from({ length: 40 }, (_, index) => ({
+  x: index * 47 + 30,
+  y: (index * 53) % 360 + 10,
+  radius: (index * 17 + 11) % 10 > 6 ? 2 : 1,
+}));
+
+const TOKYO_LIGHTS = Array.from({ length: 200 }, (_, index) => ({
+  x: (index * 67) % 1920,
+  y: 700 + ((index * 23) % 380),
+  color: (index * 29 + 7) % 10 > 4 ? "#fcd34d" : "#fb7185",
+  opacity: 0.4 + (((index * 31 + 13) % 100) / 100) * 0.5,
+}));
+
 export function IcelandScene() {
   return (
     <div className="absolute inset-0 overflow-hidden">
@@ -94,12 +107,12 @@ export function IcelandScene() {
         <rect x="0" y="1000" width="1920" height="80" fill="rgba(20, 30, 45, 0.5)" filter="url(#blur30)" />
 
         {/* 稀疏星星 */}
-        {Array.from({ length: 40 }).map((_, i) => (
+        {ICELAND_STARS.map((star, i) => (
           <circle
             key={i}
-            cx={i * 47 + 30}
-            cy={(i * 53) % 360 + 10}
-            r={Math.random() > 0.7 ? "2" : "1"}
+            cx={star.x}
+            cy={star.y}
+            r={star.radius}
             fill="rgba(255, 255, 255, 0.7)"
           />
         ))}
@@ -164,18 +177,16 @@ export function TokyoScene() {
         </g>
 
         {/* 窗户灯光 (orange/yellow specks) */}
-        {Array.from({ length: 200 }).map((_, i) => {
-          const x = (i * 67) % 1920;
-          const yBase = 700 + (i * 23) % 380;
+        {TOKYO_LIGHTS.map((light, i) => {
           return (
             <rect
               key={i}
-              x={x}
-              y={yBase}
+              x={light.x}
+              y={light.y}
               width="3"
               height="3"
-              fill={Math.random() > 0.5 ? "#fcd34d" : "#fb7185"}
-              opacity={0.4 + Math.random() * 0.5}
+              fill={light.color}
+              opacity={light.opacity}
               filter="url(#softGlow)"
             />
           );

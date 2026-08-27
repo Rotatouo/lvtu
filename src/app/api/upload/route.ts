@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
     const serviceClient = createServiceClient();
 
-    const { data, error } = await serviceClient.storage
+    const { error } = await serviceClient.storage
       .from("images")
       .upload(filename, buffer, {
         contentType: file.type || "image/jpeg",

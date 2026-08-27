@@ -1,0 +1,272 @@
+[
+  {
+    "id": "eval-01",
+    "imagePath": "evaluation/images/eval-01.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:201611_Wangfujing_St._sign.jpg",
+    "expected": { "country": "中国", "region": "北京市", "city": "北京市", "attraction": "王府井大街" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 文件描述与分类共同确认画面为北京市东城区王府井大街街牌。"
+  },
+  {
+    "id": "eval-02",
+    "imagePath": "evaluation/images/eval-02.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · Public Domain · https://commons.wikimedia.org/wiki/File:Dongdaqiao_Lu_street_sign.JPG",
+    "expected": { "country": "中国", "region": "北京市", "city": "北京市", "attraction": "东大桥路" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述与分类确认画面为北京市朝阳区东大桥路双语街牌。"
+  },
+  {
+    "id": "eval-03",
+    "imagePath": "evaluation/images/eval-03.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Huanghe_Road_sign-20240106.jpg",
+    "expected": { "country": "中国", "region": "上海市", "city": "上海市", "attraction": "黄河路" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 文件名、地点元数据与分类确认画面为上海市黄浦区黄河路街牌。"
+  },
+  {
+    "id": "eval-04",
+    "imagePath": "evaluation/images/eval-04.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Middle_Jinling_Road_sign-20240106.jpg",
+    "expected": { "country": "中国", "region": "上海市", "city": "上海市", "attraction": "金陵中路" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 文件名、地点元数据与分类确认画面为上海市黄浦区金陵中路街牌。"
+  },
+  {
+    "id": "eval-05",
+    "imagePath": "evaluation/images/eval-05.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Nanxiang_Renmin_Street,Shanghai.jpg",
+    "expected": { "country": "中国", "region": "上海市", "city": "上海市", "attraction": "人民街" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 中文描述确认画面为上海市嘉定区南翔镇人民街路牌。"
+  },
+  {
+    "id": "eval-06",
+    "imagePath": "evaluation/images/eval-06.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:West_Entrance_of_Nanda_Avenue,_Guangzhou_20230626.jpg",
+    "expected": { "country": "中国", "region": "广东省", "city": "广州市", "attraction": "南大干线西端" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认画面为广州市番禺区南大干线西端、番海大桥附近。"
+  },
+  {
+    "id": "eval-07",
+    "imagePath": "evaluation/images/eval-07.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:%E6%B7%B1%E5%9C%B3%E6%9C%88%E4%BA%AE%E6%B9%BE%E5%A4%A7%E9%81%93_Yue-Liang-Wan_Dadao_-_panoramio.jpg",
+    "expected": { "country": "中国", "region": "广东省", "city": "深圳市", "attraction": "月亮湾大道" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 文件名和分类确认画面为深圳市南山区月亮湾大道、南头检查站一带。"
+  },
+  {
+    "id": "eval-08",
+    "imagePath": "evaluation/images/eval-08.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Sign_of_Fujin_Rd,_Changchun_(20230723165651).jpg",
+    "expected": { "country": "中国", "region": "吉林省", "city": "长春市", "attraction": "富锦路" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 文件名与分类确认画面为长春市朝阳区富锦路街牌。"
+  },
+  {
+    "id": "eval-09",
+    "imagePath": "evaluation/images/eval-09.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:%E5%8D%8E%E5%BC%BA%E8%A1%97-%E7%9F%B3%E5%AE%B6%E5%BA%84.jpg",
+    "expected": { "country": "中国", "region": "河北省", "city": "石家庄市", "attraction": "华强街" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 中文描述、文件名与分类确认画面为石家庄市华强街。"
+  },
+  {
+    "id": "eval-10",
+    "imagePath": "evaluation/images/eval-10.webp",
+    "clueTier": "text",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Signs_indicating_1)_Chegongmiao_Station_2)_Priority_Carriages_for_Women_3)_Line_1_direction_to_Luohu.jpg",
+    "expected": { "country": "中国", "region": "广东省", "city": "深圳市", "attraction": "车公庙站" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认画面文字指向深圳地铁 1 号线车公庙站及罗湖方向。"
+  },
+  {
+    "id": "eval-11",
+    "imagePath": "evaluation/images/eval-11.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC0 · https://commons.wikimedia.org/wiki/File:Great_Wall_of_China_July_2006.JPG",
+    "expected": { "country": "中国", "region": "北京市", "city": "北京市", "attraction": "慕田峪长城" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认画面为北京怀柔区慕田峪长城。"
+  },
+  {
+    "id": "eval-12",
+    "imagePath": "evaluation/images/eval-12.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Sunset_of_the_Forbidden_City_2006.JPG",
+    "expected": { "country": "中国", "region": "北京市", "city": "北京市", "attraction": "故宫西北角楼" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认主体为北京市故宫西北角楼。"
+  },
+  {
+    "id": "eval-13",
+    "imagePath": "evaluation/images/eval-13.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Temple_of_Heaven,_Beijing,_China_-_010_edit.jpg",
+    "expected": { "country": "中国", "region": "北京市", "city": "北京市", "attraction": "天坛公园祈年殿" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述与画面建筑确认主体为北京天坛祈年殿。"
+  },
+  {
+    "id": "eval-14",
+    "imagePath": "evaluation/images/eval-14.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY 2.5 · https://commons.wikimedia.org/wiki/File:Potala.jpg",
+    "expected": { "country": "中国", "region": "西藏自治区", "city": "拉萨市", "attraction": "布达拉宫" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认画面从药王山脚拍摄拉萨布达拉宫。"
+  },
+  {
+    "id": "eval-15",
+    "imagePath": "evaluation/images/eval-15.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Xian_China_Terracotta-Army-Museum-01.jpg",
+    "expected": { "country": "中国", "region": "陕西省", "city": "西安市", "attraction": "秦始皇兵马俑博物馆" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认画面为西安市临潼区秦始皇兵马俑博物馆展厅。"
+  },
+  {
+    "id": "eval-16",
+    "imagePath": "evaluation/images/eval-16.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:20090524_Hangzhou_West_Lake_7531.jpg",
+    "expected": { "country": "中国", "region": "浙江省", "city": "杭州市", "attraction": "西湖风景名胜区" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认画面为杭州西湖及湖面游船。"
+  },
+  {
+    "id": "eval-17",
+    "imagePath": "evaluation/images/eval-17.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Oriental_Pearl_Tower_in_Shanghai.jpg",
+    "expected": { "country": "中国", "region": "上海市", "city": "上海市", "attraction": "东方明珠广播电视塔" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述与塔体特征确认主体为上海浦东陆家嘴东方明珠。"
+  },
+  {
+    "id": "eval-18",
+    "imagePath": "evaluation/images/eval-18.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Canton_Tower_at_night_Guangzhou_2024_dllu.jpg",
+    "expected": { "country": "中国", "region": "广东省", "city": "广州市", "attraction": "广州塔" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认主体为广州市海珠区珠江沿岸的夜间广州塔。"
+  },
+  {
+    "id": "eval-19",
+    "imagePath": "evaluation/images/eval-19.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY 2.5 · https://commons.wikimedia.org/wiki/File:Leshan_Giant_Buddha,_20161102.jpg",
+    "expected": { "country": "中国", "region": "四川省", "city": "乐山市", "attraction": "乐山大佛" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 描述确认主体为四川乐山大佛。"
+  },
+  {
+    "id": "eval-20",
+    "imagePath": "evaluation/images/eval-20.webp",
+    "clueTier": "landmark",
+    "sourceNote": "Wikimedia Commons · CC BY 2.0 · https://commons.wikimedia.org/wiki/File:Zhangjiajie_National_Forest_Park_37819-Zhangjiajie_(48757571761).jpg",
+    "expected": { "country": "中国", "region": "湖南省", "city": "张家界市", "attraction": "张家界国家森林公园" },
+    "expectedDecision": "confirm",
+    "verificationNote": "Commons 文件描述与分类确认画面为张家界国家森林公园石英砂岩峰林。"
+  },
+  {
+    "id": "eval-21",
+    "imagePath": "evaluation/images/eval-21.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC0 · https://commons.wikimedia.org/wiki/File:Shangye_Street_-_Chengdu,_China_-_DSC05295.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为四川省成都市 Shangye Street；普通道路画面没有足够视觉依据推断省市或街道。"
+  },
+  {
+    "id": "eval-22",
+    "imagePath": "evaluation/images/eval-22.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · Public Domain · https://commons.wikimedia.org/wiki/File:Guilin-main_street2.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为广西壮族自治区桂林市中山中路；普通道路、车辆与商铺不足以可靠定位。"
+  },
+  {
+    "id": "eval-23",
+    "imagePath": "evaluation/images/eval-23.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Aiman_Dadao_2026.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为广东省广州市增城区爱民大道；普通城市道路不具唯一地点锚点。"
+  },
+  {
+    "id": "eval-24",
+    "imagePath": "evaluation/images/eval-24.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:Chuangxin_Dadao,_Zengcheng_2026.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为广东省广州市增城区创新大道；普通城市道路不具唯一地点锚点。"
+  },
+  {
+    "id": "eval-25",
+    "imagePath": "evaluation/images/eval-25.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:China1982-023.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "Commons 描述确认真实拍摄地为 1982 年广东广州；普通历史街景无法仅凭画面可靠定位。"
+  },
+  {
+    "id": "eval-26",
+    "imagePath": "evaluation/images/eval-26.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · Public Domain · https://commons.wikimedia.org/wiki/File:A_country_view_of_Taihe.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为江西省吉安市泰和县乡村；普通乡村景观没有可验证的唯一地点线索。"
+  },
+  {
+    "id": "eval-27",
+    "imagePath": "evaluation/images/eval-27.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 3.0 · https://commons.wikimedia.org/wiki/File:Alxa_Zuoqi,_Alxa,_Inner_Mongolia,_China_-_panoramio_-_%E6%91%A9%E6%B8%B8%E4%B9%90_(124).jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为内蒙古自治区阿拉善盟阿拉善左旗；荒漠道路景观不具唯一地点锚点。"
+  },
+  {
+    "id": "eval-28",
+    "imagePath": "evaluation/images/eval-28.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:201701_G164_on_Jinhua%E2%80%93Wenzhou_HSR_over_Daxi_River.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为浙江省丽水市大溪河、小河塔附近金温高铁桥；山谷、河流与铁路不足以定位。"
+  },
+  {
+    "id": "eval-29",
+    "imagePath": "evaluation/images/eval-29.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC BY-SA 4.0 · https://commons.wikimedia.org/wiki/File:A_Corner_of_Hongqiao_Park.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为广东省深圳市光明区虹桥公园；普通城市公园景观无法可靠定位。"
+  },
+  {
+    "id": "eval-30",
+    "imagePath": "evaluation/images/eval-30.webp",
+    "clueTier": "weak",
+    "sourceNote": "Wikimedia Commons · CC0 · https://commons.wikimedia.org/wiki/File:Renhou_Street_-_Chengdu,_China_-_DSC05302.jpg",
+    "expected": { "country": "中国", "region": null, "city": null, "attraction": null },
+    "expectedDecision": "manual",
+    "verificationNote": "真实拍摄地为四川省成都市仁厚街；普通街巷没有足够视觉依据推断省市或街道。"
+  }
+]

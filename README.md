@@ -1,220 +1,95 @@
-# 旅途 (Journey)
+# 旅途
 
-> 一座属于你的微型世界地图。把每一份心之所向变成清晰的远方。
+## 项目一句话
 
-**旅途** 是一款 AI 驱动的旅行灵感管理工具。上传社交媒体截图，AI 自动识别地点并分类整理，在交互式 3D 地球仪上标记你的旅行足迹。
+「旅途」是一份可交互的 AI 产品案例：将旅行截图交给 `qwen-vl-plus` 识别地点，再由人确认、修改并收藏；当前版本聚焦一条可验证的核心链路，不把探索性原型包装成成熟产品。
 
-[![Vercel](https://img.shields.io/badge/vercel-deployed-black)](https://lvtu-kueq.vercel.app)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org)
-[![React](https://img.shields.io/badge/React-19-61dafb)](https://react.dev)
+## 问题与角色
 
----
+旅行灵感常散落在社交平台截图里，地点信息需要反复查找，模型给出的答案也不能直接视为事实。本项目把识别结果、置信度、证据和人工修正放在同一条流程中，让用户看见模型判断并决定是否采用。
 
-## ✨ 功能
+用户提出痛点与基本功能，在多轮对话中作选择并批准规格与结果。AI 代理完成方案细化、实现、数据构建、模型调用、测试与文档草稿。
 
-- 📤 **智能上传** — 拖拽社交媒体截图，AI 自动识别目的地、国家和城市
-- 🌍 **3D 地球探索** — Three.js 驱动的地球仪，支持旋转缩放、标记工作地点和路线
-- 🗺️ **世界地标浏览** — 5 个著名地点（World Map / Matterhorn / Trossachs / Li River / Jökulsárlón），点击切换背景
-- 🎴 **封面页** — Atlas 风格暗色封面，带搜索、章节链接、交互式地标列表
-- 📝 **旅行日记** — 为每个地点撰写游记（/journals）
-- 🖼️ **明信片生成** — 将旅行地点生成为明信片样式（/postcards）
-- 📊 **数据看板** — 旅行统计概览（/dashboard）
-- 🗺️ **路线规划** — 创建和管理旅行路线（/routes）
-- 🎯 **卡片视图 / 3D 地球视图** — 双重浏览模式
-- ✨ **电影级动效** — Framer Motion 驱动的标题入场、数字滚动、卡片 hover、背景切换
-- 🖱️ **极简光标** — 高性能圆环光标 + 柔和 bloom 效果
-- ✨ **液态鼠标水纹** — Canvas + RAF 物理模拟涟漪（可选开关）
+## 核心体验
 
----
+1. 从 6 条回放记录中选择样本，查看已经保存的模型输出与人工核验值；这 6 条回放是保存证据的演示。
+2. 上传 JPG、PNG 或 WebP 图片，调用实时识别接口；单张图片上限为 10 MB。
+3. 查看国家、地区、城市、景点、置信度和画面证据；当前实时结果统一进入人工确认。
+4. 人工确认或修改地点后，将模型原始结果与最终结果分开保留。回放表单由人工核验值预填，不是让用户从模型原始值开始纠错。
+5. 收藏仅保留在本次浏览器会话；刷新页面后不会恢复，也没有账号级或跨设备持久化。
 
-## 🛠️ 技术栈
+## AI 工作流
 
-| 层 | 技术 |
-|---|---|
-| **框架** | Next.js 16 (App Router) + React 19 |
-| **语言** | TypeScript |
-| **样式** | Tailwind CSS 4 + 自定义 CSS 变量 |
-| **3D 渲染** | Three.js + @react-three/fiber + @react-three/drei |
-| **动画** | Framer Motion |
-| **数据库** | Supabase (PostgreSQL) |
-| **AI** | Gemini 2.0 Flash (多模态识别) |
-| **部署** | Vercel (自动 HTTPS + CDN) |
-| **字体** | Playfair Display (衬线) + Noto Serif SC (中文衬线) + Plus Jakarta Sans (无衬线) |
+实时主链路为“图片输入 -> 服务端调用 `qwen-vl-plus` -> 结构化解析 -> 人工确认或修正 -> 本次会话收藏”。当前实时结果统一进入人工确认，实时接口和组件未实现 `confirm`、`review`、`manual` 自动分流。
 
----
+离线评测会根据输出派生三档决策：低置信度或国家为空为 `manual`；高置信度且四个地点字段完整为 `confirm`；其余为 `review`。三档只属于离线评测派生的产品策略，用于分析自动确认、复核和手动处理的潜在边界，不代表当前实时界面已有对应路由。
 
-## 🚀 快速开始
+6 条回放是保存证据的演示，直接使用仓库中的评测记录，不触发模型调用。页面展示模型原始输出，但回放表单由人工核验值预填，不是让用户从模型原始值开始纠错。实时识别通过服务端路由完成，客户端不会接触服务凭据；接口异常会映射为可展示的安全错误，不把上游响应或凭据写入页面。
 
-### 1. 安装依赖
+## 评测方法与真实结果
+
+评测集包含 30 张探索性评测图片，按线索强度分为文字、地标、弱线索三类，每类 10 张。主评测对 30 张图片各调用一次；另选 5 张样本，每张重复 3 次，共 15 次重复调用，用于观察输出稳定性。重复结果不计入主评测字段准确率。
+
+当前仓库保存了 30 次主评测、15 次重复调用和 5 次谨慎 Prompt 复测，共 50 次真实调用，模型均为 `qwen-vl-plus`。主评测字段结果如下：
+
+- 国家 29/30（96.7%）
+- 地区 16/30（53.3%）
+- 城市 16/30（53.3%）
+- 景点 14/30（46.7%）
+
+离线评测派生的决策分布为 `confirm` 22/30、`review` 4/30、`manual` 4/30。这里的比例只描述当前 30 张探索样本，不能外推为生产准确率或统计显著结论，也不表示实时组件已经实现三档分流。
+
+## Badcase
+
+从主评测中选取 5 个代表性 Badcase 进行谨慎 Prompt 复测：`eval-04`、`eval-08`、`eval-11`、`eval-21`、`eval-25`。复测提示强调只依据画面可见文字或唯一地标判断，通用路名不能推出城市，相似地标不确定时应降低置信度并留空。
+
+- `eval-04`：通用街牌仍被推断为南京，结果为 `review`，说明文字线索容易引发城市级过度推断。
+- `eval-08`：地区与城市留空，但仍输出了建筑名，结果为 `review`。
+- `eval-11`：识别为长城并保留北京地区，但城市留空，结果为 `review`。
+- `eval-21`：弱线索街景降为低置信度，省市和景点留空，结果为 `manual`。
+- `eval-25`：省市留空，但仍输出了道路名，结果为 `review`。
+
+这些复测用于展示失败模式和谨慎策略的影响，不代表 5 个问题已经全部解决。
+
+## 架构
+
+- 前端：Next.js 16、React 19、TypeScript、Tailwind CSS。
+- 证据层：`evaluation/manifest.json`、运行记录和汇总报告保存可复查的输入说明、模型输出与指标。
+- 交互层：评测回放、实时上传、人工修正和本次会话收藏组成当前核心体验。
+- 服务端：实时识别路由负责文件校验、模型调用、结构化输出和错误映射。
+
+Supabase 不作为当前核心依赖。仓库仍保留早期的地图、日记、明信片、路线等探索代码，但旧分支不是当前核心体验，也不作为这份案例的完成度依据。
+
+## 运行
 
 ```bash
 pnpm install
-```
-
-### 2. 配置 Supabase
-
-1. 在 [supabase.com](https://supabase.com) 创建免费项目
-2. 执行数据库迁移（见 `supabase-migration.sql`）
-3. 在 Storage 中创建 `images` 存储桶（设为公开）
-4. 复制项目 URL 和 anon key
-
-### 3. 配置 Gemini API（可选，用于 AI 识别）
-
-在 [Google AI Studio](https://aistudio.google.com/apikey) 获取 API Key。
-
-> 如果不需要 AI 识别功能，系统支持 mock 数据兜底，仍可完整体验所有 UI 功能。
-
-### 4. 环境变量
-
-```bash
-cp .env.example .env.local
-```
-
-```
-NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
-GEMINI_API_KEY=AIza...
-```
-
-### 5. 启动
-
-```bash
 pnpm dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000)
-
----
-
-## 📂 项目结构
-
-```
-src/
-├── app/                      # Next.js App Router 页面
-│   ├── page.tsx              # 首页（Atlas 风格 hero + 4 面板工作流）
-│   ├── layout.tsx            # 根布局（字体加载 + 全局样式）
-│   ├── globals.css           # 全局样式 + Tailwind
-│   ├── cover/                # 封面页（/cover）
-│   ├── journals/             # 旅行日记（/journals）
-│   ├── postcards/            # 明信片（/postcards）
-│   ├── dashboard/            # 数据看板（/dashboard）
-│   ├── routes/               # 路线管理（/routes）
-│   ├── globe/                # 3D 地球独立页
-│   └── api/                  # API 路由
-│       ├── works/            # 作品 CRUD
-│       ├── routes/           # 路线 CRUD
-│       ├── journals/         # 日记 CRUD
-│       ├── classify/         # AI 图片分类
-│       ├── upload/           # 文件上传
-│       ├── recommend/        # AI 推荐
-│       ├��─ quotes/           # 旅行金句
-│       └── weather/          # 天气查询
-│
-├── components/
-│   ├── globe/                # 3D 地球组件
-│   │   ├── GlobeView.tsx     # 3D 地球主渲染（Three.js Canvas）
-│   │   ├── StarrySky.tsx     # 星空粒子背景
-│   │   ├── GlobeMarkers.tsx  # 地点标记（beam + 数字 badge）
-│   │   ├── RouteLines.tsx    # 路线连接线（CubicBezierCurve3）
-│   │   ├── TimeController.tsx# 时间模式切换（auto/noon/night）
-│   │   └── MarkerBeam.tsx    # 标记光束动画
-│   │
-│   ├── cover/                # 封面页组件
-│   │   ├── CoverPage.tsx     # 封面主容器（世界地图 + 景点 + 章节）
-│   │   ├── Scenes.tsx        # 4 个 SVG 电影级场景
-│   │   ├── CoverGlobe.tsx    # 封面 3D 地球
-│   │   └── EnterButton.tsx   # 进入动效按钮
-│   │
-│   ├── home/                 # 首页专属组件
-│   │   ├── SceneBackgrounds.tsx  # 5 个地点真实照片背景 + SVG 兜底
-│   │   ├── LiquidCursor.tsx  # 极简光标（圆环 + bloom）
-│   │   └── CountUp.tsx       # 数字滚动动画（IntersectionObserver）
-│   │
-│   ├── UploadZone.tsx        # 拖拽/点击上传区域
-│   ├── CardGrid.tsx          # 作品卡片网格（dnd-kit 拖拽排序）
-│   ├── EditDrawer.tsx        # 作品编辑侧边抽屉
-│   ├── ManualAddModal.tsx    # 手动添加弹窗
-│   ├── ImageViewer.tsx       # 图片查看器
-│   ├── JournalEditor.tsx     # 日记编辑器（富文本）
-│   ├── UploadResultModal.tsx # 上传结果弹窗
-│   └── EmptyState.tsx        # 空状态引导
-│
-├── lib/
-│   ├── supabase.ts           # Supabase 客户端（含 service client）
-│   ├── gemini.ts             # Gemini AI 多模态识别
-│   ├── mock-data.ts          # Mock 数据（5 个作品 + 2 条路线）
-│   └── grouping.ts           # 动态分组算法
-│
-└── types/
-    └── index.ts              # TypeScript 类型定义（Work, Route, Journal 等）
-```
-
----
-
-## 📦 关键组件说明
-
-### 3D 地球 (`GlobeView`)
-- NASA Blue Marble 真实地球贴图（日/夜/法线/高光纹理）
-- MeshPhongMaterial + emissive 自发光（确保地图形状始终可见）
-- 三种光照模式：晨光 / 日间 / 黄昏 / 星辰
-- OrbitControls 缩放旋转限制
-- 12 秒自动旋转 + 鼠标拖拽
-- 双层大气散射效果
-- 1800 颗粒子星空 + 200 个大气尘埃
-
-### 封面 + 首页（Atlas 美学）
-- Apple/Lumora 风格暗色设计
-- Playfair Display 衬线字体标题 + 渐变 italic 高亮
-- Noto Serif SC 中文大标（letter-spacing 0.3em）
-- 毛玻璃卡片（backdrop-blur + rgba 边框）
-- Framer Motion 交错入场动画（标题逐句 + 统计 CountUp）
-- 5 张著名地点卡片（60x60px 缩略图 + pop-out hover）
-
-### 液态鼠标 (`LiquidCursor`)
-- Canvas + requestAnimationFrame 物理模拟水纹涟漪
-- 多环渲染（3 层递减环 + 中心水滴）
-- 速度自适应强度
-- 32px 细圆环光标 + 蓝色发光阴影
-
----
-
-## 🌍 部署
-
-### Vercel (推荐)
-
-1. 在 [vercel.com](https://vercel.com) 导入 GitHub 仓库
-2. 配置环境变量（同上）
-3. 自动部署 — 每次 `git push` 自动触发
+开发服务器启动后访问 `http://localhost:3000`。静态评测回放无需模型凭据；实时上传识别需要服务端配置。常用验证命令：
 
 ```bash
-git push origin master
-```
-
-### 手动部署
-
-```bash
+pnpm test:run
+pnpm lint
 pnpm build
-pnpm start
 ```
----
-<br>
 
-## 🏷️ 版本历史
+## DASHSCOPE_API_KEY
 
-| 版本 | 日期 | 内容 |
-|---|---|---|
-| v0.7.4 | 2026-07 | 世界地图与 cover 像素级统一、首页加章节链接、routes mock 兜底 |
-| v0.7.2 | 2026-07 | 首页完全封面页化 + 8 项优化（删旅途、删中文副标、stats 大字、卡片放大 pop-out、章节链接） |
-| v0.7.0 | 2026-07 | 封面页融合 v0.6.6-pre + v0.6.9（世界地图背景 + 标题 + 真实照片） |
-| v0.6.9 | 2026-07 | 首页 v0.6.9：世界地图 + 真实照片 + 液态鼠标 + 5 著名地点 |
-| v0.6.7 | 2026-07 | 首页 Atlas 风格化（3D 地球 hero + 4 面板工作流） |
-| v0.6.6 | 2026-07 | SVG 电影级风景场景 + 三章节英文链接 + 底部弹层 |
-| v0.6.4 | 2026-07 | 真地球纹理 + 封面页 Lumora 风格重设计 |
-| v0.5 | 2026-07 | MVP 阶段交稿（AI 识别 + 路线管理 + 基础 UI） |
+实时识别依赖服务端环境变量 `DASHSCOPE_API_KEY`。只在本地开发环境或部署平台的服务端配置中设置它；客户端代码、README、测试输出和运行日志都不应读取或输出实际值。
 
----
+## 边界
 
-## 📄 License
+- 当前是求职作品集中的探索性产品案例，不是已经完成用户增长、商业验证或生产运维的服务。
+- 收藏只存在于 React 运行时状态，没有登录、云端同步、刷新恢复或跨设备能力。
+- 静态回放可独立演示，但实时识别依赖外部模型服务、有效的服务端环境变量和网络状态。
+- 评测图片有明确来源与预期答案，但 30 张样本不足以代表所有旅行截图。
+- 人工修正是核心流程的一部分；模型输出不是未经复核即可采用的事实。
+- 早期功能仍可能存在于代码中，但不属于当前核心链路，也不承诺完整可用。
 
-MIT
+## 版本
+
+当前版本为 2026-08 求职作品集重塑版，重点是 AI 识别、人机协作、真实评测与边界披露。`v0.7.x` 及更早版本记录了地图、路线、日记等大范围功能探索；本次重塑主动缩小叙事范围，以仓库中的代码和评测证据为准。
+
+License: MIT

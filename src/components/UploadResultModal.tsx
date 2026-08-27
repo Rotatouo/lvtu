@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle, Upload, X, MapPin, Pencil } from "lucide-react";
+import { CheckCircle, Upload, MapPin, Pencil } from "lucide-react";
 import type { Work } from "@/types";
 
 interface UploadResultModalProps {

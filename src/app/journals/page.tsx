@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, Trash2, Loader2, RefreshCw, Pencil } from "lucide-react";
 import type { Journal, Work } from "@/types";
 import JournalEditor from "@/components/JournalEditor";
@@ -15,21 +16,31 @@ export default function JournalsPage() {
   const [loading, setLoading] = useState(true);
   const [editingJournal, setEditingJournal] = useState<JournalWithWork | null>(null);
 
-  const fetchJournals = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/journals");
-      if (!res.ok) throw new Error("加载失败");
-      const data = await res.json();
-      setJournals(data.journals || []);
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+  const loadJournals = useCallback(async (): Promise<JournalWithWork[]> => {
+    const res = await fetch("/api/journals");
+    if (!res.ok) throw new Error("加载失败");
+    const data: { journals?: JournalWithWork[] } = await res.json();
+    return data.journals || [];
   }, []);
 
-  useEffect(() => { fetchJournals(); }, [fetchJournals]);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchJournals() {
+      try {
+        const nextJournals = await loadJournals();
+        if (!cancelled) setJournals(nextJournals);
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchJournals();
+    return () => {
+      cancelled = true;
+    };
+  }, [loadJournals]);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("删除这篇日记?")) return;
@@ -63,7 +74,11 @@ export default function JournalsPage() {
 
   const handleJournalSaved = () => {
     setEditingJournal(null);
-    fetchJournals();
+    setLoading(true);
+    loadJournals()
+      .then(setJournals)
+      .catch(() => {})
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -87,7 +102,7 @@ export default function JournalsPage() {
         {!loading && journals.length === 0 && (
           <div className="text-center py-20">
             <p className="text-gray-400 dark:text-gray-500 text-sm">还没有旅行日记</p>
-            <p className="text-gray-300 dark:text-gray-600 text-xs mt-1">标记一个"去过"的地点来写第一篇吧!</p>
+            <p className="text-gray-300 dark:text-gray-600 text-xs mt-1">标记一个&quot;去过&quot;的地点来写第一篇吧!</p>
           </div>
         )}
 
@@ -112,7 +127,7 @@ export default function JournalsPage() {
                     </div>
                     {j.quote && (
                       <div className="flex items-start gap-1 group mb-1.5">
-                        <p className="text-xs text-purple-600 dark:text-purple-400 italic">"{j.quote}"</p>
+                        <p className="text-xs text-purple-600 dark:text-purple-400 italic">&quot;{j.quote}&quot;</p>
                         <button onClick={() => handleRegenQuote(j)}
                           className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-400 shrink-0 transition-opacity"
                           title="重新生成">
@@ -134,7 +149,7 @@ export default function JournalsPage() {
                   </div>
                 </div>
                 {j.photo_url && (
-                  <img src={j.photo_url} alt="" className="mt-3 w-full h-36 object-cover rounded-lg" />
+                  <Image src={j.photo_url} alt="" width={768} height={144} unoptimized loading="eager" className="mt-3 w-full h-36 object-cover rounded-lg" />
                 )}
               </div>
             ))}

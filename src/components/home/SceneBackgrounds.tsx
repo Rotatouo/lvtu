@@ -4,6 +4,11 @@
 // - World Map: NASA earth-day.jpg 静态（无 filter 无 animation）
 // - Matterhorn / Trossachs / Li River / Jökulsárlón: 用户图片优先，缺失时用 SVG
 
+const LI_RIVER_MOUNTAINS = Array.from({ length: 12 }, (_, index) => ({
+  x: index * 180 + 60,
+  height: 250 + ((index * 73 + 41) % 200),
+}));
+
 // ──────────────────────────────────────────────────────────
 // 通用：图片场景（cover 不缩放，无黑边）
 // ──────────────────────────────────────────────────────────
@@ -19,6 +24,8 @@ function PhotoScene({
 }) {
   return (
     <div className="absolute inset-0 overflow-hidden bg-black">
+      {/* The native error event reveals the adjacent SVG fallback. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt=""
@@ -144,13 +151,12 @@ function LiRiverFallback() {
       </defs>
       <rect width="1920" height="1080" fill="url(#lrSky)" />
       <ellipse cx="960" cy="650" rx="1000" ry="90" fill="rgba(180,150,120,0.4)" filter="url(#lrMist)" />
-      {Array.from({ length: 12 }).map((_, i) => {
-        const x = i * 180 + 60;
-        const h = 250 + Math.random() * 200;
+      {LI_RIVER_MOUNTAINS.map((mountain, i) => {
+        const { x, height } = mountain;
         return (
           <polygon
             key={i}
-            points={`${x},${1080} ${x - 50},${1080 - h} ${x + 50},${1080 - h * 0.6} ${x + 100},${1080}`}
+            points={`${x},${1080} ${x - 50},${1080 - height} ${x + 50},${1080 - height * 0.6} ${x + 100},${1080}`}
             fill="url(#lrMountain)"
             opacity={0.6 + (i % 3) * 0.1}
           />
