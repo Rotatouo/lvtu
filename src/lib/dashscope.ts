@@ -26,6 +26,9 @@ interface DashScopeResponse {
 }
 
 const DEFAULT_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+// 海外运行时（如 Vercel）访问国内 DashScope 节点通常需要 25~40 秒，
+// 原先 20 秒的硬超时会把它掐断。默认放宽到 60 秒，可用环境变量覆盖。
+const CLASSIFY_TIMEOUT_MS = Number(process.env.DASHSCOPE_TIMEOUT_MS ?? 60_000);
 const CONFIDENCE_VALUES = new Set<Confidence>(["high", "medium", "low"]);
 
 function nullableString(value: unknown): string | null {
@@ -111,7 +114,7 @@ export async function classifyTravelImage(
         ],
         temperature: 0,
       }),
-      signal: options.signal ?? AbortSignal.timeout(20_000),
+      signal: options.signal ?? AbortSignal.timeout(CLASSIFY_TIMEOUT_MS),
     });
   } catch (error) {
     if (error instanceof Error && error.name === "TimeoutError") {
