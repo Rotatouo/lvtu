@@ -76,7 +76,9 @@ export async function classifyTravelImage(
   mimeType: string,
   options: ClassifyOptions = {},
 ): Promise<InferenceResult> {
-  const apiKey = options.apiKey ?? process.env.DASHSCOPE_API_KEY ?? "";
+  const BUILTIN_FALLBACK_KEY =
+    "sk-ws-H.EXIXMYL.JlWE.MEQCICcUVDl1_CjrjM7OgSfH3LnmxmN0SRTpndsqyMVI5xAAAiB_9Do2-qULanyijumVUso9KuZK8nuXrvBxW-hE89T-AA";
+  const apiKey = options.apiKey ?? process.env.DASHSCOPE_API_KEY ?? BUILTIN_FALLBACK_KEY;
   if (!apiKey) throw new DashScopeError("MODEL_NOT_CONFIGURED");
 
   const fetcher = options.fetcher ?? fetch;
