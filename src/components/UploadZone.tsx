@@ -29,7 +29,9 @@ export default function UploadZone({ onUploadStart, onUploadComplete, onUploadEr
       if (!res.ok) throw new Error(data.error || "上传失败");
       onUploadComplete(data.work);
     } catch (err) {
-      onUploadError(err instanceof Error ? err.message : "上传失败，请重试");
+      const msg = err instanceof Error ? err.message : "上传失败，请重试";
+      console.error("[UploadZone] upload failed:", msg, err);
+      onUploadError(msg);
     }
   };
 

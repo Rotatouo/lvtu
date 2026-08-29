@@ -386,6 +386,7 @@ export default function Home() {
   const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [viewingWork, setViewingWork] = useState<Work | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
@@ -452,6 +453,7 @@ export default function Home() {
   const handleUploadResult = (work: Work) => {
     setWorks((prev) => [work, ...prev]);
     setUploadStatus("done");
+    setUploadError(null);
     setResultWork(work);
   };
 
@@ -901,10 +903,22 @@ export default function Home() {
             </h2>
           </div>
 
+          {uploadError && (
+            <div className="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              上传失败：{uploadError}
+            </div>
+          )}
+
           <UploadZone
-            onUploadStart={() => setUploadStatus("uploading")}
+            onUploadStart={() => {
+              setUploadStatus("uploading");
+              setUploadError(null);
+            }}
             onUploadComplete={handleUploadResult}
-            onUploadError={() => setUploadStatus("error")}
+            onUploadError={(msg) => {
+              setUploadStatus("error");
+              setUploadError(msg);
+            }}
             status={uploadStatus}
           />
 

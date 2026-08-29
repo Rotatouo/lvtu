@@ -172,9 +172,8 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("Classify error:", error);
-    return NextResponse.json(
-      { error: "服务器错误，请稍后重试" },
-      { status: 500 }
-    );
+    const message =
+      error instanceof Error ? error.message : "服务器错误，请稍后重试";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
