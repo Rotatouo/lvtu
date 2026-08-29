@@ -58,6 +58,17 @@ export async function classifyImage(
     throw new Error("未配置 DASHSCOPE_API_KEY");
   }
 
+  // 服务端兜底：前端压缩可能被绕过（curl 直传、canvas 不可用），这里拦一道。
+  // 2026-08-29 线上实测：原图 626KB（base64 约 835KB）从 Vercel 打到 DashScope 必然
+  // 撞 45s 超时。与其让用户干等 45 秒再看到 "aborted due to timeout"，
+  // 不如立刻返回一个说得清楚的中文错误。阈值留了余量，正常流量碰不到。
+  const MAX_BASE64_CHARS = 1_000_000;
+  if (imageBase64.length > MAX_BASE64_CHARS) {
+    throw new Error(
+      `图片过大（base64 ${Math.round(imageBase64.length / 1024)}KB），超出可识别上限，请压缩后重试`
+    );
+  }
+
   // 必须设代码层超时：平台（Vercel / EdgeOne）到点会直接掐断并返回 HTML 错误页，
   // 前端 res.json() 会炸成 "Unexpected token 'A'"，用户只看到莫名其妙的失败。
   // 主动超时才能返回可读的 JSON 错误。默认 45s，给 Supabase 上传 + 冷启动留 15s 余量。
