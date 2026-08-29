@@ -105,7 +105,7 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
           }`}
         >
           <List className="w-3.5 h-3.5" />
-          {sortMode ? "退出排序" : "路线排序"}
+          {sortMode ? "退出排序" : "调整排序"}
         </button>
       </div>
 

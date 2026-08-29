@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { ArrowLeft, Trash2, Loader2, GripVertical } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2, GripVertical, Plus, X } from "lucide-react";
 import type { Route } from "@/types";
+import RouteAddWorkModal from "@/components/RouteAddWorkModal";
 import {
   DndContext,
   closestCenter,
@@ -20,12 +21,12 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-function SortableItem({ item, route }: { item: any; route: Route }) {
+function SortableItem({ item, route, onRemove, removing }: { item: any; route: Route; onRemove?: (workId: string) => void; removing?: boolean }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const work = item.work;
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-1.5">
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-1.5 group">
       <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab">
         <GripVertical className="w-3.5 h-3.5" />
       </button>
@@ -38,6 +39,17 @@ function SortableItem({ item, route }: { item: any; route: Route }) {
           {[work?.final_country, work?.final_city].filter(Boolean).join(" · ")}
         </p>
       </div>
+      {onRemove && (
+        <button
+          onClick={() => onRemove(item.work_id)}
+          disabled={removing}
+          className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+          title="从路线移除"
+          aria-label="从路线移除"
+        >
+          {removing ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+        </button>
+      )}
     </div>
   );
 }
@@ -46,6 +58,8 @@ export default function RoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingRoute, setEditingRoute] = useState<Route | null>(null);
+  const [removingWorkId, setRemovingWorkId] = useState<string | null>(null);
 
   const fetchRoutes = useCallback(async () => {
     setLoading(true);
@@ -83,6 +97,22 @@ export default function RoutesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: updateItems }),
     });
+  };
+
+  const handleRemove = async (routeId: string, workId: string) => {
+    if (!window.confirm("把这个地点从路线中移除？")) return;
+    setRemovingWorkId(workId);
+    try {
+      await fetch(`/api/routes/${routeId}/items?work_id=${workId}`, { method: "DELETE" });
+      setRoutes((prev) =>
+        prev.map((r) =>
+          r.id === routeId
+            ? { ...r, items: (r.items || []).filter((i) => i.work_id !== workId) }
+            : r
+        )
+      );
+    } catch { /* ignore */ }
+    finally { setRemovingWorkId(null); }
   };
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
@@ -124,24 +154,40 @@ export default function RoutesPage() {
                 <span className="text-[11px] text-gray-400">{items.length} 个地点</span>
               </button>
 
-              {expanded && items.length > 0 && (
+              {expanded && (
                 <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={(e: DragEndEvent) => {
-                      if (!e.over || e.active.id === e.over.id) return;
-                      const oldIdx = items.findIndex((i) => i.id === e.active.id);
-                      const newIdx = items.findIndex((i) => i.id === e.over!.id);
-                      if (oldIdx >= 0 && newIdx >= 0) handleReorder(route.id, oldIdx, newIdx);
-                    }}
+                  {items.length > 0 ? (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(e: DragEndEvent) => {
+                        if (!e.over || e.active.id === e.over.id) return;
+                        const oldIdx = items.findIndex((i) => i.id === e.active.id);
+                        const newIdx = items.findIndex((i) => i.id === e.over!.id);
+                        if (oldIdx >= 0 && newIdx >= 0) handleReorder(route.id, oldIdx, newIdx);
+                      }}
+                    >
+                      <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+                        {items.map((item) => (
+                          <SortableItem
+                            key={item.id}
+                            item={item}
+                            route={route}
+                            onRemove={(workId) => handleRemove(route.id, workId)}
+                            removing={removingWorkId === item.work_id}
+                          />
+                        ))}
+                      </SortableContext>
+                    </DndContext>
+                  ) : (
+                    <p className="text-xs text-gray-400 py-2">路线里还没有地点</p>
+                  )}
+                  <button
+                    onClick={() => setEditingRoute(route)}
+                    className="mt-2 w-full flex items-center justify-center gap-1 py-2 rounded-lg text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
                   >
-                    <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                      {items.map((item) => (
-                        <SortableItem key={item.id} item={item} route={route} />
-                      ))}
-                    </SortableContext>
-                  </DndContext>
+                    <Plus className="w-3.5 h-3.5" /> 添加地点
+                  </button>
                 </div>
               )}
 
@@ -155,6 +201,17 @@ export default function RoutesPage() {
           );
         })}
       </main>
+
+      {editingRoute && (
+        <RouteAddWorkModal
+          route={editingRoute}
+          onClose={() => setEditingRoute(null)}
+          onAdded={() => {
+            setEditingRoute(null);
+            fetchRoutes();
+          }}
+        />
+      )}
     </div>
   );
 }
