@@ -5,9 +5,20 @@ import { useDropzone } from "react-dropzone";
 import { Upload, Image as ImageIcon } from "lucide-react";
 import type { UploadStatus, Work } from "@/types";
 
+/** /api/classify 的完整响应。以前只往外传 work，导致 AI 失败被伪装成"上传成功" */
+export interface ClassifyResultPayload {
+  work: Work;
+  classification: { country?: string | null; confidence?: string } | null;
+  ai_error?: string | null;
+  ai_elapsed_ms?: number | null;
+  warning?: string | null;
+  duplicate?: boolean;
+  duplicate_id?: string | null;
+}
+
 interface UploadZoneProps {
   onUploadStart: (count: number) => void;
-  onUploadComplete: (work: Work) => void;
+  onUploadComplete: (payload: ClassifyResultPayload) => void;
   onUploadError: (error: string) => void;
   status: UploadStatus;
 }
@@ -84,7 +95,8 @@ export default function UploadZone({ onUploadStart, onUploadComplete, onUploadEr
       }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "上传失败");
-      onUploadComplete(data.work);
+      // 传完整响应，别只传 work —— AI 那一半成没成要看 ai_error / classification
+      onUploadComplete(data as ClassifyResultPayload);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "上传失败，请重试";
       console.error("[UploadZone] upload failed:", msg, err);

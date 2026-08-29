@@ -96,8 +96,12 @@ export async function POST(request: NextRequest) {
     // 转 base64 用于 AI
     const base64 = buffer.toString("base64");
 
+    // 记录 AI 耗时：超时、API 报错、返回空，三种失败靠耗时和 message 才能区分
+    const aiStartedAt = Date.now();
+
     try {
       const classification = await classifyImage(base64, file.type);
+      const aiElapsedMs = Date.now() - aiStartedAt;
 
       // 地理编码：AI 没给坐标就用 Nominatim 查
       let { lat, lng } = classification;
@@ -148,6 +152,7 @@ export async function POST(request: NextRequest) {
           opening_note: classification.opening_note,
         },
         classification,
+        ai_elapsed_ms: aiElapsedMs,
       };
 
       if (duplicateId) {
@@ -157,11 +162,22 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(resp);
     } catch (aiError) {
-      console.error("AI classification error:", aiError);
-      // AI 失败但图片已保存，返回部分结果
+      const aiElapsedMs = Date.now() - aiStartedAt;
+      const aiMessage =
+        aiError instanceof Error ? aiError.message : String(aiError);
+      console.error("AI classification error:", aiMessage, {
+        ms: aiElapsedMs,
+        bytes: buffer.length,
+        b64: base64.length,
+        mime: file.type,
+      });
+      // AI 失败但图片已保存，返回部分结果。
+      // ai_error 必须回传给前端：否则错误只躺在服务端日志里，UI 还会谎报"成功"。
       const failResp: Record<string, unknown> = {
         work,
         classification: null,
+        ai_error: aiMessage,
+        ai_elapsed_ms: aiElapsedMs,
         warning: "地点识别失败，请手动分类",
       };
       if (duplicateId) {

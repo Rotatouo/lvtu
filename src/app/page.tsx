@@ -18,7 +18,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Work, UploadStatus, Route as RouteType } from "@/types";
-import UploadZone from "@/components/UploadZone";
+import UploadZone, { type ClassifyResultPayload } from "@/components/UploadZone";
 import CardGrid from "@/components/CardGrid";
 import EditDrawer from "@/components/EditDrawer";
 import ManualAddModal from "@/components/ManualAddModal";
@@ -387,6 +387,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [uploadStatus, setUploadStatus] = useState<UploadStatus>("idle");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // 卡片已入库、但 AI 那一半没成 —— 这既不是成功也不是失败，必须单独说清楚
+  const [uploadWarning, setUploadWarning] = useState<string | null>(null);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [viewingWork, setViewingWork] = useState<Work | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
@@ -450,11 +452,25 @@ export default function Home() {
       .catch(() => {});
   }, [fetchWorks]);
 
-  const handleUploadResult = (work: Work) => {
+  const handleUploadResult = (payload: ClassifyResultPayload) => {
+    const work = payload.work;
     setWorks((prev) => [work, ...prev]);
     setUploadStatus("done");
     setUploadError(null);
     setResultWork(work);
+
+    // 以前这里一律当成功，把 AI 失败伪装过去了。现在分三种情况如实告知：
+    if (payload.ai_error) {
+      setUploadWarning(
+        `图片已保存，但 AI 识别失败（${payload.ai_elapsed_ms ?? "?"}ms）：${payload.ai_error}`
+      );
+    } else if (!payload.classification || !payload.classification.country) {
+      setUploadWarning(
+        `图片已保存，但 AI 没能认出地点（置信度 ${payload.classification?.confidence ?? "unknown"}）。可点开卡片手动补上。`
+      );
+    } else {
+      setUploadWarning(null);
+    }
   };
 
   const handleEditWork = (work: Work) => setEditingWork(work);
@@ -909,10 +925,17 @@ export default function Home() {
             </div>
           )}
 
+          {uploadWarning && (
+            <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200 break-words">
+              {uploadWarning}
+            </div>
+          )}
+
           <UploadZone
             onUploadStart={() => {
               setUploadStatus("uploading");
               setUploadError(null);
+              setUploadWarning(null);
             }}
             onUploadComplete={handleUploadResult}
             onUploadError={(msg) => {

@@ -35,6 +35,9 @@ export async function geocode(
       headers: {
         "User-Agent": "LvtuApp/1.0 (travel-wishlist)",
       },
+      // 必须设超时：Nominatim 是海外服务，卡住会吃满平台层 60s 上限，
+      // 被平台掐断后返回 HTML 错误页，前端 res.json() 会炸成 "Unexpected token 'A'"。
+      signal: AbortSignal.timeout(8_000),
     });
 
     if (!response.ok) return null;
