@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Plus,
   Search,
@@ -18,7 +18,10 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Work, UploadStatus, Route as RouteType } from "@/types";
-import UploadZone, { type ClassifyResultPayload } from "@/components/UploadZone";
+import UploadZone, {
+  type ClassifyResultPayload,
+  type BatchSummary,
+} from "@/components/UploadZone";
 import CardGrid from "@/components/CardGrid";
 import EditDrawer from "@/components/EditDrawer";
 import ManualAddModal from "@/components/ManualAddModal";
@@ -28,6 +31,7 @@ import UploadResultModal from "@/components/UploadResultModal";
 import JournalEditor from "@/components/JournalEditor";
 import LiquidCursor from "@/components/home/LiquidCursor";
 import CountUp from "@/components/home/CountUp";
+import ThemeToggle from "@/components/ThemeToggle";
 import {
   MatterhornScene,
   TrossachsScene,
@@ -389,6 +393,10 @@ export default function Home() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   // 卡片已入库、但 AI 那一半没成 —— 这既不是成功也不是失败，必须单独说清楚
   const [uploadWarning, setUploadWarning] = useState<string | null>(null);
+  // 批量上传的整批汇总条
+  const [batchSummary, setBatchSummary] = useState<BatchSummary | null>(null);
+  // 本批总数用 ref 存：UploadZone 的回调可能拿到旧闭包，读 state 会判断错批次数
+  const batchSizeRef = useRef(0);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [viewingWork, setViewingWork] = useState<Work | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
@@ -457,7 +465,10 @@ export default function Home() {
     setWorks((prev) => [work, ...prev]);
     setUploadStatus("done");
     setUploadError(null);
-    setResultWork(work);
+
+    // 批量时不逐张弹结果卡（否则一次弹十几个弹窗），只在缩略图上打勾 / 打点；
+    // 单张沿用原来的交互，直接弹出识别结果。
+    if (batchSizeRef.current <= 1) setResultWork(work);
 
     // 以前这里一律当成功，把 AI 失败伪装过去了。现在分三种情况如实告知：
     if (payload.ai_error) {
@@ -471,6 +482,13 @@ export default function Home() {
     } else {
       setUploadWarning(null);
     }
+  };
+
+  const handleBatchFinish = (summary: BatchSummary) => {
+    setUploadStatus("idle");
+    setBatchSummary(summary);
+    // 批量的单张提示交给汇总条，避免和横幅重复
+    setUploadWarning(null);
   };
 
   const handleEditWork = (work: Work) => setEditingWork(work);
@@ -591,12 +609,15 @@ export default function Home() {
           ))}
         </div>
 
-        <button
-          onClick={() => setShowManualAdd(true)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/8 hover:bg-white/15 backdrop-blur-md border border-white/10 text-white/85 text-sm transition-all"
-        >
-          <Plus size={13} /> 添加
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle tone="on-dark" />
+          <button
+            onClick={() => setShowManualAdd(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/8 hover:bg-white/15 backdrop-blur-md border border-white/10 text-white/85 text-sm transition-all"
+          >
+            <Plus size={13} /> 添加
+          </button>
+        </div>
       </nav>
 
       {/* ═══════════ HERO ═══════════ */}
@@ -932,7 +953,9 @@ export default function Home() {
           )}
 
           <UploadZone
-            onUploadStart={() => {
+            onUploadStart={(count) => {
+              batchSizeRef.current = count;
+              setBatchSummary(null);
               setUploadStatus("uploading");
               setUploadError(null);
               setUploadWarning(null);
@@ -942,8 +965,34 @@ export default function Home() {
               setUploadStatus("error");
               setUploadError(msg);
             }}
+            onBatchFinish={handleBatchFinish}
             status={uploadStatus}
           />
+
+          {batchSummary && batchSummary.total > 1 && (
+            <div className="mb-6 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-white/12 bg-white/5 px-4 py-3 text-sm">
+              <span className="font-medium text-white/90">
+                批量识别完成 · 共 {batchSummary.total} 张
+              </span>
+              {batchSummary.ok > 0 && (
+                <span className="text-emerald-300">成功 {batchSummary.ok}</span>
+              )}
+              {batchSummary.aiFailed > 0 && (
+                <span className="text-amber-300">
+                  已保存但没认出地点 {batchSummary.aiFailed}
+                </span>
+              )}
+              {batchSummary.uploadFailed > 0 && (
+                <span className="text-red-300">失败 {batchSummary.uploadFailed}</span>
+              )}
+              <button
+                onClick={() => setBatchSummary(null)}
+                className="ml-auto text-xs text-white/40 transition-colors hover:text-white/80"
+              >
+                知道了
+              </button>
+            </div>
+          )}
 
           {works.length > 0 && (
             <div className="flex items-center justify-between gap-3 mt-8 mb-6">

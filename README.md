@@ -1,36 +1,64 @@
-# 旅途 (Journey)
+# 旅途 · Journey
 
-上传社交媒体旅行截图，AI 自动分类整理，打造你的全球旅行心愿单。
+> 刷到一张想去的地方，截图丢进来，AI 替你认出这是哪儿，自动归档成一张会生长的世界地图。
+
+在线地址：<https://lvtu-kueq.vercel.app>
+
+---
+
+## 它能做什么
+
+| 功能 | 说明 |
+| --- | --- |
+| **截图识别** | 拖入小红书 / 抖音 / 微博的旅行截图，视觉模型读出国家、城市、景点，自动打标归档。**支持一次拖入多张批量识别**（最多 20 张，3 条并发） |
+| **心愿地图** | 想去 / 去过两种状态，卡片瀑布流 + 3D 地球双视图切换 |
+| **路线规划** | 把心愿串成路线，拖动排序、随时增删，自动生成带编号的可视化地图 |
+| **旅程记录** | 去过的地方可以写日记，AI 顺手生成一句"旅途印记" |
+| **明信片** | 把日记排版成 4 种风格的明信片，一键导出 PNG |
+| **我的旅程** | 经验值 / 等级 / 徽章体系，加 AI 目的地推荐 |
+| **深浅双主题** | 全局外观开关，选择记在本地，刷新不丢 |
+
+---
 
 ## 技术栈
 
-- **框架**: Next.js 14 + React
-- **样式**: Tailwind CSS
-- **数据库**: Supabase (PostgreSQL)
-- **图片存储**: Supabase Storage
-- **AI**: Gemini 2.0 Flash (多模态识别)
-- **部署**: Vercel
+| 层 | 选型 |
+| --- | --- |
+| 框架 | Next.js 16（App Router）+ React 19 |
+| 样式 | Tailwind CSS 4（CSS 变量令牌 + `@theme inline`） |
+| 数据库 / 存储 | Supabase（PostgreSQL + Storage） |
+| AI 视觉 | 阿里云 DashScope `qwen-vl-plus` |
+| AI 文本 | 阿里云 DashScope `qwen-plus`（旅途印记、目的地推荐） |
+| 3D 地球 | Three.js + `@react-three/fiber` + `@react-three/drei` |
+| 2D 地图 | Leaflet + react-leaflet |
+| 交互 | Framer Motion、dnd-kit |
+| 导出 | html2canvas |
+| 部署 | Vercel |
 
-## 快速开始
+> `src/lib/gemini.ts` 是历史遗留文件名，项目从未使用过 Gemini，现在走的是 DashScope。
 
-### 1. 环境准备
+---
+
+## 本地跑起来
+
+### 1. 安装依赖
 
 ```bash
-# 安装依赖
 pnpm install
 ```
 
-### 2. 配置 Supabase
+### 2. 准备 Supabase
 
-1. 在 [supabase.com](https://supabase.com) 创建免费项目
-2. 在 SQL Editor 中执行 `supabase-migration.sql`
-3. 在 Storage 中创建 `images` 存储桶（设为公开）
-4. 复制项目 URL 和 anon key
+1. 在 [supabase.com](https://supabase.com) 建一个免费项目
+2. SQL Editor 里按顺序执行仓库根目录的迁移脚本：
+   `supabase-migration.sql` → `supabase-migration-v0.4.sql` → `supabase-migration-v0.4.1.sql` → `supabase-migration-v0.5.sql`
+3. Storage 里新建 **`images`** 桶，设为 public
+4. 拿走 Project URL、anon key、service role key
 
-### 3. 配置 Gemini API
+### 3. 准备 DashScope Key
 
-1. 在 [Google AI Studio](https://aistudio.google.com/apikey) 获取 API Key
-2. Gemini 2.0 Flash 每天有 1500 次免费调用额度
+在[阿里云百炼控制台](https://bailian.console.aliyun.com/)开通 DashScope 并创建 API Key。
+`qwen-vl-plus` / `qwen-plus` 均有免费额度，个人用量基本不花钱。
 
 ### 4. 环境变量
 
@@ -38,76 +66,164 @@ pnpm install
 cp .env.example .env.local
 ```
 
-编辑 `.env.local` 填入实际值：
-
-```
+```ini
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
-GEMINI_API_KEY=AIza...
+DASHSCOPE_API_KEY=sk-...
 ```
 
-### 5. 启动开发
+可选：`DASHSCOPE_TIMEOUT_MS`（默认 `45000`，视觉模型调用的代码层超时，见下文踩坑记录）
+
+### 5. 启动
 
 ```bash
 pnpm dev
 ```
 
-打开 http://localhost:3000
+打开 <http://localhost:3000>
 
-### 6. 部署到 Vercel
+### 6. 部署
 
-```bash
-# 安装 Vercel CLI
-pnpm add -g vercel
+把仓库导进 [Vercel](https://vercel.com)，配上上面 4 个环境变量即可自动部署。
 
-# 部署
-vercel
+**注意**：Serverless 平台默认的函数超时是 10s，本项目靠 `/api/classify/route.ts` 里的
+`export const maxDuration = 60` 把它顶到 60s。换平台部署时记得同步调整。
 
-# 在 Vercel Dashboard 中配置环境变量
-```
-
-或直接在 [vercel.com](https://vercel.com) 导入 GitHub 仓库，自动部署。
+---
 
 ## 项目结构
 
 ```
 src/
 ├── app/
-│   ├── api/
-│   │   ├── classify/    # POST - 上传截图 + AI 分类
-│   │   └── works/       # GET/POST/PUT/DELETE - 作品 CRUD
-│   ├── layout.tsx       # 根布局
-│   ├── page.tsx         # 首页
-│   └── globals.css      # 全局样式
+│   ├── page.tsx            首页（HERO + 卡片网格 + 3D 地球）
+│   ├── journals/           旅程记录
+│   ├── postcards/          明信片生成
+│   ├── dashboard/          我的旅程（等级 / 徽章 / AI 推荐）
+│   ├── routes/             路线规划（含可视化地图）
+│   ├── globe/              3D 地球全屏页
+│   ├── cover/              开场动画页
+│   ├── globals.css         设计令牌 + 主题 + Leaflet 适配 + 动画
+│   └── api/
+│       ├── classify/       上传截图 + AI 识别（核心链路）
+│       ├── works/          心愿 CRUD
+│       ├── journals/       日记 CRUD
+│       ├── routes/         路线与路线项 CRUD、排序
+│       ├── quotes/         AI 生成旅途印记
+│       ├── recommend/      AI 推荐目的地
+│       ├── tiles/          地图瓦片代理
+│       └── weather/        天气
 ├── components/
-│   ├── UploadZone.tsx   # 拖拽上传组件
-│   ├── WorkCard.tsx     # 作品卡片
-│   ├── CardGrid.tsx     # 动态分组网格
-│   ├── EditDrawer.tsx   # 分类编辑抽屉
-│   ├── ManualAddModal.tsx # 手动添加弹窗
-│   ├── ImageViewer.tsx  # 图片查看器
-│   └── EmptyState.tsx   # 空状态引导
-├── lib/
-│   ├── supabase.ts      # Supabase 客户端
-│   ├── gemini.ts        # Gemini AI 客户端
-│   └── grouping.ts      # 动态分组算法
-└── types/
-    └── index.ts         # TypeScript 类型定义
+│   ├── UploadZone.tsx      拖拽上传 + 批量队列（压缩、并发、重试、取消）
+│   ├── PageShell.tsx       四个子页面共用的外壳（顶栏 + 主题开关 + 空状态）
+│   ├── ThemeProvider.tsx   主题上下文（localStorage + 防闪烁引导脚本）
+│   ├── ThemeToggle.tsx     深浅切换按钮
+│   ├── RouteMiniMap.tsx    路线可视化小地图
+│   ├── CardGrid.tsx        卡片网格 + 拖拽排序
+│   ├── MapView.tsx         2D 大地图
+│   ├── home/               首屏专属（场景背景、液态光标、数字滚动）
+│   ├── globe/              3D 地球模块
+│   └── cover/              开场动画模块
+├── lib/                    Supabase / DashScope / 地理编码 / 分组算法
+└── types/                  全局类型
 ```
 
-## 费用
+---
 
-| 资源 | 免费额度 | 预估月费 |
-|------|---------|---------|
-| Vercel | 100GB 带宽 | ¥0 |
-| Supabase | 500MB 数据库 + 1GB 存储 | ¥0 |
-| Gemini 2.0 Flash | 1500次/天 | ¥0 |
-| **合计** | | **¥0** |
+## 设计系统
 
-## 里程碑
+整套配色走 **CSS 变量令牌**，在 `globals.css` 里定义，靠 `<html class="dark">` 翻转，
+再用 Tailwind 4 的 `@theme inline` 注册成工具类。
 
-- ✅ v0.1 - MVP: 收藏与分类
-- ⬜ v0.2 - 丰富与管理（备注、搜索、状态标记）
-- ⬜ v0.3 - 地图探索（2D 交互地图 + 路线规划）
-- ⬜ v1.0 - 3D 地球仪 + 社交分享
+| 令牌 | 工具类 | 用途 |
+| --- | --- | --- |
+| `--canvas` | `bg-canvas` | 页面底色 |
+| `--surface` / `--surface-2` | `bg-surface` `bg-surface-2` | 卡片 / 嵌套面 |
+| `--fg` / `--fg-2` / `--fg-3` | `text-fg` `text-fg-2` `text-fg-3` | 主 / 次 / 弱文字 |
+| `--line` / `--line-2` | `border-line` `border-line-2` | 描边 |
+| `--brand` / `--brand-soft` | `text-brand` `bg-brand-soft` | 品牌色（浅：青绿 / 深：青蓝） |
+| `--gold` / `--gold-soft` | `text-gold` `bg-gold-soft` | 等级徽章 |
+| `--danger` / `--danger-soft` | `text-danger` `bg-danger-soft` | 危险操作 |
+
+**好处**：写 `bg-surface text-fg` 就自动适配深浅，不用到处写 `dark:` 变体。
+
+**范围**：首屏 HERO 是恒深色的沉浸式设计（照片 + 暗色蒙版），不随主题翻转；
+四个子页面和主题开关覆盖的其余部分会跟随。切换按钮在首页导航右上角和各子页面顶栏右侧。
+
+**Leaflet 深色适配**：不引第三方暗色瓦片源（国内访问不稳），
+改为在深色模式下对标准 OSM 瓦片做 CSS 反相（`.dark .themed-map .leaflet-tile-pane`）。
+
+---
+
+## 踩坑记录
+
+### 1. 大图直传导致 AI 识别超时（本项目最隐蔽的一个坑）
+
+**现象**：本地一切正常，线上某些截图死活识别不出来，换个时间又莫名其妙好了。
+
+**真因**：前端压缩逻辑里有一句 `if (blob.size >= file.size) return file;`
+——"压完反而更大就退回原图"。小红书截图多半已经是压过的 JPEG，重编码常常比原图还大，
+于是 3~8MB 的全分辨率原图被直传，base64 后再涨 33%，从 Vercel（美国节点）打到
+阿里云 DashScope 必然撞上代码层的 45s 超时。
+
+**修复**：改成阶梯降档 `1280px/0.82 → 1024px/0.75 → 800px/0.7`，压进 350KB 预算即止；
+**即使全部超预算，兜底也用压过的最小那份，绝不退回原图**。
+
+实测（Vercel 美国节点 → DashScope）：
+
+| 尺寸 / 体积 | 耗时 |
+| --- | --- |
+| 1170×2532 / 113KB | 8.7s |
+| 1170×2532 / 169KB | 13.7s |
+| 1170×2532 / 235KB | 27.8s |
+| 1170×2532 / 626KB | **超时被掐断** |
+| 739×1600 / 323KB | 9.7s |
+| 591×1280 / 52KB | 5.3s |
+
+**两层级超时必须配套**：代码层 45s（可用 `DASHSCOPE_TIMEOUT_MS` 覆盖）<
+平台层 60s（`maxDuration`）。只改一层没用。
+
+### 2. AI 失败被伪装成"上传成功"
+
+`/api/classify` 只把 `work` 往外传，卡片入库了就一律报成功。
+现在传完整响应（`ai_error` / `classification` / `ai_elapsed_ms`），前端如实区分三种结果：
+成功 / 已保存但没认出地点 / 彻底失败。
+
+### 3. 平台超时返回的是 HTML 而不是 JSON
+
+Vercel 504 时 `res.json()` 会抛 `Unexpected token 'A'`，前端只看到一句莫名其妙的报错。
+现在先判 `content-type` 再解析，非 JSON 时给出"识别超时，请重试"这样人能看懂的提示。
+
+### 4. 压缩后文件名丢了，重复检测失效
+
+前端压缩后文件名变成 `upload-<时间戳>.jpg`，服务端按文件名查重的逻辑永远命中不了。
+现在把原始文件名通过 `originalName` 字段单独传给后端。
+
+---
+
+## 路线图
+
+- ✅ v0.1 MVP：收藏与分类
+- ✅ v0.2 丰富与管理：备注、搜索、状态标记
+- ✅ v0.3 地图探索：2D 交互地图 + 路线规划与可视化
+- ✅ v0.4 内容层：旅程记录、明信片、等级徽章
+- ✅ v0.5 3D 地球 + 开场动画
+- ✅ v0.6 设计系统：深浅双主题 + 四个子页面 UI 统一
+- ✅ v0.7 批量上传（并发队列 + 逐张状态 + 失败重试）
+- ⬜ v0.8 街道级缩放地图
+- ⬜ v1.0 社交分享
+
+---
+
+## 成本
+
+个人用量下全部落在免费额度内：
+
+| 资源 | 免费额度 |
+| --- | --- |
+| Vercel | 100GB 带宽 / Hobby |
+| Supabase | 500MB 数据库 + 1GB 存储 |
+| DashScope | `qwen-vl-plus` / `qwen-plus` 免费额度 |
+
+> Supabase 免费项目长时间无访问会自动暂停，在控制台点一下 Resume 即可恢复。

@@ -4,8 +4,10 @@ import { classifyImage } from "@/lib/gemini";
 import { geocode } from "@/lib/geocode";
 import { v4 as uuidv4 } from "uuid";
 
-// 平台层超时：不设会被 Vercel 默认上限掐断（服务端函数默认 10s）
-// 代码层不设 fetch 超时，让慢网/冷启动能跑完
+// 超时要配套改两层，只改一层无效：
+//   平台层 —— 不设会被 Vercel 默认上限掐断（服务端函数默认 10s）
+//   代码层 —— src/lib/gemini.ts 里的 AbortSignal.timeout(45s)，要严格小于这里
+//            （留 15s 给 Supabase 上传和冷启动），否则拿不到可读的 JSON 错误
 export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
@@ -16,6 +18,11 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json({ error: "未提供文件" }, { status: 400 });
     }
+
+    // 前端压缩后会把文件名改成 upload-<时间戳>.jpg，原始文件名得单独传过来，
+    // 否则下面按文件名做的重复检测永远命中不了。
+    const originalName =
+      (formData.get("originalName") as string | null) || file.name || "";
 
     // 检查文件类型
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -43,7 +50,6 @@ export async function POST(request: NextRequest) {
     const filePath = `works/${fileName}`;
 
     // 重复检测：检查原始文件名是否已存在
-    const originalName = file.name;
     let duplicateId: string | null = null;
     if (originalName) {
       const nameWithoutExt = originalName.replace(/\.[^.]+$/, "");
