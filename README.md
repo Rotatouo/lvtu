@@ -200,6 +200,22 @@ Vercel 504 时 `res.json()` 会抛 `Unexpected token 'A'`，前端只看到一�
 前端压缩后文件名变成 `upload-<时间戳>.jpg`，服务端按文件名查重的逻辑永远命中不了。
 现在把原始文件名通过 `originalName` 字段单独传给后端。
 
+### 5. Leaflet 在静态预渲染阶段炸 `window is not defined`
+
+**现象**：`pnpm build` 在 `Generating static pages` 卡在 `/routes`，报
+`ReferenceError: window is not defined`。本地 `pnpm dev` 一切正常，因为只有构建期会做静态预渲染。
+
+**真因**：`/routes` 页用了 Leaflet 小地图 `RouteMiniMap`，react-leaflet 在
+**模块顶层 import 阶段**就访问 `window`。哪怕页面标了 `"use client"`，Next 在静态预渲染时
+仍会执行模块顶层代码，于是炸在 build 而非运行时。
+
+**修复**：`RouteMiniMap` 改用 `next/dynamic(() => import(...), { ssr: false })` 懒加载，
+让 Leaflet 只在浏览器里加载。所有用到 Three.js / Leaflet 且会被静态预渲染的组件
+（`GlobeView`、`RouteMiniMap`）都必须是 `ssr:false` 的动态导入。
+
+**教训**：凡是 import 阶段碰 `window` / `document` 的第三方库（地图、3D、canvas），
+在会被静态预渲染的页面里一律 `next/dynamic({ ssr: false })`，别直接静态 import。
+
 ---
 
 ## 路线图
