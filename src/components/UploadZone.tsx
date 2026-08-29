@@ -12,19 +12,76 @@ interface UploadZoneProps {
   status: UploadStatus;
 }
 
+/** 把图片压到最长边 maxEdge 以内并转 JPEG，任何一步失败都退回原文件 */
+async function compressImage(file: File, maxEdge = 1600, quality = 0.85): Promise<File> {
+  if (typeof window === "undefined" || !file.type.startsWith("image/")) return file;
+  if (file.type === "image/gif") return file; // 不动动图
+
+  try {
+    const bitmap = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("decode failed"));
+      };
+      img.src = url;
+    });
+
+    const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+    if (scale === 1 && file.size < 1024 * 1024) return file; // 本来就够小
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality)
+    );
+    if (!blob || blob.size >= file.size) return file; // 压完反而更大就用原图
+
+    return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+      type: "image/jpeg",
+    });
+  } catch {
+    return file; // 压缩失败不阻塞上传
+  }
+}
+
 export default function UploadZone({ onUploadStart, onUploadComplete, onUploadError, status }: UploadZoneProps) {
   const [previews, setPreviews] = useState<string[]>([]);
 
-  const uploadFile = async (file: File) => {
+  const uploadFile = async (original: File) => {
+    // 预览用原图（本地即时显示，不等压缩）
     const reader = new FileReader();
     reader.onload = (e) => setPreviews((prev) => [...prev, e.target?.result as string]);
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(original);
+
+    // 上传前压缩：手机截图常 3~8MB，base64 后再大 33%，是 504 超时的最大元凶。
+    // 缩到最长边 1600px + JPEG 0.85，通常能压到 300KB 以内。
+    const file = await compressImage(original);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const res = await fetch("/api/classify", { method: "POST", body: formData });
+      // 平台超时会返回 HTML 错误页而非 JSON，这里先判 content-type 再解析
+      const isJson = (res.headers.get("content-type") || "").includes("application/json");
+      if (!isJson) {
+        throw new Error(
+          res.status === 504
+            ? "识别超时（服务器 504），请重试或换一张小一点的图"
+            : `服务器返回异常 (${res.status})，请重试`
+        );
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "上传失败");
       onUploadComplete(data.work);

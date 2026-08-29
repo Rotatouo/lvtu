@@ -58,8 +58,14 @@ export async function classifyImage(
     throw new Error("未配置 DASHSCOPE_API_KEY");
   }
 
+  // 必须设代码层超时：平台（Vercel / EdgeOne）到点会直接掐断并返回 HTML 错误页，
+  // 前端 res.json() 会炸成 "Unexpected token 'A'"，用户只看到莫名其妙的失败。
+  // 主动超时才能返回可读的 JSON 错误。默认 45s，给 Supabase 上传 + 冷启动留 15s 余量。
+  const timeoutMs = Number(process.env.DASHSCOPE_TIMEOUT_MS ?? 45_000);
+
   const response = await fetch(DASHSCOPE_API_URL, {
     method: "POST",
+    signal: AbortSignal.timeout(timeoutMs),
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
