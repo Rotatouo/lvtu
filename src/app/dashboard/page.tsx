@@ -100,10 +100,12 @@ export default function DashboardPage() {
 
   const stats = useMemo(() => {
     const beenWorks = works.filter((w) => w.status === "been_there");
-    const countries = new Set(beenWorks.map((w) => w.final_country).filter(Boolean));
-    const cities = new Set(beenWorks.map((w) => w.final_city).filter(Boolean));
+    // 统计卡片的「国家 / 城市 / 景点」应反映用户已收集的所有地点
+    //（包含想去和去过），而不是仅统计去过。否则上传的心愿单不会被计入。
+    const countries = new Set(works.map((w) => w.final_country).filter(Boolean));
+    const cities = new Set(works.map((w) => w.final_city).filter(Boolean));
     const attractions = new Set(
-      beenWorks.map((w) => w.final_attraction).filter(Boolean)
+      works.map((w) => w.final_attraction).filter(Boolean)
     );
 
     const totalXp =
