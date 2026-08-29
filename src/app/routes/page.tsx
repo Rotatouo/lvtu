@@ -1,11 +1,23 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { Trash2, Loader2, GripVertical, Plus, X, Route as RouteIcon, ChevronDown } from "lucide-react";
 import type { Route } from "@/types";
 import RouteAddWorkModal from "@/components/RouteAddWorkModal";
-import RouteMiniMap from "@/components/RouteMiniMap";
 import PageShell, { EmptyBlock, SectionTitle } from "@/components/PageShell";
+
+// Leaflet 在 import 阶段就会访问 window，必须 ssr:false 避开预渲染。
+// 否则 pnpm build 会在 /routes 的静态预渲染时炸 window is not defined。
+const RouteMiniMap = dynamic(() => import("@/components/RouteMiniMap"), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="h-[260px] w-full rounded-2xl border border-line bg-surface-2 animate-pulse-subtle"
+      aria-label="地图加载中"
+    />
+  ),
+});
 import {
   DndContext,
   closestCenter,
