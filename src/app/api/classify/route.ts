@@ -4,6 +4,10 @@ import { classifyImage } from "@/lib/gemini";
 import { geocode } from "@/lib/geocode";
 import { v4 as uuidv4 } from "uuid";
 
+// 平台层超时：不设会被 Vercel 默认上限掐断（服务端函数默认 10s）
+// 代码层不设 fetch 超时，让慢网/冷启动能跑完
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
