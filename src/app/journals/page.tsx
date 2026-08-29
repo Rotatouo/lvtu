@@ -1,19 +1,26 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { ArrowLeft, Trash2, Loader2, RefreshCw, Pencil } from "lucide-react";
+import { BookOpen, Trash2, Loader2, RefreshCw, Pencil, CalendarDays, Quote } from "lucide-react";
 import type { Journal, Work } from "@/types";
 import JournalEditor from "@/components/JournalEditor";
+import PageShell, { EmptyBlock } from "@/components/PageShell";
 
 interface JournalWithWork extends Journal {
   works?: Work | null;
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export default function JournalsPage() {
   const [journals, setJournals] = useState<JournalWithWork[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingJournal, setEditingJournal] = useState<JournalWithWork | null>(null);
+  const [regenId, setRegenId] = useState<string | null>(null);
 
   const fetchJournals = useCallback(async () => {
     setLoading(true);
@@ -29,16 +36,19 @@ export default function JournalsPage() {
     }
   }, []);
 
-  useEffect(() => { fetchJournals(); }, [fetchJournals]);
+  useEffect(() => {
+    fetchJournals();
+  }, [fetchJournals]);
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("删除这篇日记?")) return;
+    if (!window.confirm("删除这篇日记？")) return;
     await fetch(`/api/journals/${id}`, { method: "DELETE" });
     setJournals((prev) => prev.filter((j) => j.id !== id));
   };
 
   const handleRegenQuote = async (journal: JournalWithWork) => {
-    if (!window.confirm("重新生成旅途印记?原来的会被覆盖。")) return;
+    if (!window.confirm("重新生成旅途印记？原来的会被覆盖。")) return;
+    setRegenId(journal.id);
     try {
       const res = await fetch("/api/quotes", {
         method: "POST",
@@ -57,8 +67,14 @@ export default function JournalsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quote: newQuote }),
       });
-      setJournals((prev) => prev.map((j) => j.id === journal.id ? { ...j, quote: newQuote } : j));
-    } catch { /* ignore */ }
+      setJournals((prev) =>
+        prev.map((j) => (j.id === journal.id ? { ...j, quote: newQuote } : j))
+      );
+    } catch {
+      /* ignore */
+    } finally {
+      setRegenId(null);
+    }
   };
 
   const handleJournalSaved = () => {
@@ -66,81 +82,141 @@ export default function JournalsPage() {
     fetchJournals();
   };
 
+  const photoCount = journals.filter((j) => j.photo_url).length;
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Link href="/" className="p-1 -ml-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">旅行日记</h1>
+    <PageShell
+      title="旅程记录"
+      subtitle={
+        loading
+          ? "加载中…"
+          : journals.length > 0
+            ? `${journals.length} 篇日记 · ${photoCount} 张照片`
+            : "还没有日记"
+      }
+      icon={<BookOpen className="h-[17px] w-[17px]" />}
+    >
+      {loading && (
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-fg-3" />
         </div>
-      </header>
+      )}
 
-      <main className="max-w-3xl mx-auto px-4 py-6">
-        {loading && (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          </div>
-        )}
+      {!loading && journals.length === 0 && (
+        <EmptyBlock
+          icon={<BookOpen className="h-5 w-5" />}
+          title="还没有旅行日记"
+          hint="把心愿卡片标记为「去过」，就能写下第一篇了"
+        />
+      )}
 
-        {!loading && journals.length === 0 && (
-          <div className="text-center py-20">
-            <p className="text-gray-400 dark:text-gray-500 text-sm">还没有旅行日记</p>
-            <p className="text-gray-300 dark:text-gray-600 text-xs mt-1">标记一个"去过"的地点来写第一篇吧!</p>
-          </div>
-        )}
-
-        {!loading && journals.length > 0 && (
-          <div className="space-y-3">
-            {journals.map((j) => (
-              <div key={j.id} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-gray-900 dark:text-white">
-                        {j.works && (j.works.final_attraction || j.works.final_city || "未知地点")}
-                      </span>
-                      {j.visited_at && (
-                        <span className="text-[11px] text-gray-400">
-                          {j.visited_at}
-                        </span>
-                      )}
-                      <span className="text-[11px] text-gray-300">
-                        {new Date(j.created_at).toLocaleDateString("zh-CN", { year: "numeric", month: "short", day: "numeric" })}
-                      </span>
+      {!loading && journals.length > 0 && (
+        <div className="space-y-3">
+          {journals.map((j, idx) => {
+            const place =
+              j.works?.final_attraction || j.works?.final_city || "未知地点";
+            const region = [j.works?.final_country, j.works?.final_city]
+              .filter(Boolean)
+              .join(" · ");
+            return (
+              <article
+                key={j.id}
+                className="animate-rise-in overflow-hidden rounded-2xl border border-line bg-surface transition-colors hover:border-line-2"
+                style={{
+                  boxShadow: "var(--shadow-card)",
+                  animationDelay: `${Math.min(idx, 8) * 40}ms`,
+                }}
+              >
+                <div className="flex gap-3 p-3.5">
+                  {/* 缩略图 */}
+                  {j.photo_url ? (
+                    <img
+                      src={j.photo_url}
+                      alt={place}
+                      className="h-[76px] w-[76px] shrink-0 rounded-xl object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-xl bg-surface-2 text-fg-3">
+                      <BookOpen className="h-5 w-5" />
                     </div>
+                  )}
+
+                  <div className="min-w-0 flex-1">
+                    {/* 标题行 */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h3 className="truncate text-[14px] font-semibold leading-tight text-fg">
+                          {place}
+                        </h3>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-fg-3">
+                          <CalendarDays className="h-3 w-3" />
+                          <span>{formatDate(j.created_at)}</span>
+                          {region && (
+                            <>
+                              <span className="text-line-2">·</span>
+                              <span className="truncate">{region}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* 操作 */}
+                      <div className="flex shrink-0 items-center gap-0.5">
+                        <button
+                          onClick={() => setEditingJournal(j)}
+                          className="rounded-lg p-1.5 text-fg-3 transition-colors hover:bg-surface-2 hover:text-brand"
+                          title="编辑"
+                          aria-label="编辑"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(j.id)}
+                          className="rounded-lg p-1.5 text-fg-3 transition-colors hover:bg-danger-soft hover:text-danger"
+                          title="删除"
+                          aria-label="删除"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* 旅途印记 */}
                     {j.quote && (
-                      <div className="flex items-start gap-1 group mb-1.5">
-                        <p className="text-xs text-purple-600 dark:text-purple-400 italic">"{j.quote}"</p>
-                        <button onClick={() => handleRegenQuote(j)}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-400 shrink-0 transition-opacity"
-                          title="重新生成">
-                          <RefreshCw className="w-3 h-3" />
+                      <div className="group mt-2 flex items-start gap-1.5 rounded-lg bg-brand-soft/60 px-2.5 py-1.5">
+                        <Quote className="mt-0.5 h-3 w-3 shrink-0 text-brand" />
+                        <p className="flex-1 text-[11px] italic leading-relaxed text-brand">
+                          {j.quote}
+                        </p>
+                        <button
+                          onClick={() => handleRegenQuote(j)}
+                          disabled={regenId === j.id}
+                          className="shrink-0 rounded p-0.5 text-brand opacity-0 transition-opacity hover:bg-brand/10 focus:opacity-100 group-hover:opacity-100 disabled:opacity-100"
+                          title="重新生成旅途印记"
+                          aria-label="重新生成旅途印记"
+                        >
+                          {regenId === j.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-3 w-3" />
+                          )}
                         </button>
                       </div>
                     )}
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
-                      {j.content || <span className="text-gray-300 italic">(没有写感受)</span>}
+
+                    {/* 正文 */}
+                    <p className="mt-2 line-clamp-3 text-[12.5px] leading-relaxed text-fg-2">
+                      {j.content || (
+                        <span className="italic text-fg-3">（没有写感受）</span>
+                      )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => setEditingJournal(j)} className="p-1 text-gray-300 hover:text-blue-500" title="编辑">
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => handleDelete(j.id)} className="p-1 text-gray-300 hover:text-red-500" title="删除">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
                 </div>
-                {j.photo_url && (
-                  <img src={j.photo_url} alt="" className="mt-3 w-full h-36 object-cover rounded-lg" />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </main>
+              </article>
+            );
+          })}
+        </div>
+      )}
 
       {editingJournal && editingJournal.works && (
         <JournalEditor
@@ -150,6 +226,6 @@ export default function JournalsPage() {
           onSaved={handleJournalSaved}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

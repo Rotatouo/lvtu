@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
-import { ArrowLeft, Trash2, Loader2, GripVertical, Plus, X } from "lucide-react";
+import { Trash2, Loader2, GripVertical, Plus, X, Route as RouteIcon, ChevronDown } from "lucide-react";
 import type { Route } from "@/types";
 import RouteAddWorkModal from "@/components/RouteAddWorkModal";
+import RouteMiniMap from "@/components/RouteMiniMap";
+import PageShell, { EmptyBlock, SectionTitle } from "@/components/PageShell";
 import {
   DndContext,
   closestCenter,
@@ -21,33 +22,79 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-function SortableItem({ item, route, onRemove, removing }: { item: any; route: Route; onRemove?: (workId: string) => void; removing?: boolean }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+function SortableItem({
+  item,
+  index,
+  onRemove,
+  removing,
+}: {
+  item: any;
+  index: number;
+  onRemove?: (workId: string) => void;
+  removing?: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: item.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
   const work = item.work;
+
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 py-1.5 group">
-      <button {...attributes} {...listeners} className="text-gray-300 hover:text-gray-500 cursor-grab">
-        <GripVertical className="w-3.5 h-3.5" />
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`group flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-surface-2 ${
+        isDragging ? "z-10 bg-surface-2 opacity-90" : ""
+      }`}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="shrink-0 cursor-grab touch-none text-fg-3 transition-colors hover:text-fg-2 active:cursor-grabbing"
+        title="拖动调整顺序"
+        aria-label="拖动调整顺序"
+      >
+        <GripVertical className="h-3.5 w-3.5" />
       </button>
-      {work?.image_thumb && <img src={work.image_thumb} alt="" className="w-8 h-8 object-cover rounded" />}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-gray-700 dark:text-gray-200 truncate">
+
+      <span className="w-4 shrink-0 text-center text-[10px] font-medium text-fg-3">
+        {index + 1}
+      </span>
+
+      {work?.image_thumb ? (
+        <img
+          src={work.image_thumb}
+          alt=""
+          className="h-8 w-8 shrink-0 rounded-lg object-cover"
+        />
+      ) : (
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg-3">
+          <RouteIcon className="h-3.5 w-3.5" />
+        </span>
+      )}
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12.5px] font-medium text-fg">
           {work?.final_attraction || work?.final_city || "?"}
         </p>
-        <p className="text-[10px] text-gray-400">
-          {[work?.final_country, work?.final_city].filter(Boolean).join(" · ")}
+        <p className="truncate text-[10px] text-fg-3">
+          {[work?.final_country, work?.final_city].filter(Boolean).join(" · ") ||
+            "未识别地点"}
         </p>
       </div>
+
       {onRemove && (
         <button
           onClick={() => onRemove(item.work_id)}
           disabled={removing}
-          className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all"
+          className="shrink-0 rounded-md p-1 text-fg-3 transition-colors hover:bg-danger-soft hover:text-danger"
           title="从路线移除"
           aria-label="从路线移除"
         >
-          {removing ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3.5 h-3.5" />}
+          {removing ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <X className="h-3.5 w-3.5" />
+          )}
         </button>
       )}
     </div>
@@ -57,7 +104,7 @@ function SortableItem({ item, route, onRemove, removing }: { item: any; route: R
 export default function RoutesPage() {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [removingWorkId, setRemovingWorkId] = useState<string | null>(null);
 
@@ -67,14 +114,28 @@ export default function RoutesPage() {
       const res = await fetch("/api/routes");
       const d = await res.json();
       setRoutes(d.routes || []);
-    } catch { /* ignore */ }
-    finally { setLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchRoutes(); }, [fetchRoutes]);
+  useEffect(() => {
+    fetchRoutes();
+  }, [fetchRoutes]);
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleDelete = async (route: Route) => {
-    if (!window.confirm(`删除路线「${route.name}」?`)) return;
+    if (!window.confirm(`删除路线「${route.name}」？`)) return;
     await fetch(`/api/routes/${route.id}`, { method: "DELETE" });
     setRoutes((prev) => prev.filter((r) => r.id !== route.id));
   };
@@ -103,7 +164,9 @@ export default function RoutesPage() {
     if (!window.confirm("把这个地点从路线中移除？")) return;
     setRemovingWorkId(workId);
     try {
-      await fetch(`/api/routes/${routeId}/items?work_id=${workId}`, { method: "DELETE" });
+      await fetch(`/api/routes/${routeId}/items?work_id=${workId}`, {
+        method: "DELETE",
+      });
       setRoutes((prev) =>
         prev.map((r) =>
           r.id === routeId
@@ -111,96 +174,169 @@ export default function RoutesPage() {
             : r
         )
       );
-    } catch { /* ignore */ }
-    finally { setRemovingWorkId(null); }
+    } catch {
+      /* ignore */
+    } finally {
+      setRemovingWorkId(null);
+    }
   };
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
+
+  const totalStops = routes.reduce((s, r) => s + (r.items?.length || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Link href="/" className="p-1 -ml-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">路线</h1>
+    <PageShell
+      title="路线"
+      subtitle={
+        loading
+          ? "加载中…"
+          : routes.length > 0
+            ? `${routes.length} 条路线 · 共 ${totalStops} 站`
+            : "还没有路线"
+      }
+      icon={<RouteIcon className="h-[17px] w-[17px]" />}
+    >
+      {loading && (
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-fg-3" />
         </div>
-      </header>
+      )}
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-3">
-        {loading && (
-          <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
-        )}
+      {!loading && routes.length === 0 && (
+        <EmptyBlock
+          icon={<RouteIcon className="h-5 w-5" />}
+          title="还没有路线"
+          hint="在首页卡片上点 🗺️ 就能加入路线"
+        />
+      )}
 
-        {!loading && routes.length === 0 && (
-          <div className="text-center py-20 space-y-1">
-            <p className="text-gray-400 text-sm">还没有路线</p>
-            <p className="text-gray-300 text-xs">在卡片上点 🗺️ 加入路线</p>
-          </div>
-        )}
+      {!loading && routes.length > 0 && (
+        <div className="space-y-6">
+          {/* ── 路线总览地图 ─────────────────────────── */}
+          <section>
+            <SectionTitle icon={<RouteIcon className="h-4 w-4" />}>
+              路线总览
+            </SectionTitle>
+            <RouteMiniMap routes={routes} height="260px" />
+          </section>
 
-        {routes.map((route) => {
-          const items = (route.items || []).sort((a, b) => a.sort_order - b.sort_order);
-          const expanded = expandedId === route.id;
-          return (
-            <div key={route.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-              <button
-                onClick={() => setExpandedId(expanded ? null : route.id)}
-                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
-              >
-                <span className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: route.color }} />
-                <span className="flex-1 text-left text-sm font-medium text-gray-900 dark:text-white">{route.name}</span>
-                <span className="text-[11px] text-gray-400">{items.length} 个地点</span>
-              </button>
+          {/* ── 路线列表 ─────────────────────────────── */}
+          <section>
+            <SectionTitle
+              aside={<span className="text-[11px] text-fg-3">点标题展开</span>}
+            >
+              我的路线
+            </SectionTitle>
 
-              {expanded && (
-                <div className="border-t border-gray-100 dark:border-gray-700 px-4 py-2">
-                  {items.length > 0 ? (
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={(e: DragEndEvent) => {
-                        if (!e.over || e.active.id === e.over.id) return;
-                        const oldIdx = items.findIndex((i) => i.id === e.active.id);
-                        const newIdx = items.findIndex((i) => i.id === e.over!.id);
-                        if (oldIdx >= 0 && newIdx >= 0) handleReorder(route.id, oldIdx, newIdx);
-                      }}
-                    >
-                      <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-                        {items.map((item) => (
-                          <SortableItem
-                            key={item.id}
-                            item={item}
-                            route={route}
-                            onRemove={(workId) => handleRemove(route.id, workId)}
-                            removing={removingWorkId === item.work_id}
-                          />
-                        ))}
-                      </SortableContext>
-                    </DndContext>
-                  ) : (
-                    <p className="text-xs text-gray-400 py-2">路线里还没有地点</p>
-                  )}
-                  <button
-                    onClick={() => setEditingRoute(route)}
-                    className="mt-2 w-full flex items-center justify-center gap-1 py-2 rounded-lg text-xs text-blue-600 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/30 transition-colors"
+            <div className="space-y-3">
+              {routes.map((route, rIdx) => {
+                const items = (route.items || []).sort(
+                  (a, b) => a.sort_order - b.sort_order
+                );
+                const expanded = expandedIds.has(route.id);
+
+                return (
+                  <div
+                    key={route.id}
+                    className="animate-rise-in overflow-hidden rounded-2xl border border-line bg-surface transition-colors"
+                    style={{
+                      boxShadow: "var(--shadow-card)",
+                      animationDelay: `${Math.min(rIdx, 8) * 40}ms`,
+                    }}
                   >
-                    <Plus className="w-3.5 h-3.5" /> 添加地点
-                  </button>
-                </div>
-              )}
+                    {/* 顶部色条 */}
+                    <div
+                      className="h-1 w-full"
+                      style={{ background: route.color }}
+                      aria-hidden
+                    />
 
-              <div className="flex justify-end border-t border-gray-100 dark:border-gray-700 px-4 py-2">
-                <button onClick={() => handleDelete(route)}
-                  className="flex items-center gap-1 text-[10px] text-gray-400 hover:text-red-500 transition-colors">
-                  <Trash2 className="w-3 h-3" />删除
-                </button>
-              </div>
+                    <button
+                      onClick={() => toggleExpand(route.id)}
+                      aria-expanded={expanded}
+                      className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-2"
+                    >
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: route.color }}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-[13.5px] font-semibold text-fg">
+                        {route.name}
+                      </span>
+                      <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] text-fg-3">
+                        {items.length} 站
+                      </span>
+                      <ChevronDown
+                        className="h-4 w-4 shrink-0 text-fg-3 transition-transform duration-200"
+                        style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)" }}
+                      />
+                    </button>
+
+                    {expanded && (
+                      <div className="border-t border-line px-3 py-2">
+                        {items.length > 0 ? (
+                          <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragEnd={(e: DragEndEvent) => {
+                              if (!e.over || e.active.id === e.over.id) return;
+                              const oldIdx = items.findIndex((i) => i.id === e.active.id);
+                              const newIdx = items.findIndex((i) => i.id === e.over!.id);
+                              if (oldIdx >= 0 && newIdx >= 0)
+                                handleReorder(route.id, oldIdx, newIdx);
+                            }}
+                          >
+                            <SortableContext
+                              items={items.map((i) => i.id)}
+                              strategy={verticalListSortingStrategy}
+                            >
+                              <div className="space-y-0.5">
+                                {items.map((item, idx) => (
+                                  <SortableItem
+                                    key={item.id}
+                                    item={item}
+                                    index={idx}
+                                    onRemove={(workId) => handleRemove(route.id, workId)}
+                                    removing={removingWorkId === item.work_id}
+                                  />
+                                ))}
+                              </div>
+                            </SortableContext>
+                          </DndContext>
+                        ) : (
+                          <p className="py-3 text-center text-xs text-fg-3">
+                            路线里还没有地点
+                          </p>
+                        )}
+
+                        <button
+                          onClick={() => setEditingRoute(route)}
+                          className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-line-2 py-2 text-xs font-medium text-fg-2 transition-colors hover:border-brand hover:bg-brand-soft hover:text-brand"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> 添加地点
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="flex justify-end border-t border-line px-4 py-1.5">
+                      <button
+                        onClick={() => handleDelete(route)}
+                        className="inline-flex items-center gap-1 rounded px-1 py-0.5 text-[10px] text-fg-3 transition-colors hover:text-danger"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        删除路线
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </main>
+          </section>
+        </div>
+      )}
 
       {editingRoute && (
         <RouteAddWorkModal
@@ -212,6 +348,6 @@ export default function RoutesPage() {
           }}
         />
       )}
-    </div>
+    </PageShell>
   );
 }

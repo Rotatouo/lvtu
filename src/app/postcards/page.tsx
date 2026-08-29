@@ -1,39 +1,72 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
-import { ArrowLeft, Download, Check, Loader2, Image } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Download,
+  Check,
+  Loader2,
+  Mail,
+  Image as ImageIcon,
+  Sparkles,
+} from "lucide-react";
 import html2canvas from "html2canvas";
 import type { Journal, Work } from "@/types";
+import PageShell, { EmptyBlock, SectionTitle } from "@/components/PageShell";
 
 interface JournalWithWork extends Journal {
   works?: Work | null;
 }
 
-type Template = "vintage" | "fresh" | "minimal";
+type Template = "vintage" | "fresh" | "minimal" | "nocturne";
 
-const templates: { key: Template; name: string; desc: string }[] = [
-  { key: "vintage", name: "复古", desc: "米黄底 衬线字" },
-  { key: "fresh", name: "清新", desc: "白底 圆角 蓝标" },
-  { key: "minimal", name: "极简", desc: "白底 纯文字" },
+const templates: { key: Template; name: string; desc: string; swatch: string[] }[] = [
+  { key: "vintage", name: "复古", desc: "米黄 衬线", swatch: ["#FFF8E7", "#B45309"] },
+  { key: "fresh", name: "清新", desc: "白底 蓝调", swatch: ["#FFFFFF", "#2563EB"] },
+  { key: "minimal", name: "极简", desc: "白底 黑白", swatch: ["#FFFFFF", "#111827"] },
+  { key: "nocturne", name: "暗调", desc: "墨底 青光", swatch: ["#0B1118", "#22D3EE"] },
 ];
 
-// 明信片渲染组件(截图目标)
-function PostcardCanvas({ journal, template, work }: { journal: JournalWithWork; template: Template; work: Work }) {
+/* ═══════════════════════════════════════════════════════════
+   明信片本体 —— 这是导出产物，配色固定不跟随主题
+   ═══════════════════════════════════════════════════════════ */
+function PostcardCanvas({
+  journal,
+  template,
+  work,
+}: {
+  journal: JournalWithWork;
+  template: Template;
+  work: Work;
+}) {
   const label = work?.final_attraction || work?.final_city || "未知";
-  const location = [work?.final_country, work?.final_region, work?.final_city].filter(Boolean).join(" · ");
-  const date = new Date(journal.created_at).toLocaleDateString("zh-CN", { year: "numeric", month: "long", day: "numeric" });
+  const location = [work?.final_country, work?.final_region, work?.final_city]
+    .filter(Boolean)
+    .join(" · ");
+  const date = new Date(journal.created_at).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   if (template === "vintage") {
     return (
-      <div className="w-[360px] flex border-2 border-amber-300" style={{ background: "#FFF8E7", fontFamily: "Georgia, serif" }}>
-        {journal.photo_url && <img src={journal.photo_url} alt="" className="w-40 h-48 object-cover" />}
-        <div className="flex-1 p-4 flex flex-col justify-center gap-2">
+      <div
+        className="flex w-[360px] border-2 border-amber-300"
+        style={{ background: "#FFF8E7", fontFamily: "Georgia, serif" }}
+      >
+        {journal.photo_url && (
+          <img src={journal.photo_url} alt="" className="h-48 w-40 object-cover" />
+        )}
+        <div className="flex flex-1 flex-col justify-center gap-2 p-4">
           <h3 className="text-base font-bold text-amber-900">{label}</h3>
           <p className="text-[10px] text-amber-700">{location}</p>
-          {journal.quote && <p className="text-xs italic text-amber-800">"{journal.quote}"</p>}
-          <p className="text-[11px] text-amber-900 leading-relaxed">{journal.content}</p>
-          <p className="text-[10px] text-amber-600 mt-auto">{date}</p>
+          {journal.quote && (
+            <p className="text-xs italic text-amber-800">“{journal.quote}”</p>
+          )}
+          <p className="text-[11px] leading-relaxed text-amber-900">
+            {journal.content}
+          </p>
+          <p className="mt-auto text-[10px] text-amber-600">{date}</p>
         </div>
       </div>
     );
@@ -41,14 +74,50 @@ function PostcardCanvas({ journal, template, work }: { journal: JournalWithWork;
 
   if (template === "fresh") {
     return (
-      <div className="w-[360px] bg-white rounded-xl shadow-lg overflow-hidden border border-blue-100">
-        {journal.photo_url && <img src={journal.photo_url} alt="" className="w-full h-44 object-cover" />}
+      <div className="w-[360px] overflow-hidden rounded-xl border border-blue-100 bg-white shadow-lg">
+        {journal.photo_url && (
+          <img src={journal.photo_url} alt="" className="h-44 w-full object-cover" />
+        )}
         <div className="p-4">
           <h3 className="text-base font-bold text-blue-600">{label}</h3>
-          <p className="text-[11px] text-gray-500 mb-2">{location}</p>
-          {journal.quote && <p className="text-xs italic text-purple-500 mb-1">"{journal.quote}"</p>}
-          <p className="text-sm text-gray-700 leading-relaxed">{journal.content}</p>
-          <p className="text-[11px] text-gray-400 mt-3">{date}</p>
+          <p className="mb-2 text-[11px] text-gray-500">{location}</p>
+          {journal.quote && (
+            <p className="mb-1 text-xs italic text-purple-500">“{journal.quote}”</p>
+          )}
+          <p className="text-sm leading-relaxed text-gray-700">{journal.content}</p>
+          <p className="mt-3 text-[11px] text-gray-400">{date}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (template === "nocturne") {
+    return (
+      <div className="w-[360px] overflow-hidden rounded-xl border border-[#1e2b3a] bg-[#0b1118]">
+        {journal.photo_url && (
+          <img src={journal.photo_url} alt="" className="h-44 w-full object-cover opacity-90" />
+        )}
+        <div className="p-4">
+          <h3
+            className="text-base font-semibold text-[#e8f4f8]"
+            style={{ fontFamily: '"Playfair Display", Georgia, serif' }}
+          >
+            {label}
+          </h3>
+          <p className="mb-2 text-[11px] tracking-wide text-[#22d3ee]">
+            {location}
+          </p>
+          {journal.quote && (
+            <p className="mb-2 border-l-2 border-[#22d3ee] pl-2 text-xs italic text-[#7f9bb0]">
+              {journal.quote}
+            </p>
+          )}
+          <p className="text-[12.5px] leading-relaxed text-[#b9cadb]">
+            {journal.content}
+          </p>
+          <p className="mt-3 text-[10px] uppercase tracking-[0.2em] text-[#4a5f73]">
+            {date}
+          </p>
         </div>
       </div>
     );
@@ -56,13 +125,19 @@ function PostcardCanvas({ journal, template, work }: { journal: JournalWithWork;
 
   // minimal
   return (
-    <div className="w-[360px] bg-white overflow-hidden">
-      {journal.photo_url && <img src={journal.photo_url} alt="" className="w-full h-56 object-cover grayscale" />}
+    <div className="w-[360px] overflow-hidden bg-white">
+      {journal.photo_url && (
+        <img src={journal.photo_url} alt="" className="h-56 w-full object-cover grayscale" />
+      )}
       <div className="p-4">
         <h3 className="text-lg font-light tracking-wider text-black">{label}</h3>
-        <p className="text-[10px] text-gray-400 mb-3">{location} · {date}</p>
-        {journal.quote && <p className="text-xs text-gray-600 italic mb-1">"{journal.quote}"</p>}
-        <p className="text-sm text-gray-800 leading-relaxed">{journal.content}</p>
+        <p className="mb-3 text-[10px] text-gray-400">
+          {location} · {date}
+        </p>
+        {journal.quote && (
+          <p className="mb-1 text-xs italic text-gray-600">“{journal.quote}”</p>
+        )}
+        <p className="text-sm leading-relaxed text-gray-800">{journal.content}</p>
       </div>
     </div>
   );
@@ -93,7 +168,8 @@ export default function PostcardsPage() {
   const toggleJournal = (id: string) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -121,108 +197,164 @@ export default function PostcardsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Link href="/" className="p-1 -ml-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">明信片生成</h1>
+    <PageShell
+      title="明信片"
+      subtitle="把旅途日记做成一张可以带走的卡片"
+      icon={<Mail className="h-[17px] w-[17px]" />}
+    >
+      {loading && (
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-fg-3" />
         </div>
-      </header>
+      )}
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {loading && (
-          <div className="flex justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-gray-400" /></div>
-        )}
+      {!loading && journals.length === 0 && (
+        <EmptyBlock
+          icon={<ImageIcon className="h-5 w-5" />}
+          title="还没有可做明信片的日记"
+          hint="需要带照片、且正文不少于 20 字的日记"
+        />
+      )}
 
-        {!loading && journals.length === 0 && (
-          <div className="text-center py-20 space-y-1">
-            <Image className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-400 text-sm">还没有可做明信片的日记</p>
-            <p className="text-gray-300 text-xs">先写几篇带照片的日记再来制作明信片吧</p>
-          </div>
-        )}
-
-        {journals.length > 0 && (
-          <>
-            {/* 选择日记 */}
-            <div>
-              <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">选择日记({selected.size}/6)</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {journals.map((j) => {
-                  const isSelected = selected.has(j.id);
-                  return (
-                    <button
-                      key={j.id}
-                      onClick={() => toggleJournal(j.id)}
-                      className={`relative rounded-lg overflow-hidden border-2 transition-all ${
-                        isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-gray-200 dark:border-gray-700 opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      {j.photo_url && <img src={j.photo_url} alt="" className="w-full h-20 object-cover" />}
-                      <div className="p-2 text-left">
-                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                          {j.works && (j.works.final_attraction || j.works.final_city)}
-                        </p>
-                        <p className="text-[10px] text-gray-500 truncate">{j.content.slice(0, 30)}</p>
-                      </div>
-                      {isSelected && (
-                        <div className="absolute top-1 right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
+      {journals.length > 0 && (
+        <div className="space-y-7">
+          {/* ── 选择日记 ─────────────────────────────── */}
+          <section>
+            <SectionTitle
+              icon={<ImageIcon className="h-4 w-4" />}
+              aside={
+                <span className="text-[11px] text-fg-3">{selected.size}/6</span>
+              }
+            >
+              选择日记
+            </SectionTitle>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {journals.map((j) => {
+                const isSelected = selected.has(j.id);
+                return (
+                  <button
+                    key={j.id}
+                    onClick={() => toggleJournal(j.id)}
+                    aria-pressed={isSelected}
+                    className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                      isSelected
+                        ? "border-brand ring-2 ring-brand/25"
+                        : "border-line opacity-70 hover:opacity-100"
+                    }`}
+                  >
+                    {j.photo_url && (
+                      <img
+                        src={j.photo_url}
+                        alt=""
+                        className="h-20 w-full object-cover"
+                      />
+                    )}
+                    <div className="bg-surface p-2">
+                      <p className="truncate text-[11px] font-medium text-fg">
+                        {j.works && (j.works.final_attraction || j.works.final_city)}
+                      </p>
+                      <p className="truncate text-[10px] text-fg-3">
+                        {j.content.slice(0, 30)}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-brand text-brand-contrast">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
+          </section>
 
-            {/* 选模板 */}
-            <div>
-              <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">选择模板</h2>
-              <div className="flex gap-2">
-                {templates.map((t) => (
+          {/* ── 选模板 ───────────────────────────────── */}
+          <section>
+            <SectionTitle icon={<Sparkles className="h-4 w-4" />}>
+              选择模板
+            </SectionTitle>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {templates.map((t) => {
+                const active = template === t.key;
+                return (
                   <button
                     key={t.key}
                     onClick={() => setTemplate(t.key)}
-                    className={`px-4 py-2 rounded-lg text-sm border transition-colors ${
-                      template === t.key
-                        ? "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                        : "border-gray-200 text-gray-600 dark:border-gray-700 dark:text-gray-400 hover:border-gray-300"
+                    aria-pressed={active}
+                    className={`rounded-xl border p-2.5 text-left transition-all ${
+                      active
+                        ? "border-brand bg-brand-soft"
+                        : "border-line bg-surface hover:border-line-2"
                     }`}
                   >
-                    {t.name}
-                    <span className="block text-[10px] opacity-60">{t.desc}</span>
+                    <span className="mb-1.5 flex gap-1">
+                      {t.swatch.map((c) => (
+                        <span
+                          key={c}
+                          className="h-3.5 w-3.5 rounded-full border border-black/10"
+                          style={{ background: c }}
+                        />
+                      ))}
+                    </span>
+                    <span
+                      className={`block text-[12px] font-medium ${
+                        active ? "text-brand" : "text-fg"
+                      }`}
+                    >
+                      {t.name}
+                    </span>
+                    <span className="block text-[10px] text-fg-3">{t.desc}</span>
                   </button>
-                ))}
-              </div>
+                );
+              })}
             </div>
+          </section>
 
-            {/* 预览 */}
-            {selectedJournals.length > 0 && (
-              <div>
-                <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">预览</h2>
-                <div className="space-y-3" ref={canvasRef}>
+          {/* ── 预览 ─────────────────────────────────── */}
+          {selectedJournals.length > 0 && (
+            <section>
+              <SectionTitle
+                icon={<Mail className="h-4 w-4" />}
+                aside={
+                  <span className="text-[11px] text-fg-3">
+                    {selectedJournals.length} 张
+                  </span>
+                }
+              >
+                预览
+              </SectionTitle>
+
+              {/* 预览台：中性底 + 内阴影，保证浅色卡和暗色卡都能看清边界 */}
+              <div className="overflow-x-auto rounded-2xl border border-line bg-surface-2 p-5">
+                <div ref={canvasRef} className="mx-auto w-fit space-y-3">
                   {selectedJournals.map((j) => (
-                    <PostcardCanvas key={j.id} journal={j} template={template} work={j.works as Work} />
+                    <PostcardCanvas
+                      key={j.id}
+                      journal={j}
+                      template={template}
+                      work={j.works as Work}
+                    />
                   ))}
                 </div>
               </div>
-            )}
+            </section>
+          )}
 
-            {/* 生成按钮 */}
-            <button
-              onClick={handleGenerate}
-              disabled={selectedJournals.length === 0 || generating}
-              className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              {generating ? "生成中..." : "生成明信片 (PNG)"}
-            </button>
-          </>
-        )}
-      </main>
-    </div>
+          {/* ── 生成 ─────────────────────────────────── */}
+          <button
+            onClick={handleGenerate}
+            disabled={selectedJournals.length === 0 || generating}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand py-3 text-sm font-medium text-brand-contrast transition-opacity hover:opacity-90 disabled:opacity-40"
+          >
+            {generating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            {generating ? "生成中…" : "生成明信片 (PNG)"}
+          </button>
+        </div>
+      )}
+    </PageShell>
   );
 }

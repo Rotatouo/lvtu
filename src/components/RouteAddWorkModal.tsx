@@ -60,31 +60,45 @@ export default function RouteAddWorkModal({ route, onClose, onAdded }: RouteAddW
   };
 
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
-        className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm max-h-[80vh] flex flex-col animate-scale-in"
+        className="flex max-h-[80vh] w-full max-w-sm animate-scale-in flex-col overflow-hidden rounded-2xl border border-line bg-surface"
+        style={{ boxShadow: "var(--shadow-pop)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-            添加地点到「{route.name}」
+        {/* 头部带路线色条 */}
+        <div className="h-1 w-full shrink-0" style={{ background: route.color }} />
+
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <h3 className="truncate pr-2 text-[13px] font-semibold text-fg">
+            添加到「{route.name}」
           </h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <X className="w-4 h-4 text-gray-400" />
+          <button
+            onClick={onClose}
+            className="shrink-0 rounded-lg p-1 text-fg-3 transition-colors hover:bg-surface-2 hover:text-fg"
+            aria-label="关闭"
+          >
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+        <div className="flex-1 space-y-0.5 overflow-y-auto p-2">
           {loading && (
-            <div className="flex justify-center py-6">
-              <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-fg-3" />
             </div>
           )}
 
           {!loading && candidates.length === 0 && (
-            <div className="text-center py-8 text-gray-400 text-sm">
-              <p>没有可添加的心愿</p>
-              <p className="text-xs mt-1 opacity-70">所有景点都已在这条路线里</p>
+            <div className="py-10 text-center">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-surface-2 text-fg-3">
+                <MapPin className="h-5 w-5" />
+              </div>
+              <p className="text-xs font-medium text-fg-2">没有可添加的心愿</p>
+              <p className="mt-1 text-[11px] text-fg-3">所有景点都已在这条路线里</p>
             </div>
           )}
 
@@ -95,25 +109,34 @@ export default function RouteAddWorkModal({ route, onClose, onAdded }: RouteAddW
                 key={w.id}
                 onClick={() => add(w)}
                 disabled={busy}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-60 text-left transition-colors"
+                className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-surface-2 disabled:opacity-60"
               >
                 {w.image_thumb ? (
-                  <img src={w.image_thumb} alt="" className="w-8 h-8 object-cover rounded shrink-0" />
+                  <img
+                    src={w.image_thumb}
+                    alt=""
+                    className="h-9 w-9 shrink-0 rounded-lg object-cover"
+                  />
                 ) : (
-                  <div className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-700 flex items-center justify-center shrink-0">
-                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                  </div>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg-3">
+                    <MapPin className="h-4 w-4" />
+                  </span>
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 dark:text-gray-200 truncate">{displayLabel(w)}</p>
-                  <p className="text-[10px] text-gray-400 truncate">
-                    {[w.final_country, w.final_city].filter(Boolean).join(" · ") || "未识别地点"}
-                  </p>
-                </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[12.5px] font-medium text-fg">
+                    {displayLabel(w)}
+                  </span>
+                  <span className="block truncate text-[10px] text-fg-3">
+                    {[w.final_country, w.final_city].filter(Boolean).join(" · ") ||
+                      "未识别地点"}
+                  </span>
+                </span>
                 {busy ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-fg-3" />
                 ) : (
-                  <Plus className="w-4 h-4 text-blue-500" />
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
+                    <Plus className="h-3.5 w-3.5" />
+                  </span>
                 )}
               </button>
             );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * 数字滚动到目标值的动画（支持 0 起步 + ease-out 曲线）
@@ -19,32 +19,39 @@ export default function CountUp({
 }) {
   const [val, setVal] = useState(start);
   const elRef = useRef<HTMLSpanElement>(null);
-  const startedRef = useRef(false);
+  const visibleRef = useRef(false);
+  const endRef = useRef(end);
+  const durationRef = useRef(duration);
+  const valRef = useRef(val);
+
+  // 让闭包始终读取最新值
+  endRef.current = end;
+  durationRef.current = duration;
+  valRef.current = val;
+
+  const startAnim = useCallback(() => {
+    const from = valRef.current;
+    const dur = durationRef.current;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const target = endRef.current;
+      setVal(Math.round(from + (target - from) * eased));
+      if (p < 1) requestAnimationFrame(tick);
+      else setVal(target);
+    };
+    requestAnimationFrame(tick);
+  }, []);
 
   useEffect(() => {
-    if (startedRef.current) return;
     const el = elRef.current;
     if (!el) return;
-
-    const startAnim = () => {
-      if (startedRef.current) return;
-      startedRef.current = true;
-
-      const t0 = performance.now();
-      const tick = (now: number) => {
-        const p = Math.min(1, (now - t0) / duration);
-        // ease-out cubic
-        const eased = 1 - Math.pow(1 - p, 3);
-        setVal(Math.round(start + (end - start) * eased));
-        if (p < 1) requestAnimationFrame(tick);
-        else setVal(end);
-      };
-      requestAnimationFrame(tick);
-    };
 
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting) {
+          visibleRef.current = true;
           startAnim();
           obs.disconnect();
         }
@@ -53,7 +60,12 @@ export default function CountUp({
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, [end, duration, start]);
+  }, [startAnim]);
+
+  // end 变化且已在视口时，补一次滚动到最新值
+  useEffect(() => {
+    if (visibleRef.current) startAnim();
+  }, [end, startAnim]);
 
   return (
     <span ref={elRef} className={className}>

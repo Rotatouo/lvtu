@@ -3,68 +3,173 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ═══════════════════════════════════════════════════════════
+   设计令牌（Design Tokens）
+   浅色：通透的旅行手帐质感，低饱和冷灰 + 青绿点缀
+   深色：与首页 #06080d 同源，青色高光
+   运行时靠 <html class="dark"> 切换，无需 dark: 前缀
+   ═══════════════════════════════════════════════════════════ */
+
 :root {
-  --background: #f9fafb;
-  --foreground: #1f2937;
+  --canvas: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --surface-3: #e5e9f0;
+
+  --fg: #0f172a;
+  --fg-2: #475569;
+  --fg-3: #94a3b8;
+
+  --line: #e3e8ef;
+  --line-2: #ccd4e0;
+
+  --brand: #0d9488;
+  --brand-2: #0f766e;
+  --brand-soft: #e2f3f1;
+  --brand-contrast: #ffffff;
+
+  --gold: #b45309;
+  --gold-soft: #fdf1d6;
+  --danger: #dc2626;
+  --danger-soft: #fdeaea;
+
+  --glow: rgba(13, 148, 136, 0.07);
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -14px rgba(15, 23, 42, 0.18);
+  --shadow-pop: 0 24px 60px -18px rgba(15, 23, 42, 0.35);
+
+  /* 兼容旧引用 */
+  --background: var(--canvas);
+  --foreground: var(--fg);
 }
 
 .dark {
-  --background: #111827;
-  --foreground: #f3f4f6;
+  --canvas: #06080d;
+  --surface: #0d1119;
+  --surface-2: #141a25;
+  --surface-3: #1b2230;
+
+  --fg: #eef2f7;
+  --fg-2: #9aa7b8;
+  --fg-3: #64748b;
+
+  --line: #1c2330;
+  --line-2: #2a3341;
+
+  --brand: #22d3ee;
+  --brand-2: #67e8f9;
+  --brand-soft: #0c2c36;
+  --brand-contrast: #04121a;
+
+  --gold: #fbbf24;
+  --gold-soft: #38290c;
+  --danger: #f87171;
+  --danger-soft: #3a1719;
+
+  --glow: rgba(34, 211, 238, 0.08);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.5), 0 14px 34px -18px rgba(0, 0, 0, 0.85);
+  --shadow-pop: 0 24px 60px -16px rgba(0, 0, 0, 0.8);
+
+  --background: var(--canvas);
+  --foreground: var(--fg);
 }
 
+/* 把令牌注册进 Tailwind，生成 bg-canvas / text-fg / border-line 等工具类 */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-contrast: var(--brand-contrast);
+
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--canvas);
+  color: var(--fg);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
+
+/* 滚动条跟随主题 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-2);
+  border-radius: 999px;
+  border: 3px solid var(--canvas);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--fg-3); }
+
+/* ── Leaflet 主题适配 ───────────────────────────────────── */
+
+/* 深色下把标准 OSM 亮色瓦片反相（避免依赖第三方暗色瓦片源） */
+.dark .themed-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.86) saturate(0.65);
+}
+.themed-map .leaflet-container {
+  background: var(--surface-2);
+  font-family: inherit;
+}
+.themed-map .leaflet-tooltip {
+  background: var(--surface);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow-card);
+  padding: 6px 8px;
+}
+.themed-map .leaflet-tooltip-top::before { border-top-color: var(--line); }
+.themed-map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  color: var(--fg-3);
+  font-size: 9px;
+}
+.themed-map .leaflet-control-attribution a { color: var(--fg-3); }
+
+/* ── 动画 ───────────────────────────────────────────────── */
 
 /* 抽屉滑入动画 */
 @keyframes slideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }
-
-.animate-slide-in {
-  animation: slideIn 0.25s ease-out;
-}
+.animate-slide-in { animation: slideIn 0.25s ease-out; }
 
 /* 弹窗缩放入场 */
 @keyframes scaleIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
-
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }
 
 /* 脉冲动画（AI 识别中） */
 @keyframes pulse-subtle {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.6;
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
+.animate-pulse-subtle { animation: pulse-subtle 1.5s ease-in-out infinite; }
 
-.animate-pulse-subtle {
-  animation: pulse-subtle 1.5s ease-in-out infinite;
+/* 列表逐项淡入 */
+@keyframes riseIn {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.animate-rise-in {
+  animation: riseIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }

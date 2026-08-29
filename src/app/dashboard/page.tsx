@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { ArrowLeft, Trophy, MapPin, Globe, Building2, BookOpen, Loader2, Sparkles, Plus } from "lucide-react";
+import {
+  Trophy,
+  MapPin,
+  Globe,
+  Building2,
+  BookOpen,
+  Loader2,
+  Sparkles,
+  Plus,
+  Check,
+  Compass,
+} from "lucide-react";
 import type { Work, Journal } from "@/types";
+import PageShell, { EmptyBlock, SectionTitle } from "@/components/PageShell";
 
 const LEVELS = [
   { level: 1, xp: 0, title: "初涉旅途" },
@@ -18,7 +29,12 @@ const LEVELS = [
   { level: 10, xp: 2000, title: "无尽旅途" },
 ];
 
-type BadgeKey = "cross_continent" | "museum_lover" | "four_seasons" | "diary_master" | "wish_collector";
+type BadgeKey =
+  | "cross_continent"
+  | "museum_lover"
+  | "four_seasons"
+  | "diary_master"
+  | "wish_collector";
 
 interface BadgeDef {
   key: BadgeKey;
@@ -38,12 +54,18 @@ const BADGES: BadgeDef[] = [
 function computeLevel(totalXp: number) {
   let current = LEVELS[0];
   for (let i = LEVELS.length - 1; i >= 0; i--) {
-    if (totalXp >= LEVELS[i].xp) { current = LEVELS[i]; break; }
+    if (totalXp >= LEVELS[i].xp) {
+      current = LEVELS[i];
+      break;
+    }
   }
   const next = LEVELS.find((l) => l.xp > totalXp);
   const prevXp = current.xp;
   const nextXp = next ? next.xp : current.xp + 1;
-  const progress = Math.min(100, Math.round(((totalXp - prevXp) / (nextXp - prevXp)) * 100));
+  const progress = Math.min(
+    100,
+    Math.round(((totalXp - prevXp) / (nextXp - prevXp)) * 100)
+  );
   return { ...current, progress, nextXp: next ? next.xp : current.xp };
 }
 
@@ -53,6 +75,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [recs, setRecs] = useState<Array<{ name: string; reason: string }>>([]);
   const [recsLoading, setRecsLoading] = useState(false);
+  const [added, setAdded] = useState<Set<string>>(new Set());
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -74,14 +98,14 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  // Stats
   const stats = useMemo(() => {
     const beenWorks = works.filter((w) => w.status === "been_there");
     const countries = new Set(beenWorks.map((w) => w.final_country).filter(Boolean));
     const cities = new Set(beenWorks.map((w) => w.final_city).filter(Boolean));
-    const attractions = new Set(beenWorks.map((w) => w.final_attraction).filter(Boolean));
+    const attractions = new Set(
+      beenWorks.map((w) => w.final_attraction).filter(Boolean)
+    );
 
-    // Experience
     const totalXp =
       works.length * 10 +
       journals.length * 30 +
@@ -90,15 +114,14 @@ export default function DashboardPage() {
 
     const levelInfo = computeLevel(totalXp);
 
-    // Badges
     const continents = new Set<string>();
     const continentMap: Record<string, string> = {
-      "中国": "亚洲", "日本": "亚洲", "韩国": "亚洲", "泰国": "亚洲", "越南": "亚洲", "印度": "亚洲",
-      "法国": "欧洲", "英国": "欧洲", "意大利": "欧洲", "德国": "欧洲", "西班牙": "欧洲",
-      "美国": "北美洲", "加拿大": "北美洲", "墨西哥": "北美洲",
-      "澳大利亚": "大洋洲", "新西兰": "大洋洲",
-      "巴西": "南美洲", "阿根廷": "南美洲",
-      "埃及": "非洲", "南非": "非洲",
+      中国: "亚洲", 日本: "亚洲", 韩国: "亚洲", 泰国: "亚洲", 越南: "亚洲", 印度: "亚洲",
+      法国: "欧洲", 英国: "欧洲", 意大利: "欧洲", 德国: "欧洲", 西班牙: "欧洲",
+      美国: "北美洲", 加拿大: "北美洲", 墨西哥: "北美洲",
+      澳大利亚: "大洋洲", 新西兰: "大洋洲",
+      巴西: "南美洲", 阿根廷: "南美洲",
+      埃及: "非洲", 南非: "非洲",
     };
     beenWorks.forEach((w) => {
       const c = continentMap[w.final_country || ""] || w.final_country;
@@ -124,13 +147,13 @@ export default function DashboardPage() {
       cities: cities.size,
       attractions: attractions.size,
       diaries: journals.length,
+      been: beenWorks.length,
       totalXp,
       levelInfo,
       badges,
     };
   }, [works, journals]);
 
-  // AI 推荐
   const loadRecs = async () => {
     if (recsLoading || recs.length > 0) return;
     setRecsLoading(true);
@@ -138,8 +161,11 @@ export default function DashboardPage() {
       const res = await fetch("/api/recommend");
       const data = await res.json();
       setRecs(data.recommendations || []);
-    } catch { /* ignore */ }
-    finally { setRecsLoading(false); }
+    } catch {
+      /* ignore */
+    } finally {
+      setRecsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -148,139 +174,236 @@ export default function DashboardPage() {
     }
   }, [loading, works]);
 
+  const flash = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 2000);
+  };
+
   const handleAddRec = async (name: string) => {
     try {
       await fetch("/api/works", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ final_attraction: name, source_platform: "AI推荐" }),
+        body: JSON.stringify({
+          final_attraction: name,
+          source_platform: "AI推荐",
+        }),
       });
-      alert(`已添加到心愿单: ${name}`);
+      setAdded((prev) => new Set(prev).add(name));
+      flash(`已加入心愿单：${name}`);
     } catch {
-      // ignore
+      flash("添加失败，请重试");
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-      </div>
-    );
-  }
+  const earnedCount = BADGES.filter((b) => stats.badges[b.key]).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="sticky top-0 z-30 bg-white/80 dark:bg-gray-800/80 backdrop-blur border-b border-gray-200 dark:border-gray-700 px-4 py-3">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <Link href="/" className="p-1 -ml-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </Link>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-white">我的旅程</h1>
+    <PageShell
+      title="我的旅程"
+      subtitle={
+        loading
+          ? "加载中…"
+          : `Lv.${stats.levelInfo.level} · ${stats.levelInfo.title} · ${earnedCount}/${BADGES.length} 枚徽章`
+      }
+      icon={<Compass className="h-[17px] w-[17px]" />}
+    >
+      {loading && (
+        <div className="flex justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-fg-3" />
         </div>
-      </header>
+      )}
 
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {works.length === 0 ? (
-          <div className="text-center py-20 space-y-2">
-            <Globe className="w-12 h-12 text-gray-300 mx-auto" />
-            <p className="text-gray-400 text-sm">还没有旅行数据</p>
-            <p className="text-gray-300 text-xs">上传你的第一张旅行截图,开始你的旅程吧!</p>
-          </div>
-        ) : (
-          <>
-            {/* 成就概览 */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700 text-center">
-              <Trophy className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-              <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+      {!loading && works.length === 0 && (
+        <EmptyBlock
+          icon={<Globe className="h-5 w-5" />}
+          title="还没有旅行数据"
+          hint="上传第一张旅行截图，开始你的旅程吧"
+        />
+      )}
+
+      {!loading && works.length > 0 && (
+        <div className="space-y-7">
+          {/* ── 等级卡 ───────────────────────────────── */}
+          <section
+            className="relative overflow-hidden rounded-3xl border border-line bg-surface p-6 text-center"
+            style={{ boxShadow: "var(--shadow-card)" }}
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-24 left-1/2 h-56 w-56 -translate-x-1/2 rounded-full blur-3xl"
+              style={{ background: "var(--glow)" }}
+            />
+            <div className="relative">
+              <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-gold-soft text-gold">
+                <Trophy className="h-5 w-5" />
+              </div>
+
+              <div
+                className="text-[52px] font-light leading-none tracking-tight text-fg"
+                style={{ fontFamily: '"Playfair Display", Georgia, serif' }}
+              >
                 Lv.{stats.levelInfo.level}
               </div>
-              <div className="text-base font-medium text-blue-600 dark:text-blue-400 mb-3">
+              <div className="mt-1.5 text-[13px] font-medium text-brand">
                 {stats.levelInfo.title}
               </div>
-              <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+
+              <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-surface-2">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-400 to-purple-500 rounded-full transition-all duration-700"
-                  style={{ width: `${stats.levelInfo.progress}%` }}
+                  className="h-full rounded-full transition-all duration-700"
+                  style={{
+                    width: `${Math.max(stats.levelInfo.progress, 2)}%`,
+                    background: "linear-gradient(90deg, var(--brand), var(--brand-2))",
+                  }}
                 />
               </div>
-              <div className="text-[11px] text-gray-400 mt-1">
-                {stats.totalXp} / {stats.levelInfo.nextXp} XP
+              <div className="mt-1.5 flex items-center justify-between text-[10px] text-fg-3">
+                <span>{stats.totalXp} XP</span>
+                <span>
+                  {stats.levelInfo.nextXp > stats.totalXp
+                    ? `距 Lv.${stats.levelInfo.level + 1} 还需 ${stats.levelInfo.nextXp - stats.totalXp} XP`
+                    : "已满级"}
+                </span>
               </div>
             </div>
+          </section>
 
-            {/* 数据统计 */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { icon: Globe, label: "国家", value: stats.countries, color: "text-green-500" },
-                { icon: Building2, label: "城市", value: stats.cities, color: "text-amber-500" },
-                { icon: MapPin, label: "景点", value: stats.attractions, color: "text-blue-500" },
-                { icon: BookOpen, label: "日记", value: stats.diaries, color: "text-purple-500" },
-              ].map((s) => (
-                <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl p-4 text-center shadow-sm border border-gray-100 dark:border-gray-700">
-                  <s.icon className={`w-5 h-5 ${s.color} mx-auto mb-1`} />
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">{s.value}</div>
-                  <div className="text-[11px] text-gray-400">{s.label}</div>
+          {/* ── 数据统计 ─────────────────────────────── */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { icon: Globe, label: "国家", value: stats.countries, tone: "text-brand" },
+              { icon: Building2, label: "城市", value: stats.cities, tone: "text-gold" },
+              { icon: MapPin, label: "景点", value: stats.attractions, tone: "text-brand" },
+              { icon: BookOpen, label: "日记", value: stats.diaries, tone: "text-gold" },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="rounded-2xl border border-line bg-surface p-4 text-center transition-colors hover:border-line-2"
+                style={{ boxShadow: "var(--shadow-card)" }}
+              >
+                <s.icon className={`mx-auto mb-1.5 h-[18px] w-[18px] ${s.tone}`} />
+                <div
+                  className="text-[26px] font-light leading-none text-fg"
+                  style={{ fontFamily: '"Playfair Display", Georgia, serif' }}
+                >
+                  {s.value}
                 </div>
-              ))}
-            </div>
+                <div className="mt-1 text-[10px] tracking-wide text-fg-3">
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
 
-            {/* 徽章 */}
-            <div>
-              <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">徽章收集</h2>
-              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
-                {BADGES.map((b) => {
-                  const earned = stats.badges[b.key];
+          {/* ── 徽章 ─────────────────────────────────── */}
+          <section>
+            <SectionTitle
+              icon={<Trophy className="h-4 w-4" />}
+              aside={
+                <span className="text-[11px] text-fg-3">
+                  {earnedCount}/{BADGES.length}
+                </span>
+              }
+            >
+              徽章收集
+            </SectionTitle>
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+              {BADGES.map((b) => {
+                const earned = stats.badges[b.key];
+                return (
+                  <div
+                    key={b.key}
+                    title={b.desc}
+                    className={`rounded-2xl border p-3 text-center transition-all ${
+                      earned
+                        ? "border-gold/50 bg-gold-soft"
+                        : "border-line bg-surface opacity-45 saturate-0"
+                    }`}
+                  >
+                    <span className="mb-1 block text-[22px] leading-none">
+                      {b.icon}
+                    </span>
+                    <p className="text-[10px] font-medium leading-tight text-fg">
+                      {b.name}
+                    </p>
+                    <p className="mt-0.5 text-[9px] leading-tight text-fg-3">
+                      {b.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* ── AI 推荐 ──────────────────────────────── */}
+          <section>
+            <SectionTitle icon={<Sparkles className="h-4 w-4" />}>
+              AI 推荐目的地
+            </SectionTitle>
+
+            {recsLoading && (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-fg-3" />
+              </div>
+            )}
+
+            {!recsLoading && recs.length === 0 && (
+              <p className="rounded-2xl border border-dashed border-line-2 px-4 py-8 text-center text-xs text-fg-3">
+                {works.filter((w) => w.is_confirmed).length === 0
+                  ? "确认几个心愿后，AI 会为你推荐相似的去处"
+                  : "暂无推荐，稍后再来看看"}
+              </p>
+            )}
+
+            {recs.length > 0 && (
+              <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2">
+                {recs.map((r) => {
+                  const done = added.has(r.name);
                   return (
                     <div
-                      key={b.key}
-                      className={`bg-white dark:bg-gray-800 rounded-xl p-3 text-center shadow-sm border transition-all ${
-                        earned
-                          ? "border-yellow-300 dark:border-yellow-600 animate-bounce"
-                          : "border-gray-100 dark:border-gray-700 opacity-40 grayscale"
-                      }`}
+                      key={r.name}
+                      className="w-[190px] shrink-0 rounded-2xl border border-line bg-surface p-4 transition-colors hover:border-line-2"
+                      style={{ boxShadow: "var(--shadow-card)" }}
                     >
-                      <span className="text-2xl block mb-1">{b.icon}</span>
-                      <p className="text-[10px] font-medium text-gray-700 dark:text-gray-300">{b.name}</p>
-                      <p className="text-[9px] text-gray-400">{b.desc}</p>
+                      <p className="text-[13px] font-semibold text-fg">{r.name}</p>
+                      <p className="mt-1 line-clamp-3 text-[11px] leading-relaxed text-fg-2">
+                        {r.reason}
+                      </p>
+                      <button
+                        onClick={() => handleAddRec(r.name)}
+                        disabled={done}
+                        className={`mt-3 inline-flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition-colors ${
+                          done
+                            ? "bg-brand-soft text-brand"
+                            : "bg-brand text-brand-contrast hover:opacity-90"
+                        }`}
+                      >
+                        {done ? (
+                          <>
+                            <Check className="h-3 w-3" /> 已添加
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="h-3 w-3" /> 加入心愿单
+                          </>
+                        )}
+                      </button>
                     </div>
                   );
                 })}
               </div>
-            </div>
+            )}
+          </section>
+        </div>
+      )}
 
-            {/* AI 推荐 */}
-            <div>
-              <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-purple-500" />
-                AI 推荐目的地
-              </h2>
-              {recsLoading && (
-                <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-gray-400" /></div>
-              )}
-              {!recsLoading && recs.length === 0 && (
-                <p className="text-sm text-gray-400 py-3">添加更多目的地后,AI 会为你推荐相似的去处</p>
-              )}
-              {recs.length > 0 && (
-                <div className="flex gap-3 overflow-x-auto pb-2">
-                  {recs.map((r) => (
-                    <div key={r.name} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 min-w-[180px] shrink-0">
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{r.name}</p>
-                      <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1 mb-3">{r.reason}</p>
-                      <button
-                        onClick={() => handleAddRec(r.name)}
-                        className="flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 font-medium"
-                      >
-                        <Plus className="w-3 h-3" /> 添加到心愿单
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </main>
-    </div>
+      {/* 轻提示 */}
+      {toast && (
+        <div className="pointer-events-none fixed bottom-8 left-1/2 z-50 -translate-x-1/2 animate-rise-in rounded-full border border-line bg-surface px-4 py-2 text-xs font-medium text-fg shadow-lg">
+          {toast}
+        </div>
+      )}
+    </PageShell>
   );
 }
