@@ -62,7 +62,9 @@ export async function classifyImage(
   // 2026-08-29 线上实测：原图 626KB（base64 约 835KB）从 Vercel 打到 DashScope 必然
   // 撞 45s 超时。与其让用户干等 45 秒再看到 "aborted due to timeout"，
   // 不如立刻返回一个说得清楚的中文错误。阈值留了余量，正常流量碰不到。
-  const MAX_BASE64_CHARS = 1_000_000;
+  // 600_000 字符 ≈ 450KB 原图。前端压缩预算是 350KB（base64 后约 478K 字符），
+  // 正常流量碰不到这条线；而实测 626KB（835K 字符）必挂，正好被拦下。
+  const MAX_BASE64_CHARS = 600_000;
   if (imageBase64.length > MAX_BASE64_CHARS) {
     throw new Error(
       `图片过大（base64 ${Math.round(imageBase64.length / 1024)}KB），超出可识别上限，请压缩后重试`
