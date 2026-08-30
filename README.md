@@ -60,9 +60,8 @@
 | 2D 地图 | Leaflet + react-leaflet |
 | 交互动画 | Framer Motion、dnd-kit |
 | 图片导出 | html2canvas |
-| 部署 | 腾讯 EdgeOne Pages（主）+ Vercel（备） |
+| 部署 | Vercel（主）+ 腾讯 EdgeOne Pages（备） |
 
-> 💡 `src/lib/gemini.ts` 只是历史遗留文件名，项目从未真正调用 Gemini，当前全部走 DashScope。
 
 ---
 
