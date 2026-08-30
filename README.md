@@ -89,7 +89,7 @@ pnpm install
 ### 3. 准备 DashScope API Key
 
 前往 [阿里云百炼控制台](https://bailian.console.aliyun.com/) 开通 DashScope 并创建 API Key。
-`qwen-vl-plus` 与 `qwen-plus` 均有免费额度，个人用量基本不花钱。
+`qwen-vl-plus` 与 `qwen-plus` 
 
 ### 4. 配置环境变量
 
