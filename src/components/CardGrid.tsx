@@ -22,7 +22,7 @@ import { buildGroupTree } from "@/lib/grouping";
 import { ChevronDown, ChevronRight, Earth, Map as MapIcon, Building2, GripVertical, List } from "lucide-react";
 
 // 可排序的卡片包装
-function SortableCard({ work, onEdit, onView, onStatusToggle, onDelete, onJournal, hasJournal }: {
+function SortableCard({ work, onEdit, onView, onStatusToggle, onDelete, onJournal, hasJournal, selectMode, selected, onToggleSelect }: {
   work: Work;
   onEdit: (w: Work) => void;
   onView: (w: Work) => void;
@@ -30,6 +30,9 @@ function SortableCard({ work, onEdit, onView, onStatusToggle, onDelete, onJourna
   onDelete: (w: Work) => void;
   onJournal?: (w: Work) => void;
   hasJournal?: boolean;
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (w: Work) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: work.id });
   const style = {
@@ -43,7 +46,7 @@ function SortableCard({ work, onEdit, onView, onStatusToggle, onDelete, onJourna
       <button {...attributes} {...listeners} className="absolute top-1 right-1 z-10 p-0.5 rounded bg-white/80 dark:bg-gray-700/80 hover:bg-gray-200 dark:hover:bg-gray-600 cursor-grab active:cursor-grabbing">
         <GripVertical className="w-3.5 h-3.5 text-gray-400" />
       </button>
-      <WorkCard work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={hasJournal} />
+      <WorkCard work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={hasJournal} selectMode={selectMode} selected={selected} onToggleSelect={onToggleSelect} />
     </div>
   );
 }
@@ -57,9 +60,13 @@ interface CardGridProps {
   onReorder?: (sortedWorks: Work[]) => void;
   onJournal?: (work: Work) => void;
   journalWorkIds?: Set<string>;
+  /** 批量管理模式 */
+  selectMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (work: Work) => void;
 }
 
-export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDelete, onReorder, onJournal, journalWorkIds }: CardGridProps) {
+export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDelete, onReorder, onJournal, journalWorkIds, selectMode, selectedIds, onToggleSelect }: CardGridProps) {
   const [sortMode, setSortMode] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -122,6 +129,7 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
                   onView={onView}
                   onStatusToggle={onStatusToggle}
                   onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)}
+                  selectMode={selectMode} selected={selectedIds?.has(work.id)} onToggleSelect={onToggleSelect}
                 />
               ))}
             </div>
@@ -171,7 +179,7 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
                                         <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                                           {city.children.flatMap((attr) =>
                                             attr.works.map((work) => (
-                                              <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} />
+                                              <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} selectMode={selectMode} selected={selectedIds?.has(work.id)} onToggleSelect={onToggleSelect} />
                                             ))
                                           )}
                                         </div>
@@ -179,7 +187,7 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
                                     ) : (
                                       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                                         {city.works.map((work) => (
-                                          <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} />
+                                          <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} selectMode={selectMode} selected={selectedIds?.has(work.id)} onToggleSelect={onToggleSelect} />
                                         ))}
                                       </div>
                                     )}
@@ -190,7 +198,7 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
                           ) : (
                             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                               {region.works.map((work) => (
-                                <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} />
+                                <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} selectMode={selectMode} selected={selectedIds?.has(work.id)} onToggleSelect={onToggleSelect} />
                               ))}
                             </div>
                           )}
@@ -200,7 +208,7 @@ export default function CardGrid({ works, onEdit, onView, onStatusToggle, onDele
                   ) : (
                     <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3">
                       {country.works.map((work) => (
-                        <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} />
+                        <WorkCard key={work.id} work={work} onEdit={onEdit} onView={onView} onStatusToggle={onStatusToggle} onDelete={onDelete} onJournal={onJournal} hasJournal={journalWorkIds?.has(work.id)} selectMode={selectMode} selected={selectedIds?.has(work.id)} onToggleSelect={onToggleSelect} />
                       ))}
                     </div>
                   )

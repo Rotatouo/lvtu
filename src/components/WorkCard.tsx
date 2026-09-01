@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { MapPin, Heart, CheckCircle2, Trash2, BookOpen, Route } from "lucide-react";
+import { MapPin, Heart, CheckCircle2, Trash2, BookOpen, Route, Check } from "lucide-react";
 import RouteSelect from "./RouteSelect";
 import type { Work } from "@/types";
 
@@ -13,10 +13,15 @@ interface WorkCardProps {
   onDelete: (work: Work) => void;
   onJournal?: (work: Work) => void;
   hasJournal?: boolean;
+  /** 批量管理模式：卡片变复选框，点击切换选中 */
+  selectMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: (work: Work) => void;
 }
 
-export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelete, onJournal, hasJournal }: WorkCardProps) {
+export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelete, onJournal, hasJournal, selectMode, selected, onToggleSelect }: WorkCardProps) {
   const [showRoutes, setShowRoutes] = useState(false);
+  const isSelecting = !!selectMode;
   const displayLabel =
     work.final_attraction ||
     work.final_city ||
@@ -34,11 +39,25 @@ export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelet
 
   const isBeenThere = work.status === "been_there";
 
+  const handleCardClick = () => {
+    if (isSelecting) {
+      onToggleSelect?.(work);
+    } else {
+      onView(work);
+    }
+  };
+
   return (
     <>
       <div
-        className="group relative bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:scale-[0.98] transition-transform duration-150 cursor-pointer touch-manipulation"
-        onClick={() => onView(work)}
+        className={`group relative bg-white rounded-xl overflow-hidden shadow-sm border transition-all duration-150 touch-manipulation ${
+          isSelecting
+            ? selected
+              ? "border-cyan-500 ring-2 ring-cyan-400/60"
+              : "border-gray-200"
+            : "border-gray-100 active:scale-[0.98] cursor-pointer"
+        }`}
+        onClick={handleCardClick}
         role="button"
         tabIndex={0}
       >
@@ -57,26 +76,41 @@ export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelet
           </div>
         )}
 
-        {/* 状态角标 */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onStatusToggle(work);
-          }}
-          className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm transition-all active:scale-110 touch-manipulation ${
-            isBeenThere
-              ? "bg-emerald-500/90 text-white"
-              : "bg-white/80 text-gray-400 hover:text-rose-500"
-          }`}
-          title={isBeenThere ? "标记为想去" : "标记为去过"}
-          aria-label={isBeenThere ? "标记为想去" : "标记为去过"}
-        >
-          {isBeenThere ? (
-            <CheckCircle2 className="w-4 h-4" />
-          ) : (
-            <Heart className="w-4 h-4" />
-          )}
-        </button>
+        {/* 管理模式：左上角复选框 */}
+        {isSelecting && (
+          <div
+            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+              selected
+                ? "bg-cyan-500 border-cyan-500 text-white"
+                : "bg-white/85 border-white text-gray-300"
+            }`}
+          >
+            {selected && <Check className="w-3.5 h-3.5" />}
+          </div>
+        )}
+
+        {/* 状态角标（管理模式隐藏，避免误触切换想去/去过） */}
+        {!isSelecting && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onStatusToggle(work);
+            }}
+            className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center shadow-sm backdrop-blur-sm transition-all active:scale-110 touch-manipulation ${
+              isBeenThere
+                ? "bg-emerald-500/90 text-white"
+                : "bg-white/80 text-gray-400 hover:text-rose-500"
+            }`}
+            title={isBeenThere ? "标记为想去" : "标记为去过"}
+            aria-label={isBeenThere ? "标记为想去" : "标记为去过"}
+          >
+            {isBeenThere ? (
+              <CheckCircle2 className="w-4 h-4" />
+            ) : (
+              <Heart className="w-4 h-4" />
+            )}
+          </button>
+        )}
 
         {/* 地名浮层（移动端常显） */}
         <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent p-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
@@ -98,6 +132,8 @@ export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelet
             )}
           </div>
 
+          {!isSelecting && (
+            <>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -142,6 +178,8 @@ export default function WorkCard({ work, onEdit, onView, onStatusToggle, onDelet
           >
             <Route className="w-4 h-4" />
           </button>
+            </>
+          )}
         </div>
 
         {/* 状态标签 */}

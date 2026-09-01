@@ -13,6 +13,7 @@ import {
   Sparkles,
   Route,
   Globe2,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -404,6 +405,9 @@ export default function Home() {
   const [routes, setRoutes] = useState<RouteType[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "map">("card");
+  // 批量管理模式：进入后卡片变复选框
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [heroMouseX, setHeroMouseX] = useState(0);
   const [heroMouseY, setHeroMouseY] = useState(0);
   const [activeScene, setActiveScene] = useState<SceneKey>("world");
@@ -529,6 +533,55 @@ export default function Home() {
       );
     } catch {
       /* ignore */
+    }
+  };
+
+  // ── 批量管理模式 ────────────────────────────────────────────
+  const handleToggleSelect = (work: Work) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(work.id)) next.delete(work.id);
+      else next.add(work.id);
+      return next;
+    });
+  };
+
+  // 当前可见卡片（含搜索过滤）是否已全部选中
+  const allVisibleSelected =
+    filteredWorks.length > 0 && filteredWorks.every((w) => selectedIds.has(w.id));
+
+  const handleSelectAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filteredWorks.forEach((w) => next.delete(w.id));
+      } else {
+        filteredWorks.forEach((w) => next.add(w.id));
+      }
+      return next;
+    });
+  };
+
+  const handleExitSelect = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`确定删除选中的 ${selectedIds.size} 张卡片？删除后不可恢复。`)) return;
+    try {
+      const res = await fetch("/api/works/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...selectedIds] }),
+      });
+      if (!res.ok) throw new Error("删除失败");
+      setWorks((prev) => prev.filter((w) => !selectedIds.has(w.id)));
+      setSelectedIds(new Set());
+      setSelectMode(false);
+    } catch {
+      window.alert("批量删除失败，请重试");
     }
   };
 
@@ -1054,10 +1107,10 @@ export default function Home() {
                   <LayoutGrid size={12} /> 卡片
                 </button>
                 <button
-                  onClick={() => setViewMode("map")}
+                  onClick={() => { if (!selectMode) setViewMode("map"); }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-all ${
                     viewMode === "map" ? "bg-white/15 text-white shadow-inner" : "text-white/55 hover:text-white/80"
-                  }`}
+                  } ${selectMode ? "opacity-40 pointer-events-none" : ""}`}
                 >
                   <Map size={12} /> 3D 地球
                 </button>
@@ -1077,6 +1130,55 @@ export default function Home() {
                     <X size={12} />
                   </button>
                 )}
+              </div>
+
+              <button
+                onClick={() =>
+                  selectMode
+                    ? handleExitSelect()
+                    : (setViewMode("card"), setSelectMode(true))
+                }
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs rounded-xl border transition-colors ${
+                  selectMode
+                    ? "border-cyan-500/40 bg-cyan-500/10 text-cyan-300"
+                    : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Trash2 size={12} />
+                {selectMode ? "完成" : "批量管理"}
+              </button>
+            </div>
+          )}
+
+          {selectMode && (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-6 rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-4 py-2.5">
+              <span className="text-sm font-medium text-cyan-200">
+                已选 {selectedIds.size} 张
+              </span>
+              <button
+                onClick={handleSelectAll}
+                className="text-xs text-white/70 hover:text-white transition-colors"
+              >
+                {allVisibleSelected ? "取消全选" : "全选"}
+              </button>
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={selectedIds.size === 0}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                    selectedIds.size === 0
+                      ? "bg-white/5 text-white/30 cursor-not-allowed"
+                      : "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                  }`}
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> 删除选中
+                </button>
+                <button
+                  onClick={handleExitSelect}
+                  className="px-3 py-1.5 text-xs text-white/50 hover:text-white/80 transition-colors"
+                >
+                  完成
+                </button>
               </div>
             </div>
           )}
@@ -1098,6 +1200,9 @@ export default function Home() {
                 onReorder={handleReorder}
                 onJournal={handleOpenJournal}
                 journalWorkIds={journalIds}
+                selectMode={selectMode}
+                selectedIds={selectedIds}
+                onToggleSelect={handleToggleSelect}
               />
             )
           ) : (
