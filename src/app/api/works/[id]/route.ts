@@ -10,7 +10,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { country, region, city, attraction, notes, status } = body;
+    const { country, region, city, attraction, notes, status, is_confirmed } = body;
 
     // 构建更新对象（只更新传入的字段）
     const updates: Record<string, unknown> = {
@@ -23,6 +23,8 @@ export async function PUT(
     if (attraction !== undefined) updates.final_attraction = attraction || null;
     if (notes !== undefined) updates.notes = notes || null;
     if (status !== undefined) updates.status = status;
+    // 「确认」操作：只标记已确认、不改分类字段 —— 不触发 geocode，也不改坐标
+    if (is_confirmed !== undefined) updates.is_confirmed = !!is_confirmed;
     // 分类字段被修改时才标记为已确认 + 重新 geocode
     if (country !== undefined || region !== undefined || city !== undefined || attraction !== undefined) {
       updates.is_confirmed = true;

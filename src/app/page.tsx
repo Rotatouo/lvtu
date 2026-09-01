@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
   Search,
@@ -27,7 +27,7 @@ import EditDrawer from "@/components/EditDrawer";
 import ManualAddModal from "@/components/ManualAddModal";
 import ImageViewer from "@/components/ImageViewer";
 import EmptyState from "@/components/EmptyState";
-import UploadResultModal from "@/components/UploadResultModal";
+import PendingSection from "@/components/PendingSection";
 import JournalEditor from "@/components/JournalEditor";
 import LiquidCursor from "@/components/home/LiquidCursor";
 import CountUp from "@/components/home/CountUp";
@@ -395,12 +395,9 @@ export default function Home() {
   const [uploadWarning, setUploadWarning] = useState<string | null>(null);
   // 批量上传的整批汇总条
   const [batchSummary, setBatchSummary] = useState<BatchSummary | null>(null);
-  // 本批总数用 ref 存：UploadZone 的回调可能拿到旧闭包，读 state 会判断错批次数
-  const batchSizeRef = useRef(0);
   const [editingWork, setEditingWork] = useState<Work | null>(null);
   const [viewingWork, setViewingWork] = useState<Work | null>(null);
   const [showManualAdd, setShowManualAdd] = useState(false);
-  const [resultWork, setResultWork] = useState<Work | null>(null);
   const [journalWork, setJournalWork] = useState<Work | null>(null);
   const [journalIds, setJournalIds] = useState<Set<string>>(new Set());
   const [recs, setRecs] = useState<Array<{ name: string; reason: string }>>([]);
@@ -411,10 +408,21 @@ export default function Home() {
   const [heroMouseY, setHeroMouseY] = useState(0);
   const [activeScene, setActiveScene] = useState<SceneKey>("world");
 
+  // 待确认专区：AI 识别后未经人工确认的卡片（is_confirmed = false）
+  const pendingWorks = useMemo(
+    () => works.filter((w) => !w.is_confirmed),
+    [works]
+  );
+  // 已确认卡片：进入主网格 / 地图，参与分组
+  const confirmedWorks = useMemo(
+    () => works.filter((w) => w.is_confirmed),
+    [works]
+  );
+
   const filteredWorks = useMemo(() => {
-    if (!searchQuery.trim()) return works;
+    if (!searchQuery.trim()) return confirmedWorks;
     const q = searchQuery.toLowerCase();
-    return works.filter((w) => {
+    return confirmedWorks.filter((w) => {
       const fields = [
         w.final_country,
         w.final_region,
@@ -427,7 +435,7 @@ export default function Home() {
       ];
       return fields.some((f) => f?.toLowerCase().includes(q));
     });
-  }, [works, searchQuery]);
+  }, [confirmedWorks, searchQuery]);
 
   const fetchWorks = useCallback(async () => {
     try {
@@ -463,14 +471,11 @@ export default function Home() {
   const handleUploadResult = (payload: ClassifyResultPayload) => {
     const work = payload.work;
     setWorks((prev) => [work, ...prev]);
-    setUploadStatus("done");
+    setUploadStatus("idle");
     setUploadError(null);
 
-    // 批量时不逐张弹结果卡（否则一次弹十几个弹窗），只在缩略图上打勾 / 打点；
-    // 单张沿用原来的交互，直接弹出识别结果。
-    if (batchSizeRef.current <= 1) setResultWork(work);
-
-    // 以前这里一律当成功，把 AI 失败伪装过去了。现在分三种情况如实告知：
+    // 卡片以 is_confirmed = false 进入「待确认专区」（见上方 PendingSection），
+    // 不再逐张弹结果卡；用户确认或编辑保存后自动进入主网格分类。
     if (payload.ai_error) {
       setUploadWarning(
         `图片已保存，但 AI 识别失败（${payload.ai_elapsed_ms ?? "?"}ms）：${payload.ai_error}`
@@ -491,6 +496,42 @@ export default function Home() {
     setUploadWarning(null);
   };
 
+  // 待确认区：单张确认（is_confirmed = true，不改分类字段）
+  const handleConfirmWork = async (work: Work) => {
+    try {
+      const res = await fetch(`/api/works/${work.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_confirmed: true }),
+      });
+      if (!res.ok) throw new Error("确认失败");
+      const data = await res.json();
+      setWorks((prev) => prev.map((w) => (w.id === data.work.id ? data.work : w)));
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // 待确认区：全部确认（批量更新 is_confirmed）
+  const handleConfirmAll = async (pendingList: Work[]) => {
+    if (pendingList.length === 0) return;
+    try {
+      const res = await fetch("/api/works/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: pendingList.map((w) => w.id) }),
+      });
+      if (!res.ok) throw new Error("确认失败");
+      const data = await res.json();
+      const confirmedIds = new Set((data.works || []).map((w: Work) => w.id));
+      setWorks((prev) =>
+        prev.map((w) => (confirmedIds.has(w.id) ? { ...w, is_confirmed: true } : w))
+      );
+    } catch {
+      /* ignore */
+    }
+  };
+
   const handleEditWork = (work: Work) => setEditingWork(work);
   const handleSaveEdit = (updatedWork: Work) => {
     setWorks((prev) => prev.map((w) => (w.id === updatedWork.id ? updatedWork : w)));
@@ -502,7 +543,7 @@ export default function Home() {
   const handleDeleteWork = async (work: Work) => {
     const label = work.final_attraction || work.final_city || work.final_country || "未知地点";
     if (!window.confirm(`确定删除「${label}？`)) return;
-    setWorks((prev) => prev.filter((w) => w.id !== w.id));
+    setWorks((prev) => prev.filter((w) => w.id !== work.id));
     try {
       await fetch(`/api/works/${work.id}`, { method: "DELETE" });
       fetchWorks();
@@ -953,8 +994,7 @@ export default function Home() {
           )}
 
           <UploadZone
-            onUploadStart={(count) => {
-              batchSizeRef.current = count;
+            onUploadStart={() => {
               setBatchSummary(null);
               setUploadStatus("uploading");
               setUploadError(null);
@@ -994,7 +1034,15 @@ export default function Home() {
             </div>
           )}
 
-          {works.length > 0 && (
+          <PendingSection
+            works={pendingWorks}
+            onConfirm={handleConfirmWork}
+            onConfirmAll={handleConfirmAll}
+            onEdit={handleEditWork}
+            onDelete={handleDeleteWork}
+          />
+
+          {confirmedWorks.length > 0 && (
             <div className="flex items-center justify-between gap-3 mt-8 mb-6">
               <div className="flex bg-white/5 backdrop-blur-md rounded-xl p-0.5 border border-white/10">
                 <button
@@ -1036,19 +1084,25 @@ export default function Home() {
           {works.length === 0 ? (
             <EmptyState onUploadClick={() => {}} />
           ) : viewMode === "card" ? (
-            <CardGrid
-              works={filteredWorks}
-              onEdit={handleEditWork}
-              onView={handleViewWork}
-              onStatusToggle={handleStatusToggle}
-              onDelete={handleDeleteWork}
-              onReorder={handleReorder}
-              onJournal={handleOpenJournal}
-              journalWorkIds={journalIds}
-            />
+            confirmedWorks.length === 0 ? (
+              <p className="py-16 text-center text-sm text-white/40">
+                还没有已确认的地点，请在上方「待确认」区确认或修改识别结果。
+              </p>
+            ) : (
+              <CardGrid
+                works={filteredWorks}
+                onEdit={handleEditWork}
+                onView={handleViewWork}
+                onStatusToggle={handleStatusToggle}
+                onDelete={handleDeleteWork}
+                onReorder={handleReorder}
+                onJournal={handleOpenJournal}
+                journalWorkIds={journalIds}
+              />
+            )
           ) : (
             <div className="h-[70vh] rounded-2xl overflow-hidden border border-white/10">
-              <GlobeView works={works} routes={routes} timeMode="noon" />
+              <GlobeView works={confirmedWorks} routes={routes} timeMode="noon" />
             </div>
           )}
 
@@ -1127,20 +1181,6 @@ export default function Home() {
       {editingWork && <EditDrawer work={editingWork} onClose={() => setEditingWork(null)} onSave={handleSaveEdit} />}
       {showManualAdd && <ManualAddModal onClose={() => setShowManualAdd(false)} onSave={handleManualAdd} />}
       {viewingWork && <ImageViewer work={viewingWork} onClose={() => setViewingWork(null)} />}
-      {resultWork && (
-        <UploadResultModal
-          work={resultWork}
-          onContinue={() => {
-            setResultWork(null);
-            setUploadStatus("idle");
-          }}
-          onClose={() => {
-            setResultWork(null);
-            setUploadStatus("idle");
-          }}
-          onEdit={handleEditWork}
-        />
-      )}
       {journalWork && (
         <JournalEditor work={journalWork} onClose={() => setJournalWork(null)} onSaved={handleJournalSaved} />
       )}
