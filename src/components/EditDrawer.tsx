@@ -86,7 +86,7 @@ export default function EditDrawer({ work, onClose, onSave }: EditDrawerProps) {
                 value={country}
                 onChange={(e) => setCountry(e.target.value)}
                 placeholder="如：中国"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
               />
             </div>
             <div>
@@ -98,7 +98,7 @@ export default function EditDrawer({ work, onClose, onSave }: EditDrawerProps) {
                 value={region}
                 onChange={(e) => setRegion(e.target.value)}
                 placeholder="如：云南（可选）"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
               />
             </div>
             <div>
@@ -110,7 +110,7 @@ export default function EditDrawer({ work, onClose, onSave }: EditDrawerProps) {
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="如：大理"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
               />
             </div>
             <div>
@@ -122,7 +122,7 @@ export default function EditDrawer({ work, onClose, onSave }: EditDrawerProps) {
                 value={attraction}
                 onChange={(e) => setAttraction(e.target.value)}
                 placeholder="如：洱海"
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors"
               />
             </div>
             <div>
@@ -134,7 +134,7 @@ export default function EditDrawer({ work, onClose, onSave }: EditDrawerProps) {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="预算、最佳季节、推荐理由…"
                 rows={3}
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors resize-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors resize-none"
               />
             </div>
           </div>
