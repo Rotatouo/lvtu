@@ -106,7 +106,7 @@ export default function RouteSelect({ work, onClose }: RouteSelectProps) {
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && createAndAdd()}
                 placeholder="路线名称..."
-                className="flex-1 px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-2 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button onClick={createAndAdd} disabled={!newName.trim()}
                 className="px-2 py-1.5 bg-blue-600 text-white text-xs rounded-lg disabled:opacity-50">

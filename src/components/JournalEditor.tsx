@@ -285,11 +285,11 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
             </div>
             {timeMode === "date" && (
               <input type="date" value={exactDate} onChange={(e) => setExactDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
             )}
             {timeMode === "yearMonth" && (
               <input type="month" value={yearMonth} onChange={(e) => setYearMonth(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
+                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none" />
             )}
             {timeMode === "monthOnly" && (
               <div className="grid grid-cols-6 gap-1.5">
@@ -310,7 +310,7 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
                 <div className="flex gap-2 items-center mb-2">
                   <span className="text-xs text-gray-500">年份</span>
                   <select value={holidayYear} onChange={(e) => setHolidayYear(Number(e.target.value))}
-                    className="px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 dark:text-white">
+                    className="px-2 py-1 border border-gray-200 dark:border-gray-600 rounded text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                     {[new Date().getFullYear(), new Date().getFullYear()-1, new Date().getFullYear()-2].map(y => (
                       <option key={y} value={y}>{y}年</option>
                     ))}
