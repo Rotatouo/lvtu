@@ -585,6 +585,25 @@ export default function Home() {
     }
   };
 
+  // 待确认区：批量删除（PendingSection 管理模式），成功后返回 true
+  const handleBulkDeletePending = async (ids: string[]): Promise<boolean> => {
+    if (ids.length === 0) return false;
+    if (!window.confirm(`确定删除选中的 ${ids.length} 张卡片？删除后不可恢复。`)) return false;
+    try {
+      const res = await fetch("/api/works/bulk-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      if (!res.ok) throw new Error("删除失败");
+      setWorks((prev) => prev.filter((w) => !ids.includes(w.id)));
+      return true;
+    } catch {
+      window.alert("批量删除失败，请重试");
+      return false;
+    }
+  };
+
   const handleEditWork = (work: Work) => setEditingWork(work);
   const handleSaveEdit = (updatedWork: Work) => {
     setWorks((prev) => prev.map((w) => (w.id === updatedWork.id ? updatedWork : w)));
@@ -1093,6 +1112,7 @@ export default function Home() {
             onConfirmAll={handleConfirmAll}
             onEdit={handleEditWork}
             onDelete={handleDeleteWork}
+            onBulkDelete={handleBulkDeletePending}
           />
 
           {confirmedWorks.length > 0 && (

@@ -10,10 +10,6 @@ export async function POST(request: NextRequest) {
     if (!Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: "缺少 ids" }, { status: 400 });
     }
-    // 单张删除走 DELETE /api/works/[id]，这里只处理批量
-    if (ids.length === 1) {
-      return NextResponse.json({ error: "单张请走单删接口" }, { status: 400 });
-    }
 
     const supabase = createServiceClient();
 
