@@ -10,6 +10,33 @@ import { v4 as uuidv4 } from "uuid";
 //            （留 15s 给 Supabase 上传和冷启动），否则拿不到可读的 JSON 错误
 export const maxDuration = 60;
 
+/**
+ * 给任意 Promise 套一层硬超时，到点即 reject，并清掉定时器。
+ *
+ * 为什么需要：整条链路原本只有 DashScope（45s，见 lib/gemini.ts）和
+ * geocode（8s，见 lib/geocode.ts）有超时，Supabase Storage 上传是唯一
+ * 没有保护的一环。上传一卡住就会与 AI 的 45s 叠加，把总耗时顶过平台层
+ * 60s 上限 —— 被平台掐断后返回的是 HTML 错误页（不是 JSON），前端
+ * res.json() 会炸成 "Unexpected token 'A'"，用户只看到莫名其妙的失败。
+ * 加了超时后，异常会变成一条可读的中文错误快速返回，而不是干等一分钟。
+ */
+function withTimeout<T>(
+  promise: PromiseLike<T>,
+  ms: number,
+  message: string
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const guard = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  // 用 PromiseLike 而非 Promise：Supabase 的查询构造器是 thenable（可 await）
+  // 但类型上并非 Promise。Promise.resolve 既能把它转成真 Promise，
+  // 也会立刻触发查询执行（Supabase 查询是惰性的，await 时才真正发请求）。
+  return Promise.race([Promise.resolve(promise), guard]).finally(() =>
+    clearTimeout(timer)
+  );
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -49,27 +76,41 @@ export async function POST(request: NextRequest) {
     const fileName = `${uuidv4()}.${fileExt}`;
     const filePath = `works/${fileName}`;
 
-    // 重复检测：检查原始文件名是否已存在
+    // 重复检测：检查原始文件名是否已存在。
+    // 这只是辅助功能，卡住时不值得拖垮整条链路 —— 超时就跳过，照常上传。
     let duplicateId: string | null = null;
     if (originalName) {
       const nameWithoutExt = originalName.replace(/\.[^.]+$/, "");
-      const { data: existing } = await supabase
-        .from("works")
-        .select("id, image_url")
-        .or(`image_url.ilike.%${nameWithoutExt}%`)
-        .limit(1);
-      if (existing && existing.length > 0) {
-        duplicateId = existing[0].id;
+      try {
+        const { data: existing } = await withTimeout(
+          supabase
+            .from("works")
+            .select("id, image_url")
+            .or(`image_url.ilike.%${nameWithoutExt}%`)
+            .limit(1),
+          3_000,
+          "duplicate-check-timeout"
+        );
+        if (existing && existing.length > 0) {
+          duplicateId = existing[0].id;
+        }
+      } catch {
+        // 查重超时/失败不阻塞上传：宁可偶尔多存一条，也好过整张图传失败
       }
     }
 
-    // 上传到 Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from("images")
-      .upload(filePath, buffer, {
+    // 上传到 Supabase Storage。
+    // 8s 对「服务端 → Supabase」绰绰有余（两者同在国外，正常 <2s），但能在异常
+    // 卡住时快速失败 —— 否则会与 AI 的 45s 叠加，顶穿平台层 60s 上限。
+    const UPLOAD_TIMEOUT_MS = 8_000;
+    const { error: uploadError } = await withTimeout(
+      supabase.storage.from("images").upload(filePath, buffer, {
         contentType: file.type,
         upsert: false,
-      });
+      }),
+      UPLOAD_TIMEOUT_MS,
+      "图片上传超时，请重试"
+    );
 
     if (uploadError) {
       console.error("Upload error:", uploadError);
