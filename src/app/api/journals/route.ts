@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
-// GET /api/journals — 获取日记列表
+// GET /api/journals — 获取日记列表（仅当前设备）
 export async function GET(request: NextRequest) {
   try {
+    const ownerId = readOwnerId(request);
+    if (!ownerId) return NextResponse.json({ journals: [] });
+
     const { searchParams } = new URL(request.url);
     const workId = searchParams.get("work_id");
 
@@ -13,6 +17,7 @@ export async function GET(request: NextRequest) {
     let query = serviceClient
       .from("travel_journals")
       .select("*")
+      .eq("owner_id", ownerId)
       .order("created_at", { ascending: false });
 
     if (workId) {
@@ -62,12 +67,20 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
 
     // 创建日记
     const { data: journal, error: insertError } = await serviceClient
       .from("travel_journals")
       .insert({
         work_id,
+        owner_id: ownerId,
         content: content || "",
         quote: quote || null,
         photo_url: photo_url || null,
@@ -81,11 +94,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "保存失败" }, { status: 500 });
     }
 
-    // 同步更新 works 状态为 been_there
+    // 同步更新 works 状态为 been_there（带归属校验：只能改自己的卡片）
     const { error: updateError } = await serviceClient
       .from("works")
       .update({ status: "been_there" })
-      .eq("id", work_id);
+      .eq("id", work_id)
+      .eq("owner_id", ownerId);
 
     if (updateError) {
       console.error("Update work status error:", updateError);

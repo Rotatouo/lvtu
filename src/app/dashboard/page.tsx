@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useMemo } from "react";
 import {
   Trophy,
@@ -82,8 +83,8 @@ export default function DashboardPage() {
     async function load() {
       try {
         const [wRes, jRes] = await Promise.all([
-          fetch("/api/works"),
-          fetch("/api/journals"),
+          apiFetch("/api/works"),
+          apiFetch("/api/journals"),
         ]);
         const wData = await wRes.json();
         const jData = await jRes.json();
@@ -160,7 +161,7 @@ export default function DashboardPage() {
     if (recsLoading || recs.length > 0) return;
     setRecsLoading(true);
     try {
-      const res = await fetch("/api/recommend");
+      const res = await apiFetch("/api/recommend");
       const data = await res.json();
       setRecs(data.recommendations || []);
     } catch {
@@ -183,7 +184,7 @@ export default function DashboardPage() {
 
   const handleAddRec = async (name: string) => {
     try {
-      await fetch("/api/works", {
+      await apiFetch("/api/works", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

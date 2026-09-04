@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
 // PUT /api/journals/[id] — 编辑日记
 export async function PUT(
@@ -12,6 +13,13 @@ export async function PUT(
     const { content, quote, photo_url, visited_at } = body;
 
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
 
     const { data, error } = await serviceClient
       .from("travel_journals")
@@ -22,6 +30,7 @@ export async function PUT(
         visited_at: visited_at ?? null,
       })
       .eq("id", id)
+      .eq("owner_id", ownerId)
       .select()
       .single();
 
@@ -46,11 +55,19 @@ export async function DELETE(
     const { id } = await params;
 
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
 
     const { error } = await serviceClient
       .from("travel_journals")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("owner_id", ownerId);
 
     if (error) {
       console.error("Delete journal error:", error);

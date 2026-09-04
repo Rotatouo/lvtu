@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useMemo } from "react";
 import { X, Plus, Loader2, MapPin } from "lucide-react";
 import type { Work, Route } from "@/types";
@@ -16,7 +17,7 @@ export default function RouteAddWorkModal({ route, onClose, onAdded }: RouteAddW
   const [adding, setAdding] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/works")
+    apiFetch("/api/works")
       .then((r) => r.json())
       .then((d) => setWorks(d.works || []))
       .catch(() => {})
@@ -42,7 +43,7 @@ export default function RouteAddWorkModal({ route, onClose, onAdded }: RouteAddW
   const add = async (work: Work) => {
     setAdding((prev) => new Set(prev).add(work.id));
     try {
-      await fetch(`/api/routes/${route.id}/items`, {
+      await apiFetch(`/api/routes/${route.id}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ work_id: work.id }),

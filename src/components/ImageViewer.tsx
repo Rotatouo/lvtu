@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { X, CloudSun, Loader2, BookOpen } from "lucide-react";
 import type { Work } from "@/types";
@@ -29,7 +30,7 @@ export default function ImageViewer({ work, onClose }: ImageViewerProps) {
     if (!showWeatherBtn || weatherLoading) return;
     setWeatherLoading(true);
     try {
-      const res = await fetch(`/api/weather?lat=${work.lat}&lng=${work.lng}`);
+      const res = await apiFetch(`/api/weather?lat=${work.lat}&lng=${work.lng}`);
       if (!res.ok) throw new Error("天气获取失败");
       const data = await res.json();
       setWeather(data);

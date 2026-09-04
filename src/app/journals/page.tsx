@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useCallback } from "react";
 import { BookOpen, Trash2, Loader2, RefreshCw, Pencil, CalendarDays, Quote } from "lucide-react";
 import type { Journal, Work } from "@/types";
@@ -25,7 +26,7 @@ export default function JournalsPage() {
   const fetchJournals = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/journals");
+      const res = await apiFetch("/api/journals");
       if (!res.ok) throw new Error("加载失败");
       const data = await res.json();
       setJournals(data.journals || []);
@@ -42,7 +43,7 @@ export default function JournalsPage() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("删除这篇日记？")) return;
-    await fetch(`/api/journals/${id}`, { method: "DELETE" });
+    await apiFetch(`/api/journals/${id}`, { method: "DELETE" });
     setJournals((prev) => prev.filter((j) => j.id !== id));
   };
 
@@ -50,7 +51,7 @@ export default function JournalsPage() {
     if (!window.confirm("重新生成旅途印记？原来的会被覆盖。")) return;
     setRegenId(journal.id);
     try {
-      const res = await fetch("/api/quotes", {
+      const res = await apiFetch("/api/quotes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -62,7 +63,7 @@ export default function JournalsPage() {
       if (!res.ok) return;
       const data = await res.json();
       const newQuote = data.quotes?.[0] || "";
-      await fetch(`/api/journals/${journal.id}`, {
+      await apiFetch(`/api/journals/${journal.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ quote: newQuote }),

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect } from "react";
 import { X, Plus, Check, Loader2 } from "lucide-react";
 import type { Work, Route } from "@/types";
@@ -19,7 +20,7 @@ export default function RouteSelect({ work, onClose }: RouteSelectProps) {
   const [adding, setAdding] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    fetch("/api/routes")
+    apiFetch("/api/routes")
       .then((r) => r.json())
       .then((d) => setRoutes(d.routes || []))
       .catch(() => {})
@@ -34,16 +35,16 @@ export default function RouteSelect({ work, onClose }: RouteSelectProps) {
     setAdding((prev) => new Set(prev).add(route.id));
     try {
       if (isInRoute(route)) {
-        await fetch(`/api/routes/${route.id}/items?work_id=${work.id}`, { method: "DELETE" });
+        await apiFetch(`/api/routes/${route.id}/items?work_id=${work.id}`, { method: "DELETE" });
       } else {
-        await fetch(`/api/routes/${route.id}/items`, {
+        await apiFetch(`/api/routes/${route.id}/items`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ work_id: work.id }),
         });
       }
       // 刷新
-      const res = await fetch("/api/routes");
+      const res = await apiFetch("/api/routes");
       const d = await res.json();
       setRoutes(d.routes || []);
     } catch { /* ignore */ }
@@ -60,19 +61,19 @@ export default function RouteSelect({ work, onClose }: RouteSelectProps) {
     if (!newName.trim()) return;
     try {
       const colorIdx = routes.length % ROUTE_COLORS.length;
-      const res = await fetch("/api/routes", {
+      const res = await apiFetch("/api/routes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newName.trim(), color: ROUTE_COLORS[colorIdx] }),
       });
       const d = await res.json();
       if (d.route) {
-        await fetch(`/api/routes/${d.route.id}/items`, {
+        await apiFetch(`/api/routes/${d.route.id}/items`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ work_id: work.id }),
         });
-        const r2 = await fetch("/api/routes");
+        const r2 = await apiFetch("/api/routes");
         const d2 = await r2.json();
         setRoutes(d2.routes || []);
         setNewName("");

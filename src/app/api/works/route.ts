@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { geocode } from "@/lib/geocode";
+import { readOwnerId } from "@/lib/api";
 
-// GET /api/works — 获取所有作品
-export async function GET() {
+// GET /api/works — 获取当前设备（owner_id）的所有作品
+export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    // 无归属标识（旧客户端 / 直连 curl）：安全侧默认 —— 不返回任何数据
+    if (!ownerId) return NextResponse.json({ works: [] });
+
     const { data: works, error } = await supabase
       .from("works")
       .select("*")
+      .eq("owner_id", ownerId)
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: false });
 
@@ -41,6 +47,13 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法保存" },
+        { status: 400 }
+      );
+    }
 
     // 地理编码
     const geo = await geocode(country, region, city, attraction);
@@ -48,6 +61,7 @@ export async function POST(request: NextRequest) {
     const { data: work, error } = await supabase
       .from("works")
       .insert({
+        owner_id: ownerId,
         final_country: country || null,
         final_region: region || null,
         final_city: city || null,

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Sparkles, Loader2, Camera, Check, Save, RefreshCw } from "lucide-react";
 import type { Work, Journal } from "@/types";
@@ -50,7 +51,7 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
     let cancelled = false;
     async function fetchQuotes() {
       try {
-        const res = await fetch("/api/quotes", {
+        const res = await apiFetch("/api/quotes", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -104,7 +105,7 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
   const regenQuotes = async () => {
     setQuoteLoading(true);
     try {
-      const res = await fetch("/api/quotes", {
+      const res = await apiFetch("/api/quotes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -137,7 +138,7 @@ export default function JournalEditor({ work, onClose, onSaved, journal }: Journ
       const form = new FormData();
       form.append("file", file);
       form.append("prefix", "journals");
-      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const res = await apiFetch("/api/upload", { method: "POST", body: form });
       const data = await res.json();
       if (data.url) setPhotoUrl(data.url);
     } catch { /* ignore */ }

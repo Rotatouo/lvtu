@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { X } from "lucide-react";
 import type { Work } from "@/types";
@@ -23,7 +24,7 @@ export default function EditDrawer({ work, onClose, onSave }: EditDrawerProps) {
 
     setSaving(true);
     try {
-      const res = await fetch(`/api/works/${work.id}`, {
+      const res = await apiFetch(`/api/works/${work.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ country, region, city, attraction, notes }),

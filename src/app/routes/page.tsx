@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { Trash2, Loader2, GripVertical, Plus, X, Route as RouteIcon, ChevronDown } from "lucide-react";
@@ -123,7 +124,7 @@ export default function RoutesPage() {
   const fetchRoutes = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/routes");
+      const res = await apiFetch("/api/routes");
       const d = await res.json();
       setRoutes(d.routes || []);
     } catch {
@@ -148,7 +149,7 @@ export default function RoutesPage() {
 
   const handleDelete = async (route: Route) => {
     if (!window.confirm(`删除路线「${route.name}」？`)) return;
-    await fetch(`/api/routes/${route.id}`, { method: "DELETE" });
+    await apiFetch(`/api/routes/${route.id}`, { method: "DELETE" });
     setRoutes((prev) => prev.filter((r) => r.id !== route.id));
   };
 
@@ -165,7 +166,7 @@ export default function RoutesPage() {
           : r
       )
     );
-    await fetch(`/api/routes/${routeId}/items/reorder`, {
+    await apiFetch(`/api/routes/${routeId}/items/reorder`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items: updateItems }),
@@ -176,7 +177,7 @@ export default function RoutesPage() {
     if (!window.confirm("把这个地点从路线中移除？")) return;
     setRemovingWorkId(workId);
     try {
-      await fetch(`/api/routes/${routeId}/items?work_id=${workId}`, {
+      await apiFetch(`/api/routes/${routeId}/items?work_id=${workId}`, {
         method: "DELETE",
       });
       setRoutes((prev) =>

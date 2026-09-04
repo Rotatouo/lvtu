@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
 const DASHSCOPE_API_URL =
   "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    // 推荐基于「自己的」心愿 + 去过，无归属则无可推荐
+    if (!ownerId) {
+      return NextResponse.json({ recommendations: [] });
+    }
 
-    // 获取已确认的作品列表
+    // 获取当前设备已确认的作品列表
     const { data: works, error } = await supabase
       .from("works")
       .select("final_attraction, final_city, final_country")
+      .eq("owner_id", ownerId)
       .eq("is_confirmed", true)
       .not("final_attraction", "is", null)
       .limit(30);

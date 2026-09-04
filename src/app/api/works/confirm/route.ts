@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
 // POST /api/works/confirm — 批量确认待识别卡片（is_confirmed = true）
 // 供「待确认专区」的「全部确认」按钮使用。
@@ -13,6 +14,14 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
+
     const { data, error } = await supabase
       .from("works")
       .update({
@@ -20,6 +29,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .in("id", ids as string[])
+      .eq("owner_id", ownerId)
       .select();
 
     if (error) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { geocode } from "@/lib/geocode";
+import { readOwnerId } from "@/lib/api";
 
 // PUT /api/works/[id] — 更新作品分类
 export async function PUT(
@@ -43,19 +44,34 @@ export async function PUT(
     }
 
     const supabase = createServiceClient();
-    const { data: work, error } = await supabase
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
+
+    const { data: works, error } = await supabase
       .from("works")
       .update(updates)
       .eq("id", id)
-      .select()
-      .single();
+      .eq("owner_id", ownerId)
+      .select();
 
     if (error) {
       console.error("Update error:", error);
       return NextResponse.json({ error: "更新失败" }, { status: 500 });
     }
+    if (!works || works.length === 0) {
+      // 不存在，或不属于当前设备 —— 统一按「无权限」处理
+      return NextResponse.json(
+        { error: "作品不存在或无权操作" },
+        { status: 404 }
+      );
+    }
 
-    return NextResponse.json({ work });
+    return NextResponse.json({ work: works[0] });
   } catch (error) {
     console.error("Works PUT error:", error);
     return NextResponse.json(
@@ -73,16 +89,28 @@ export async function DELETE(
   try {
     const { id } = await params;
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
 
-    // 先查作品获取图片 URL
+    // 先查作品获取图片 URL（带归属校验：不是自己的查不到）
     const { data: work } = await supabase
       .from("works")
       .select("image_url")
       .eq("id", id)
+      .eq("owner_id", ownerId)
       .single();
 
-    // 删除数据库记录
-    const { error } = await supabase.from("works").delete().eq("id", id);
+    // 删除数据库记录（带归属校验：不是自己的删不到）
+    const { error } = await supabase
+      .from("works")
+      .delete()
+      .eq("id", id)
+      .eq("owner_id", ownerId);
 
     if (error) {
       console.error("Delete error:", error);

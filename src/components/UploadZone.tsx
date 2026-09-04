@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import {
@@ -211,7 +212,7 @@ export default function UploadZone({
         // 服务端才能按文件名做重复检测（批量拖同一批截图时很关键）
         formData.append("originalName", item.file.name);
 
-        const res = await fetch("/api/classify", {
+        const res = await apiFetch("/api/classify", {
           method: "POST",
           body: formData,
           signal,

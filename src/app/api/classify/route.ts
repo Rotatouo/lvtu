@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase";
 import { classifyImage } from "@/lib/gemini";
 import { geocode } from "@/lib/geocode";
 import { v4 as uuidv4 } from "uuid";
+import { readOwnerId } from "@/lib/api";
 
 // 超时要配套改两层，只改一层无效：
 //   平台层 —— 不设会被 Vercel 默认上限掐断（服务端函数默认 10s）
@@ -39,6 +40,13 @@ function withTimeout<T>(
 
 export async function POST(request: NextRequest) {
   try {
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法保存" },
+        { status: 400 }
+      );
+    }
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
 
@@ -86,6 +94,7 @@ export async function POST(request: NextRequest) {
           supabase
             .from("works")
             .select("id, image_url")
+            .eq("owner_id", ownerId)
             .or(`image_url.ilike.%${nameWithoutExt}%`)
             .limit(1),
           3_000,
@@ -129,6 +138,7 @@ export async function POST(request: NextRequest) {
       .from("works")
       .insert({
         image_url: imageUrl,
+        owner_id: ownerId,
         status: "want_to_go",
       })
       .select()

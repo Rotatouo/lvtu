@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
 interface ReorderItem {
   id: string;
@@ -19,13 +20,21 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
 
-    // 批量更新
+    // 批量更新（带归属过滤：不是自己的排序不会被改到）
     const updates = items.map((item) =>
       supabase
         .from("works")
         .update({ sort_order: item.sort_order })
         .eq("id", item.id)
+        .eq("owner_id", ownerId)
     );
 
     const results = await Promise.all(updates);

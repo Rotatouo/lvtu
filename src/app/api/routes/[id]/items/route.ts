@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
 // POST /api/routes/[id]/items — 添加地点到路线
 export async function POST(
@@ -15,6 +16,26 @@ export async function POST(
     }
 
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
+    // 校验路线归属：不是自己的路线不能往里加地点
+    const { data: ownedRoute } = await serviceClient
+      .from("routes")
+      .select("id")
+      .eq("id", routeId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+    if (!ownedRoute) {
+      return NextResponse.json(
+        { error: "路线不存在或无权操作" },
+        { status: 404 }
+      );
+    }
 
     // 获取当前最大 sort_order
     const { data: existing } = await serviceClient
@@ -58,6 +79,27 @@ export async function DELETE(
     }
 
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
+    // 校验路线归属
+    const { data: ownedRoute } = await serviceClient
+      .from("routes")
+      .select("id")
+      .eq("id", routeId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+    if (!ownedRoute) {
+      return NextResponse.json(
+        { error: "路线不存在或无权操作" },
+        { status: 404 }
+      );
+    }
+
     const { error } = await serviceClient
       .from("route_items")
       .delete()

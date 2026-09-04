@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
-// GET /api/routes — 获取所有路线(含 items + works)
-export async function GET() {
+// GET /api/routes — 获取当前设备的所有路线(含 items + works)
+export async function GET(request: NextRequest) {
   try {
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) return NextResponse.json({ routes: [] });
 
-    // 拿所有路线
+    // 拿当前设备的路线
     const { data: routes, error: routeErr } = await serviceClient
       .from("routes")
       .select("*")
+      .eq("owner_id", ownerId)
       .order("created_at", { ascending: true });
 
     if (routeErr) {
@@ -21,10 +25,12 @@ export async function GET() {
       return NextResponse.json({ routes: [] });
     }
 
-    // 拿所有 route_items
+    // 只拿这些路线的 items
+    const routeIds = routes.map((r) => r.id);
     const { data: allItems, error: itemErr } = await serviceClient
       .from("route_items")
       .select("*")
+      .in("route_id", routeIds)
       .order("sort_order", { ascending: true });
 
     if (itemErr) {
@@ -75,9 +81,21 @@ export async function POST(request: NextRequest) {
     }
 
     const serviceClient = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
+
     const { data, error } = await serviceClient
       .from("routes")
-      .insert({ name: name.trim(), color: color || "#60a5fa" })
+      .insert({
+        name: name.trim(),
+        color: color || "#60a5fa",
+        owner_id: ownerId,
+      })
       .select()
       .single();
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useRef } from "react";
 import {
   Download,
@@ -152,7 +153,7 @@ export default function PostcardsPage() {
   const canvasRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/api/journals")
+    apiFetch("/api/journals")
       .then((r) => r.json())
       .then((data) => {
         const list: JournalWithWork[] = (data.journals || []).filter(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { readOwnerId } from "@/lib/api";
 
 // POST /api/works/bulk-delete — 批量删除作品（数据库 + Storage 图片）
 export async function POST(request: NextRequest) {
@@ -12,18 +13,27 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createServiceClient();
+    const ownerId = readOwnerId(request);
+    if (!ownerId) {
+      return NextResponse.json(
+        { error: "缺少设备标识，无法操作" },
+        { status: 400 }
+      );
+    }
 
-    // 先查图片 URL（删 Storage 用）
+    // 先查图片 URL（删 Storage 用，带归属过滤：只查得到自己的）
     const { data: works } = await supabase
       .from("works")
       .select("id, image_url")
-      .in("id", ids as string[]);
+      .in("id", ids as string[])
+      .eq("owner_id", ownerId);
 
-    // 删数据库记录
+    // 删数据库记录（带归属过滤：别人的删不到）
     const { error: deleteError } = await supabase
       .from("works")
       .delete()
-      .in("id", ids as string[]);
+      .in("id", ids as string[])
+      .eq("owner_id", ownerId);
 
     if (deleteError) {
       console.error("Bulk delete error:", deleteError);

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus,
@@ -443,7 +444,7 @@ export default function Home() {
 
   const fetchWorks = useCallback(async () => {
     try {
-      const res = await fetch("/api/works");
+      const res = await apiFetch("/api/works");
       const data = await res.json();
       if (data.works) setWorks(data.works);
     } catch {
@@ -455,18 +456,18 @@ export default function Home() {
 
   useEffect(() => {
     fetchWorks();
-    fetch("/api/journals")
+    apiFetch("/api/journals")
       .then((r) => r.json())
       .then((d) => {
         const ids = new Set<string>((d.journals || []).map((j: any) => j.work_id));
         setJournalIds(ids);
       })
       .catch(() => {});
-    fetch("/api/recommend")
+    apiFetch("/api/recommend")
       .then((r) => r.json())
       .then((d) => setRecs(d.recommendations || []))
       .catch(() => {});
-    fetch("/api/routes")
+    apiFetch("/api/routes")
       .then((r) => r.json())
       .then((d) => setRoutes(d.routes || []))
       .catch(() => {});
@@ -503,7 +504,7 @@ export default function Home() {
   // 待确认区：单张确认（is_confirmed = true，不改分类字段）
   const handleConfirmWork = async (work: Work) => {
     try {
-      const res = await fetch(`/api/works/${work.id}`, {
+      const res = await apiFetch(`/api/works/${work.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_confirmed: true }),
@@ -520,7 +521,7 @@ export default function Home() {
   const handleConfirmAll = async (pendingList: Work[]) => {
     if (pendingList.length === 0) return;
     try {
-      const res = await fetch("/api/works/confirm", {
+      const res = await apiFetch("/api/works/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: pendingList.map((w) => w.id) }),
@@ -571,7 +572,7 @@ export default function Home() {
     if (selectedIds.size === 0) return;
     if (!window.confirm(`确定删除选中的 ${selectedIds.size} 张卡片？删除后不可恢复。`)) return;
     try {
-      const res = await fetch("/api/works/bulk-delete", {
+      const res = await apiFetch("/api/works/bulk-delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids: [...selectedIds] }),
@@ -590,7 +591,7 @@ export default function Home() {
     if (ids.length === 0) return false;
     if (!window.confirm(`确定删除选中的 ${ids.length} 张卡片？删除后不可恢复。`)) return false;
     try {
-      const res = await fetch("/api/works/bulk-delete", {
+      const res = await apiFetch("/api/works/bulk-delete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ids }),
@@ -617,7 +618,7 @@ export default function Home() {
     if (!window.confirm(`确定删除「${label}？`)) return;
     setWorks((prev) => prev.filter((w) => w.id !== work.id));
     try {
-      await fetch(`/api/works/${work.id}`, { method: "DELETE" });
+      await apiFetch(`/api/works/${work.id}`, { method: "DELETE" });
       fetchWorks();
     } catch {
       fetchWorks();
@@ -628,7 +629,7 @@ export default function Home() {
     const newStatus = work.status === "been_there" ? "want_to_go" : "been_there";
     setWorks((prev) => prev.map((w) => (w.id === work.id ? { ...w, status: newStatus } : w)));
     try {
-      await fetch(`/api/works/${work.id}`, {
+      await apiFetch(`/api/works/${work.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
@@ -647,7 +648,7 @@ export default function Home() {
   const handleReorder = async (sortedWorks: Work[]) => {
     setWorks(sortedWorks);
     try {
-      await fetch("/api/works/reorder", {
+      await apiFetch("/api/works/reorder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1252,7 +1253,7 @@ export default function Home() {
                     <button
                       onClick={async () => {
                         try {
-                          await fetch("/api/works", {
+                          await apiFetch("/api/works", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ final_attraction: r.name, source_platform: "AI推荐" }),

@@ -1,5 +1,6 @@
 "use client";
 
+import { apiFetch } from "@/lib/api";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -157,7 +158,7 @@ export default function CoverPage() {
     setStats(getMockStats());
 
     // 真实 API 部分（countries、routes 从 /api 取）
-    fetch("/api/routes")
+    apiFetch("/api/routes")
       .then((r) => (r.ok ? r.json() : { routes: [] }))
       .then((d) => {
         const list: RouteType[] = d.routes || [];
@@ -165,7 +166,7 @@ export default function CoverPage() {
       })
       .catch(() => {});
 
-    fetch("/api/works")
+    apiFetch("/api/works")
       .then((r) => (r.ok ? r.json() : { works: [] }))
       .then((d) => {
         const works = (d.works || []) as Array<{ final_country?: string }>;
