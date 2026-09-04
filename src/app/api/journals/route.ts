@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { readOwnerId } from "@/lib/api";
-import { signImageUrls } from "@/lib/storage";
+import { proxyImageUrls } from "@/lib/storage";
 
 // GET /api/journals — 获取日记列表（仅当前设备）
 export async function GET(request: NextRequest) {
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
       .select("id, final_attraction, final_city, final_country, final_region, status, image_url, image_thumb")
       .in("id", workIds);
 
-    const signedWorks = await signImageUrls(works || []);
-    const workMap = new Map(signedWorks.map((w) => [w.id, w]));
+    const proxiedWorks = proxyImageUrls(works || []);
+    const workMap = new Map(proxiedWorks.map((w) => [w.id, w]));
 
     const journalsWithWorks = journals.map((j) => ({
       ...j,
