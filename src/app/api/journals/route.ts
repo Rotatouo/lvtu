@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { readOwnerId } from "@/lib/api";
+import { signImageUrls } from "@/lib/storage";
 
 // GET /api/journals — 获取日记列表（仅当前设备）
 export async function GET(request: NextRequest) {
@@ -35,14 +36,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ journals: [] });
     }
 
-    // 批量获取关联的 works
+    // 批量获取关联的 works（签临时直链，避免 Storage 桶未公开时前端 403）
     const workIds = [...new Set(journals.map((j) => j.work_id))];
     const { data: works } = await serviceClient
       .from("works")
       .select("id, final_attraction, final_city, final_country, final_region, status, image_url, image_thumb")
       .in("id", workIds);
 
-    const workMap = new Map((works || []).map((w) => [w.id, w]));
+    const signedWorks = await signImageUrls(works || []);
+    const workMap = new Map(signedWorks.map((w) => [w.id, w]));
 
     const journalsWithWorks = journals.map((j) => ({
       ...j,

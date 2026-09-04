@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { geocode } from "@/lib/geocode";
 import { readOwnerId } from "@/lib/api";
+import { signImageUrls } from "@/lib/storage";
 
 // GET /api/works — 获取当前设备（owner_id）的所有作品
 export async function GET(request: NextRequest) {
@@ -23,7 +24,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "获取失败" }, { status: 500 });
     }
 
-    return NextResponse.json({ works: works || [] });
+    // Storage 桶未公开时，公开 URL 会 403；用 service role 签发临时直链给前端
+    const signedWorks = await signImageUrls(works || []);
+    return NextResponse.json({ works: signedWorks });
   } catch (error) {
     console.error("Works GET error:", error);
     return NextResponse.json(
