@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
 
     const journalsWithWorks = journals.map((j) => ({
       ...j,
+      photo_url: toStorageProxyUrl(j.photo_url),
       works: workMap.get(j.work_id) || null,
     }));
 

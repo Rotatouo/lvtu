@@ -40,6 +40,8 @@ function PostcardCanvas({
   work: Work;
 }) {
   const label = work?.final_attraction || work?.final_city || "未知";
+  // 日记没单独传现场照时，回退到关联卡片（景点）的截图，保证明信片有图
+  const photo = journal.photo_url || journal.works?.image_url || null;
   const location = [work?.final_country, work?.final_region, work?.final_city]
     .filter(Boolean)
     .join(" · ");
@@ -55,8 +57,8 @@ function PostcardCanvas({
         className="flex w-[360px] border-2 border-amber-300"
         style={{ background: "#FFF8E7", fontFamily: "Georgia, serif" }}
       >
-        {journal.photo_url && (
-          <img src={journal.photo_url} alt="" className="h-48 w-40 object-cover" />
+        {photo && (
+          <img src={photo} alt="" className="h-48 w-40 object-cover" />
         )}
         <div className="flex flex-1 flex-col justify-center gap-2 p-4">
           <h3 className="text-base font-bold text-amber-900">{label}</h3>
@@ -76,8 +78,8 @@ function PostcardCanvas({
   if (template === "fresh") {
     return (
       <div className="w-[360px] overflow-hidden rounded-xl border border-blue-100 bg-white shadow-lg">
-        {journal.photo_url && (
-          <img src={journal.photo_url} alt="" className="h-44 w-full object-cover" />
+        {photo && (
+          <img src={photo} alt="" className="h-44 w-full object-cover" />
         )}
         <div className="p-4">
           <h3 className="text-base font-bold text-blue-600">{label}</h3>
@@ -95,8 +97,8 @@ function PostcardCanvas({
   if (template === "nocturne") {
     return (
       <div className="w-[360px] overflow-hidden rounded-xl border border-[#1e2b3a] bg-[#0b1118]">
-        {journal.photo_url && (
-          <img src={journal.photo_url} alt="" className="h-44 w-full object-cover opacity-90" />
+        {photo && (
+          <img src={photo} alt="" className="h-44 w-full object-cover opacity-90" />
         )}
         <div className="p-4">
           <h3
@@ -127,8 +129,8 @@ function PostcardCanvas({
   // minimal
   return (
     <div className="w-[360px] overflow-hidden bg-white">
-      {journal.photo_url && (
-        <img src={journal.photo_url} alt="" className="h-56 w-full object-cover grayscale" />
+      {photo && (
+        <img src={photo} alt="" className="h-56 w-full object-cover grayscale" />
       )}
       <div className="p-4">
         <h3 className="text-lg font-light tracking-wider text-black">{label}</h3>
@@ -157,7 +159,7 @@ export default function PostcardsPage() {
       .then((r) => r.json())
       .then((data) => {
         const list: JournalWithWork[] = (data.journals || []).filter(
-          (j: JournalWithWork) => j.photo_url && j.content.length >= 20
+          (j: JournalWithWork) => (j.photo_url || j.works?.image_url) && j.content.length >= 20
         );
         setJournals(list);
         setSelected(new Set(list.length > 0 ? [list[0].id] : []));
@@ -243,9 +245,9 @@ export default function PostcardsPage() {
                         : "border-line opacity-70 hover:opacity-100"
                     }`}
                   >
-                    {j.photo_url && (
+                    {(j.photo_url || j.works?.image_url) && (
                       <img
-                        src={j.photo_url}
+                        src={j.photo_url || j.works?.image_url || undefined}
                         alt=""
                         className="h-20 w-full object-cover"
                       />

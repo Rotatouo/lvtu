@@ -325,6 +325,7 @@ export default function RoutesPage() {
                                     item={item}
                                     index={idx}
                                     onRemove={(workId) => handleRemove(route.id, workId)}
+                                    onView={(w) => setViewerWork(w)}
                                     removing={removingWorkId === item.work_id}
                                   />
                                 ))}

@@ -130,9 +130,9 @@ export default function JournalsPage() {
               >
                 <div className="flex gap-3 p-3.5">
                   {/* 缩略图 */}
-                  {j.photo_url ? (
+                  {(j.photo_url || j.works?.image_url) ? (
                     <img
-                      src={j.photo_url}
+                      src={j.photo_url || j.works?.image_url || undefined}
                       alt={place}
                       className="h-[76px] w-[76px] shrink-0 rounded-xl object-cover"
                     />
