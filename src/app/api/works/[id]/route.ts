@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { geocode } from "@/lib/geocode";
 import { readOwnerId } from "@/lib/api";
+import { toStorageProxyUrl } from "@/lib/storage";
 
 // PUT /api/works/[id] — 更新作品分类
 export async function PUT(
