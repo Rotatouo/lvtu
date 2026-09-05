@@ -15,6 +15,7 @@ import {
   Route,
   Globe2,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -412,6 +413,12 @@ export default function Home() {
   const [heroMouseX, setHeroMouseX] = useState(0);
   const [heroMouseY, setHeroMouseY] = useState(0);
   const [activeScene, setActiveScene] = useState<SceneKey>("world");
+  // 存量补全：对缺少州/城市的卡片重跑 AI 识别
+  const [reclassifying, setReclassifying] = useState(false);
+  const [reclassifyProgress, setReclassifyProgress] = useState({
+    done: 0,
+    total: 0,
+  });
 
   // 待确认专区：AI 识别后未经人工确认的卡片（is_confirmed = false）
   const pendingWorks = useMemo(
@@ -442,6 +449,16 @@ export default function Home() {
     });
   }, [confirmedWorks, searchQuery]);
 
+  /**
+   * 缺州/省或城市的卡片。
+   * 早期提示词写的是「中国必须填省份(region);其他可选」，所以国外卡片只有
+   * 国家 + 景点名，这两项为空。提示词修好只影响新图，存量靠「补全」按钮重跑。
+   */
+  const missingPlaceWorks = useMemo(
+    () => works.filter((w) => w.image_url && (!w.final_region || !w.final_city)),
+    [works]
+  );
+
   const fetchWorks = useCallback(async () => {
     try {
       const res = await apiFetch("/api/works");
@@ -453,6 +470,45 @@ export default function Home() {
       setLoading(false);
     }
   }, []);
+
+  /**
+   * 对缺少州/城市的存量卡片重跑 AI 识别。
+   * 分批（每次 2 张）是为了不撞 Vercel 60s 上限——单张识别最长 45s，
+   * 一次丢 20 张必被平台掐断，返回 HTML 错误页。
+   */
+  const handleReclassifyMissing = useCallback(async () => {
+    if (missingPlaceWorks.length === 0 || reclassifying) return;
+    if (
+      !window.confirm(
+        `将对 ${missingPlaceWorks.length} 张缺少州/城市的卡片重新跑一次 AI 识别，覆盖它们的地点字段。每张约 10-45 秒，请保持页面打开。继续？`
+      )
+    )
+      return;
+
+    const ids = missingPlaceWorks.map((w) => w.id);
+    const BATCH = 2;
+    setReclassifying(true);
+    setReclassifyProgress({ done: 0, total: ids.length });
+    try {
+      for (let i = 0; i < ids.length; i += BATCH) {
+        const chunk = ids.slice(i, i + BATCH);
+        await apiFetch("/api/works/reclassify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: chunk }),
+        });
+        setReclassifyProgress({
+          done: Math.min(i + chunk.length, ids.length),
+          total: ids.length,
+        });
+      }
+      await fetchWorks();
+    } catch {
+      /* ignore */
+    } finally {
+      setReclassifying(false);
+    }
+  }, [missingPlaceWorks, reclassifying, fetchWorks]);
 
   useEffect(() => {
     fetchWorks();
@@ -1152,6 +1208,24 @@ export default function Home() {
                   </button>
                 )}
               </div>
+
+              {missingPlaceWorks.length > 0 && (
+                <button
+                  onClick={handleReclassifyMissing}
+                  disabled={reclassifying}
+                  title="对缺少州/城市的卡片重跑一次 AI 识别"
+                  className="flex items-center gap-1.5 px-3 py-2 text-xs rounded-xl border border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-50"
+                >
+                  {reclassifying ? (
+                    <Loader2 size={12} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={12} />
+                  )}
+                  {reclassifying
+                    ? `补全中 ${reclassifyProgress.done}/${reclassifyProgress.total}`
+                    : `补全州/城市 (${missingPlaceWorks.length})`}
+                </button>
+              )}
 
               <button
                 onClick={() =>
