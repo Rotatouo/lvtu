@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { readOwnerId } from "@/lib/api";
+import { proxyImageUrls } from "@/lib/storage";
 
 // GET /api/routes — 获取当前设备的所有路线(含 items + works)
 export async function GET(request: NextRequest) {
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
         .from("works")
         .select("id, final_attraction, final_city, final_country, lat, lng, status, image_url, image_thumb")
         .in("id", workIds);
-      (works || []).forEach((w) => workMap.set(w.id, w));
+      proxyImageUrls(works || []).forEach((w) => workMap.set(w.id, w));
     }
 
     // 组装

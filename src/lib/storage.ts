@@ -25,10 +25,12 @@ export function toStorageProxyUrl(url: string | null | undefined): string | null
 type WithImageFields = {
   image_url?: string | null;
   image_thumb?: string | null;
+  photo_url?: string | null;
 };
 
 /**
  * 把对象列表里的 Supabase Storage 公开 URL 批量转成同域代理 URL。
+ * 覆盖 works 的 image_url/image_thumb，以及 journals 的 photo_url。
  */
 export function proxyImageUrls<T extends WithImageFields>(items: T[]): T[] {
   if (items.length === 0) return items;
@@ -36,5 +38,6 @@ export function proxyImageUrls<T extends WithImageFields>(items: T[]): T[] {
     ...item,
     image_url: toStorageProxyUrl(item.image_url),
     image_thumb: toStorageProxyUrl(item.image_thumb),
+    photo_url: toStorageProxyUrl(item.photo_url),
   }));
 }

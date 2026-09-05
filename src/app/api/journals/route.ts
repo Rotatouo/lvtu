@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { readOwnerId } from "@/lib/api";
-import { proxyImageUrls } from "@/lib/storage";
+import { proxyImageUrls, toStorageProxyUrl } from "@/lib/storage";
 
 // GET /api/journals — 获取日记列表（仅当前设备）
 export async function GET(request: NextRequest) {

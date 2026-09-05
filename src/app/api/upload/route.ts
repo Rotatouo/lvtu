@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { toStorageProxyUrl } from "@/lib/storage";
 
 // POST /api/upload — 上传文件到 Supabase Storage(不做 AI 分类,不创建作品)
 export async function POST(request: NextRequest) {
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
       .from("images")
       .getPublicUrl(filename);
 
-    return NextResponse.json({ url: urlData.publicUrl });
+    return NextResponse.json({ url: toStorageProxyUrl(urlData.publicUrl) });
   } catch (error) {
     console.error("Upload API error:", error);
     return NextResponse.json({ error: "服务器错误" }, { status: 500 });

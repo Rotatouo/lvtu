@@ -7,6 +7,7 @@ import { Trash2, Loader2, GripVertical, Plus, X, Route as RouteIcon, ChevronDown
 import type { Route } from "@/types";
 import RouteAddWorkModal from "@/components/RouteAddWorkModal";
 import PageShell, { EmptyBlock, SectionTitle } from "@/components/PageShell";
+import ImageViewer from "@/components/ImageViewer";
 
 // Leaflet 在 import 阶段就会访问 window，必须 ssr:false 避开预渲染。
 // 否则 pnpm build 会在 /routes 的静态预渲染时炸 window is not defined。
@@ -40,11 +41,13 @@ function SortableItem({
   index,
   onRemove,
   removing,
+  onView,
 }: {
   item: any;
   index: number;
   onRemove?: (workId: string) => void;
   removing?: boolean;
+  onView?: (work: any) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: item.id });
@@ -73,12 +76,20 @@ function SortableItem({
         {index + 1}
       </span>
 
-      {work?.image_thumb ? (
-        <img
-          src={work.image_thumb}
-          alt=""
-          className="h-8 w-8 shrink-0 rounded-lg object-cover"
-        />
+      {work?.image_thumb || work?.image_url ? (
+        <button
+          type="button"
+          onClick={() => work && onView?.(work)}
+          className="shrink-0 overflow-hidden rounded-lg"
+          title="查看截图"
+          aria-label="查看截图"
+        >
+          <img
+            src={work.image_thumb || work.image_url}
+            alt=""
+            className="h-9 w-9 object-cover"
+          />
+        </button>
       ) : (
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg-3">
           <RouteIcon className="h-3.5 w-3.5" />
@@ -120,6 +131,7 @@ export default function RoutesPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [editingRoute, setEditingRoute] = useState<Route | null>(null);
   const [removingWorkId, setRemovingWorkId] = useState<string | null>(null);
+  const [viewerWork, setViewerWork] = useState<any>(null);
 
   const fetchRoutes = useCallback(async () => {
     setLoading(true);
@@ -360,6 +372,10 @@ export default function RoutesPage() {
             fetchRoutes();
           }}
         />
+      )}
+
+      {viewerWork && (
+        <ImageViewer work={viewerWork} onClose={() => setViewerWork(null)} />
       )}
     </PageShell>
   );

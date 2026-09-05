@@ -4,6 +4,7 @@ import { classifyImage } from "@/lib/gemini";
 import { geocode } from "@/lib/geocode";
 import { v4 as uuidv4 } from "uuid";
 import { readOwnerId } from "@/lib/api";
+import { toStorageProxyUrl } from "@/lib/storage";
 
 // 超时要配套改两层，只改一层无效：
 //   平台层 —— 不设会被 Vercel 默认上限掐断（服务端函数默认 10s）
@@ -231,7 +232,7 @@ export async function POST(request: NextRequest) {
       // AI 失败但图片已保存，返回部分结果。
       // ai_error 必须回传给前端：否则错误只躺在服务端日志里，UI 还会谎报"成功"。
       const failResp: Record<string, unknown> = {
-        work,
+        work: { ...work, image_url: toStorageProxyUrl(work.image_url) },
         classification: null,
         ai_error: aiMessage,
         ai_elapsed_ms: aiElapsedMs,
